@@ -58,12 +58,12 @@ public abstract class EntityRendererMixin<T extends Entity>
 		MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider,
 		int i)
 	{
+		NameTagsHack nameTagsHack = WurstClient.INSTANCE.getHax().nameTagsHack;
+
 		double d = this.dispatcher.getSquaredDistanceToCamera(entity);
 		
-		if(d > 4096)
+		if(d > 4096 && !nameTagsHack.isUnlimitedRange())
 			return;
-		
-		NameTagsHack nameTagsHack = WurstClient.INSTANCE.getHax().nameTagsHack;
 		
 		boolean bl = !entity.isSneaky() || nameTagsHack.isEnabled();
 		float f = entity.getHeight() + 0.5F;
@@ -96,7 +96,7 @@ public abstract class EntityRendererMixin<T extends Entity>
 		
 		if(bl)
 			textRenderer.draw(text.asOrderedText(), h, j, -1, false, matrix4f,
-				vertexConsumerProvider, false, 0, i);
+				vertexConsumerProvider, nameTagsHack.isEnabled() ? true : false, 0, i);
 		
 		matrixStack.pop();
 	}
