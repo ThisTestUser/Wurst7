@@ -167,40 +167,31 @@ public final class FeedAuraHack extends Hack
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		
 		matrixStack.push();
-		RenderUtils.applyRenderOffset(matrixStack);
+		RenderUtils.applyRegionalRenderOffset(matrixStack);
+		
+		BlockPos camPos = RenderUtils.getCameraBlockPos();
+		int regionX = (camPos.getX() >> 9) * 512;
+		int regionZ = (camPos.getZ() >> 9) * 512;
 		
 		Box box = new Box(BlockPos.ORIGIN);
-		float p = 1;
-		LivingEntity le = renderTarget;
-		p = (le.getMaxHealth() - le.getHealth()) / le.getMaxHealth();
-		float red = p * 2F;
-		float green = 2 - red;
-		
 		matrixStack.translate(
 			renderTarget.prevX
-				+ (renderTarget.getX() - renderTarget.prevX) * partialTicks,
+				+ (renderTarget.getX() - renderTarget.prevX) * partialTicks - regionX,
 			renderTarget.prevY
 				+ (renderTarget.getY() - renderTarget.prevY) * partialTicks,
 			renderTarget.prevZ
-				+ (renderTarget.getZ() - renderTarget.prevZ) * partialTicks);
+				+ (renderTarget.getZ() - renderTarget.prevZ) * partialTicks - regionZ);
 		matrixStack.translate(0, 0.05, 0);
 		matrixStack.scale(renderTarget.getWidth(), renderTarget.getHeight(),
 			renderTarget.getWidth());
 		matrixStack.translate(-0.5, 0, -0.5);
 		
-		if(p < 1)
-		{
-			matrixStack.translate(0.5, 0.5, 0.5);
-			matrixStack.scale(p, p, p);
-			matrixStack.translate(-0.5, -0.5, -0.5);
-		}
-		
 		RenderSystem.setShader(GameRenderer::getPositionShader);
 		
-		RenderSystem.setShaderColor(red, green, 0, 0.25F);
+		RenderSystem.setShaderColor(1, 0, 0, 0.25F);
 		RenderUtils.drawSolidBox(box, matrixStack);
 		
-		RenderSystem.setShaderColor(red, green, 0, 0.5F);
+		RenderSystem.setShaderColor(1, 0, 0, 0.5F);
 		RenderUtils.drawOutlinedBox(box, matrixStack);
 		
 		matrixStack.pop();
