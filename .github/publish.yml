@@ -1,0 +1,42 @@
+name: "Compile and Publish"
+
+on: [push]
+
+jobs:
+  gradle:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Execute Gradle build
+        run: ./gradlew build
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.2.4
+        if: success()
+        with:
+          name: Wurst
+          path: build/libs/
+
+      - name: Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "1.19.2"
+          prerelease: false
+          title: "Wurst Client - ThisTestUser's Edition for 1.19.2"
+          files: |
+            build/libs/Wurst-Client-v7.31-MC1.19.2.jar
