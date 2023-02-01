@@ -27,9 +27,9 @@ public final class NoFireOverlayHack extends Hack
 		addSetting(offset);
 	}
 
-	public float getOverlayOffset()
+	public double getOverlayOffset()
 	{
-		return isEnabled() ? offset.getValueF() : 0;
+		return isEnabled() ? offset.getValue() : 0;
 	}
 
 	// See InGameOverlayRendererMixin.getFireOffset()

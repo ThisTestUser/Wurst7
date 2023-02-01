@@ -24,8 +24,8 @@ public class InGameOverlayRendererMixin
 {
 	@ModifyConstant(method =
 		"renderFireOverlay(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/util/math/MatrixStack;)V",
-		constant = @Constant(floatValue = -0.3F))
-	private static float getFireOffset(float orig)
+		constant = @Constant(doubleValue = -0.30000001192092896D))
+	private static double getFireOffset(double orig)
 	{
 		return orig - WurstClient.INSTANCE.getHax().noFireOverlayHack.getOverlayOffset();
 	}
