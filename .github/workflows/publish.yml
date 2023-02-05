@@ -22,6 +22,9 @@ jobs:
           path: './gradle.properties'
           properties: 'minecraft_version mod_version'
 
+      - name: Trim whitespace from mod version
+        run: echo "MOD_VERSION=$(echo ${{ steps.read_properties.outputs.mod_version }} | tr -d '\r')" >> $GITHUB_ENV
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
@@ -46,4 +49,4 @@ jobs:
           prerelease: false
           title: "Wurst Client - ThisTestUser's Edition for ${{ steps.read_properties.outputs.minecraft_version }}"
           files: |
-            "build/libs/Wurst-Client-${{ steps.read_properties.outputs.mod_version }}.jar"
+            "build/libs/Wurst-Client-${{ env.MOD_VERSION }}.jar"
