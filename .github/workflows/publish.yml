@@ -49,4 +49,4 @@ jobs:
           prerelease: false
           title: "Wurst Client - ThisTestUser's Edition for ${{ steps.read_properties.outputs.minecraft_version }}"
           files: |
-            "build/libs/Wurst-Client-${{ env.MOD_VERSION }}.jar"
+            build/libs/Wurst-Client-${{ env.MOD_VERSION }}.jar
