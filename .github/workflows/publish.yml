@@ -14,6 +14,13 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          
+      - name: Read data from gradle.properties
+        id: read_properties
+        uses: christian-draeger/read-properties@1.1.1
+        with:
+          path: './gradle.properties'
+          property: 'minecraft_version mod_version'
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -35,8 +42,8 @@ jobs:
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "v1.19.2"
+          automatic_release_tag: "v${{ steps.read_properties.outputs.minecraft_version }}"
           prerelease: false
-          title: "Wurst Client - ThisTestUser's Edition for 1.19.2"
+          title: "Wurst Client - ThisTestUser's Edition for ${{ steps.read_properties.outputs.minecraft_version }}"
           files: |
-            build/libs/Wurst-Client-v7.31-MC1.19.2.jar
+            build/libs/Wurst-Client-${{ steps.read_properties.outputs.mod_version }}.jar
