@@ -54,18 +54,11 @@ public class ChatHudMixin extends DrawableHelper
 		message = event.getComponent();
 		indicator = WurstClient.INSTANCE.getOtfs().noChatReportsOtf
 			.modifyIndicator(message, signature, indicator);
-		shadow$logChatMessage(message, indicator);
 		shadow$addMessage(message, signature, client.inGameHud.getTicks(),
 			indicator, false);
 		ci.cancel();
 	}
 	
-	@Shadow
-	private void shadow$logChatMessage(Text message, @Nullable MessageIndicator indicator)
-	{
-
-	}
-
 	@Shadow
 	private void shadow$addMessage(Text message,
 		@Nullable MessageSignatureData signature, int ticks,
