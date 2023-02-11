@@ -33,6 +33,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.world.chunk.Chunk;
 import net.wurstclient.WurstClient;
+import net.wurstclient.hacks.NameTagsHack;
 
 public enum RenderUtils
 {
@@ -859,6 +860,7 @@ public enum RenderUtils
 	public static void renderTag(MatrixStack matrixStack, Text text, Entity entity, int color, 
 		float height, int limit, float partialTicks)
 	{
+		NameTagsHack nameTagsHack = WurstClient.INSTANCE.getHax().nameTagsHack;
 		MinecraftClient MC = MinecraftClient.getInstance();
 		EntityRenderDispatcher dispatcher = MC.getEntityRenderDispatcher();
 		double dist = dispatcher.getSquaredDistanceToCamera((Entity)entity);
@@ -879,10 +881,13 @@ public enum RenderUtils
         matrixStack.multiply(dispatcher.getRotation());
         
 		float scale = 0.025F;
-		double distance = WurstClient.MC.player.distanceTo(entity);
+		if(nameTagsHack.isEnabled())
+		{
+			double distance = WurstClient.MC.player.distanceTo(entity);
 		
-		if(distance > 10)
-			scale *= distance / 10;
+			if(distance > 10)
+				scale *= distance / 10;
+		}
 		
 		matrixStack.scale(-scale, -scale, scale);
 		
