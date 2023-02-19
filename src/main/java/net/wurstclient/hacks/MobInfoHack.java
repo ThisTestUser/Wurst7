@@ -32,6 +32,7 @@ import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.NameResolver;
 import net.wurstclient.util.RenderUtils;
 
+@SearchTags({"mob info", "mob owner", "mobowner", "pet owner", "petowner", "llama strength"})
 public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 {
 	private final SliderSetting llamaThres =
