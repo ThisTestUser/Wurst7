@@ -10,9 +10,9 @@ package net.wurstclient.settings.filters;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.AllayEntity;
 
-public final class FilterAllaySetting extends EntityFilterCheckbox
+public final class FilterAllaysSetting extends EntityFilterCheckbox
 {
-	public FilterAllaySetting(String description, boolean checked)
+	public FilterAllaysSetting(String description, boolean checked)
 	{
 		super("Filter allays", description, checked);
 	}
@@ -23,8 +23,8 @@ public final class FilterAllaySetting extends EntityFilterCheckbox
 		return !(e instanceof AllayEntity);
 	}
 	
-	public static FilterAllaySetting genericCombat(boolean checked)
+	public static FilterAllaysSetting genericCombat(boolean checked)
 	{
-		return new FilterAllaySetting("Won't attack allays.", checked);
+		return new FilterAllaysSetting("Won't attack allays.", checked);
 	}
 }
