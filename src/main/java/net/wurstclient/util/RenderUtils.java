@@ -893,4 +893,49 @@ public enum RenderUtils
 			matrixStack.pop();
 		}
 	}
+	
+	public static void renderTag(MatrixStack matrixStack, Text text, Entity entity, int color, 
+		float height, int limit, float partialTicks)
+	{
+		NameTagsHack nameTagsHack = WurstClient.INSTANCE.getHax().nameTagsHack;
+		MinecraftClient MC = MinecraftClient.getInstance();
+		EntityRenderDispatcher dispatcher = MC.getEntityRenderDispatcher();
+		double dist = dispatcher.getSquaredDistanceToCamera((Entity)entity);
+		if(dist > limit * limit) 
+			return;
+		matrixStack.push();
+		
+		RenderUtils.applyCameraRotationOnly();
+		Vec3d camPos = RenderUtils.getCameraPos();
+		matrixStack.translate(
+			-camPos.x + entity.prevX
+			+ (entity.getX() - entity.prevX) * partialTicks,
+			-camPos.y + entity.prevY
+			+ (entity.getY() - entity.prevY) * partialTicks + entity.getHeight() + height,
+			-camPos.z + entity.prevZ
+			+ (entity.getZ() - entity.prevZ) * partialTicks);
+		
+		matrixStack.multiply(dispatcher.getRotation());
+		
+		float scale = 0.025F;
+		if(nameTagsHack.isEnabled())
+		{
+			double distance = WurstClient.MC.player.distanceTo(entity);
+			
+			if(distance > 10)
+				scale *= distance / 10;
+		}
+		
+		matrixStack.scale(-scale, -scale, scale);
+		
+		Matrix4f matrix4f = matrixStack.peek().getPositionMatrix();
+		float g = MC.options.getTextBackgroundOpacity(0.25f);
+		int j = (int)(g * 255.0f) << 24;
+		int h = -MC.textRenderer.getWidth(text) / 2;
+		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+		MC.textRenderer.draw(text, h, 0, color, false, matrix4f, immediate, false, j, 15728880);
+		MC.textRenderer.draw(text, h, 0, -1, false, matrix4f, immediate, true, 0, 15728880);
+		immediate.draw();
+		matrixStack.pop();
+	}
 }

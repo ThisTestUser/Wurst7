@@ -22,6 +22,8 @@ import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Matrix4f;
@@ -32,6 +34,7 @@ import net.wurstclient.events.CameraTransformViewBobbingListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.ColorSetting;
 import net.wurstclient.settings.EnumSetting;
 import net.wurstclient.util.RenderUtils;
@@ -41,6 +44,9 @@ import net.wurstclient.util.RotationUtils;
 public final class ItemEspHack extends Hack implements UpdateListener,
 	CameraTransformViewBobbingListener, RenderListener
 {
+	private final CheckboxSetting names =
+		new CheckboxSetting("Show item names", true);
+	
 	private final EnumSetting<Style> style =
 		new EnumSetting<>("Style", Style.values(), Style.BOXES);
 	
@@ -59,6 +65,7 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 		super("ItemESP");
 		setCategory(Category.RENDER);
 		
+		addSetting(names);
 		addSetting(style);
 		addSetting(boxSize);
 		addSetting(color);
@@ -125,7 +132,7 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 	
-	private void renderBoxes(MatrixStack matrixStack, double partialTicks,
+	private void renderBoxes(MatrixStack matrixStack, float partialTicks,
 		int regionX, int regionZ)
 	{
 		float extraSize = boxSize.getSelected().extraSize;
@@ -156,11 +163,18 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 				matrixStack.pop();
 			}
 			
+			if(names.isChecked())
+			{
+				ItemStack stack = e.getStack();
+				Text text = Text.literal(stack.getCount() + "x ").append(stack.getName());
+				RenderUtils.renderTag(matrixStack, text, e, 16777215, 1F, 30, partialTicks);
+			}
+			
 			matrixStack.pop();
 		}
 	}
 	
-	private void renderTracers(MatrixStack matrixStack, double partialTicks,
+	private void renderTracers(MatrixStack matrixStack, float partialTicks,
 		int regionX, int regionZ)
 	{
 		GL11.glEnable(GL11.GL_BLEND);
