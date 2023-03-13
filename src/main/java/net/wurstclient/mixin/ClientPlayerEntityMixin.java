@@ -31,6 +31,7 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.HungerManager;
 import net.minecraft.network.encryption.PlayerPublicKey;
 import net.minecraft.network.message.ArgumentSignatureDataMap;
 import net.minecraft.network.message.DecoratedContents;
@@ -148,13 +149,14 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		tempCurrentScreen = null;
 	}
 	
-	@Inject(at = {@At("HEAD")},
-		method = {"canSprint()Z"},
-		cancellable = true)
-	private void canSprint(CallbackInfoReturnable<Boolean> cir)
+	@Redirect(at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I",
+		ordinal = 0), method = "tickMovement()V")
+	private int getFoodLevel(HungerManager manager)
 	{
 		if(WurstClient.INSTANCE.getHax().autoSprintHack.shouldSprintHungry())
-			cir.setReturnValue(true);
+			return 20;
+		return manager.getFoodLevel();
 	}
 
 	@Inject(at = @At("HEAD"),
