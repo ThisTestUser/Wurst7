@@ -23,7 +23,7 @@ public final class NameTagsHack extends Hack
 		"See-through mode",
 		"Renders nametags on the see-through text layer. This makes them"
 			+ " easier to read behind walls.",
-		false);
+		true);
 	
 	private final CheckboxSetting forceNametags = new CheckboxSetting(
 		"Force nametags",

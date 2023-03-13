@@ -202,8 +202,6 @@ public final class FeedAuraHack extends Hack
 		float p = 1;
 		LivingEntity le = renderTarget;
 		p = (le.getMaxHealth() - le.getHealth()) / le.getMaxHealth();
-		float green = p * 2F;
-		float red = 2 - green;
 		
 		matrixStack.translate(
 			MathHelper.lerp(partialTicks, renderTarget.prevX,
@@ -218,16 +216,12 @@ public final class FeedAuraHack extends Hack
 			renderTarget.getWidth());
 		matrixStack.translate(-0.5, 0, -0.5);
 		
-		matrixStack.translate(0.5, 0.5, 0.5);
-		matrixStack.scale(p, p, p);
-		matrixStack.translate(-0.5, -0.5, -0.5);
-		
 		RenderSystem.setShader(GameRenderer::getPositionShader);
 		
-		RenderSystem.setShaderColor(red, green, 0, 0.25F);
+		RenderSystem.setShaderColor(1, 0, 0, 0.25F);
 		RenderUtils.drawSolidBox(box, matrixStack);
 		
-		RenderSystem.setShaderColor(red, green, 0, 0.5F);
+		RenderSystem.setShaderColor(1, 0, 0, 0.5F);
 		RenderUtils.drawOutlinedBox(box, matrixStack);
 		
 		matrixStack.pop();
