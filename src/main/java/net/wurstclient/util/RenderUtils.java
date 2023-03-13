@@ -12,18 +12,16 @@ import org.lwjgl.opengl.GL11;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.VertexBuffer;
-import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.BufferBuilder.BuiltBuffer;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
@@ -32,6 +30,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.world.chunk.Chunk;
 import net.wurstclient.WurstClient;
+import net.wurstclient.hacks.NameTagsHack;
 
 public enum RenderUtils
 {
