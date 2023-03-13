@@ -44,6 +44,7 @@
     "MessageHandlerMixin",
     "MinecraftClientMixin",
     "MiningToolItemMixin",
+    "MobEntityRendererMixin",
     "MouseMixin",
     "MultiplayerScreenMixin",
     "PackScreenMixin",
