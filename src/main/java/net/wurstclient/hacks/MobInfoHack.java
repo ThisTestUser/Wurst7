@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -79,6 +81,7 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 	{
 		Set<String> onlineCache = new HashSet<>();
 		Set<String> offlineCache = new HashSet<>();
+		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
 		for(LivingEntity entity : entities)
 		{
 			if((entity instanceof TameableEntity && ((TameableEntity)entity).isTamed())
@@ -130,7 +133,7 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 					offset += 0.5F;
 				else
 					offset += 1F;
-				RenderUtils.renderTag(matrixStack, text, entity, 16777215, offset, 75, partialTicks);
+				RenderUtils.renderTag(matrixStack, text, entity, immediate, 16777215, offset, 75, partialTicks);
 			}
 			if(entity instanceof LlamaEntity llama && llama.getStrength() >= llamaThres.getValueI())
 			{
@@ -161,8 +164,9 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 						text.append(Text.literal(Integer.toString(strength)).formatted(Formatting.DARK_GREEN));
 						break;
 				}
-				RenderUtils.renderTag(matrixStack, text, llama, 16777215, offset, 75, partialTicks);
+				RenderUtils.renderTag(matrixStack, text, llama, immediate, 16777215, offset, 75, partialTicks);
 			}
 		}
+		immediate.draw();
 	}
 }

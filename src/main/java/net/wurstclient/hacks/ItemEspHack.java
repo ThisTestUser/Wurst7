@@ -17,6 +17,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
@@ -137,6 +138,7 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 	{
 		float extraSize = boxSize.getSelected().extraSize;
 		
+		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
 		for(ItemEntity e : items)
 		{
 			matrixStack.push();
@@ -167,11 +169,12 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 			{
 				ItemStack stack = e.getStack();
 				Text text = Text.literal(stack.getCount() + "x ").append(stack.getName());
-				RenderUtils.renderTag(matrixStack, text, e, 16777215, 1F, 30, partialTicks);
+				RenderUtils.renderTag(matrixStack, text, e, immediate, 16777215, 1F, 30, partialTicks);
 			}
 			
 			matrixStack.pop();
 		}
+		immediate.draw();
 	}
 	
 	private void renderTracers(MatrixStack matrixStack, float partialTicks,

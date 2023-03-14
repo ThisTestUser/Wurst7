@@ -893,7 +893,7 @@ public enum RenderUtils
 		}
 	}
 	
-	public static void renderTag(MatrixStack matrixStack, Text text, Entity entity, int color, 
+	public static void renderTag(MatrixStack matrixStack, Text text, Entity entity, VertexConsumerProvider provider, int color, 
 		float height, int limit, float partialTicks)
 	{
 		NameTagsHack nameTagsHack = WurstClient.INSTANCE.getHax().nameTagsHack;
@@ -931,10 +931,8 @@ public enum RenderUtils
 		float g = MC.options.getTextBackgroundOpacity(0.25f);
 		int j = (int)(g * 255.0f) << 24;
 		int h = -MC.textRenderer.getWidth(text) / 2;
-		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-		MC.textRenderer.draw(text, h, 0, color, false, matrix4f, immediate, false, j, 15728880);
-		MC.textRenderer.draw(text, h, 0, -1, false, matrix4f, immediate, true, 0, 15728880);
-		immediate.draw();
+		MC.textRenderer.draw(text, h, 0, color, false, matrix4f, provider, false, j, 15728880);
+		MC.textRenderer.draw(text, h, 0, -1, false, matrix4f, provider, true, 0, 15728880);
 		matrixStack.pop();
 	}
 }

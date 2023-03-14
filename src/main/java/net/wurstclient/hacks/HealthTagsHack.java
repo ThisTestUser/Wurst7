@@ -9,6 +9,8 @@ package net.wurstclient.hacks;
 
 import java.text.DecimalFormat;
 
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -58,6 +60,7 @@ public final class HealthTagsHack extends Hack implements RenderListener
 	{
 		if(!mobs.isChecked())
 			return;
+		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
 		for(Entity e : MC.world.getEntities())
 			if(e instanceof MobEntity entity)
 			{
@@ -67,11 +70,10 @@ public final class HealthTagsHack extends Hack implements RenderListener
 					: DF.format(entity.getMaxHealth());
 				Text text = Text.literal(health + "/" + maxHealth).formatted(
 					getColor(entity.getHealth(), entity.getMaxHealth()));
-				if(!entity.hasCustomName())
-					RenderUtils.renderTag(matrixStack, text, entity, 0xffffff, 0.5F, 75, partialTicks);
-				else 
-					RenderUtils.renderTag(matrixStack, text, entity, 0xffffff, 1.0F, 75, partialTicks);
+				RenderUtils.renderTag(matrixStack, text, entity, immediate, 0xffffff,
+					!entity.hasCustomName() ? 0.5F : 1.0F, 75, partialTicks);
 			}
+		immediate.draw();
 	}
 	
 	public Text addHealth(LivingEntity entity, Text nametag)
