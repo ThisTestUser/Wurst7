@@ -32,8 +32,13 @@ public enum BlockBreaker
 	
 	public static boolean breakOneBlock(BlockPos pos)
 	{
+		return breakOneBlock(pos, false);
+	}
+	
+	public static boolean breakOneBlock(BlockPos pos, boolean checkLOS)
+	{
 		BlockBreakingParams params = getBlockBreakingParams(pos);
-		if(params == null)
+		if(params == null || (checkLOS && !params.lineOfSight))
 			return false;
 		
 		// face block
@@ -128,6 +133,11 @@ public enum BlockBreaker
 	
 	public static void breakBlocksWithPacketSpam(Iterable<BlockPos> blocks)
 	{
+		breakBlocksWithPacketSpam(blocks, false);
+	}
+	
+	public static void breakBlocksWithPacketSpam(Iterable<BlockPos> blocks, boolean checkLOS)
+	{
 		Vec3d eyesPos = RotationUtils.getEyesPos();
 		ClientPlayNetworkHandler netHandler = MC.player.networkHandler;
 		
@@ -144,6 +154,13 @@ public enum BlockBreaker
 				// check if side is facing towards player
 				if(eyesPos.squaredDistanceTo(hitVec) >= distanceSqPosVec)
 					continue;
+				
+				// check LOS
+				if(checkLOS && MC.world.raycast(new RaycastContext(eyesPos, hitVec,
+					RaycastContext.ShapeType.COLLIDER,
+					RaycastContext.FluidHandling.NONE, MC.player))
+					.getType() != HitResult.Type.MISS)
+					return;
 				
 				// break block
 				netHandler.sendPacket(new PlayerActionC2SPacket(

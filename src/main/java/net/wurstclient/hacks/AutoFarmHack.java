@@ -26,6 +26,8 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -44,6 +46,7 @@ import net.wurstclient.WurstClient;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.settings.BlockListSetting;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
@@ -62,6 +65,28 @@ public final class AutoFarmHack extends Hack
 	private final CheckboxSetting replant =
 		new CheckboxSetting("Replant", true);
 	
+	private final CheckboxSetting harvestFirst = new CheckboxSetting(
+		"Harvest first", "Harvest all crops first before replanting.",
+		false);
+	
+	private final CheckboxSetting checkLOS = new CheckboxSetting(
+		"Check line of sight",
+		"Makes sure that you don't reach through walls when breaking.",
+		false);
+	
+	private final CheckboxSetting fortune = new CheckboxSetting(
+		"Choose fortune tool",
+		"Chooses a fortune tool to harvest crops if available on the hotbar.",
+		false);
+	
+	private final CheckboxSetting silkTouch = new CheckboxSetting(
+		"Choose silk touch tool",
+		"Chooses a silk touch tool to harvest melons if available on the hotbar.",
+		false);
+	
+	private final BlockListSetting excluded = new BlockListSetting("Excluded Crops",
+		"List of crops that will be excluded from AutoFarm.");
+	
 	private final HashMap<BlockPos, Item> plants = new HashMap<>();
 	
 	private final ArrayDeque<Set<BlockPos>> prevBlocks = new ArrayDeque<>();
@@ -75,6 +100,9 @@ public final class AutoFarmHack extends Hack
 	
 	private boolean busy;
 	
+	private final HashMap<Block, Item> seeds;
+	private final HashSet<Block> fortuneBlocks;
+	
 	public AutoFarmHack()
 	{
 		super("AutoFarm");
@@ -82,6 +110,29 @@ public final class AutoFarmHack extends Hack
 		setCategory(Category.BLOCKS);
 		addSetting(range);
 		addSetting(replant);
+		addSetting(harvestFirst);
+		addSetting(checkLOS);
+		addSetting(fortune);
+		addSetting(silkTouch);
+		addSetting(excluded);
+		
+		seeds = new HashMap<>();
+		seeds.put(Blocks.WHEAT, Items.WHEAT_SEEDS);
+		seeds.put(Blocks.CARROTS, Items.CARROT);
+		seeds.put(Blocks.POTATOES, Items.POTATO);
+		seeds.put(Blocks.BEETROOTS, Items.BEETROOT_SEEDS);
+		seeds.put(Blocks.PUMPKIN_STEM, Items.PUMPKIN_SEEDS);
+		seeds.put(Blocks.MELON_STEM, Items.MELON_SEEDS);
+		seeds.put(Blocks.NETHER_WART, Items.NETHER_WART);
+		seeds.put(Blocks.COCOA, Items.COCOA_BEANS);
+		
+		fortuneBlocks = new HashSet<>();
+		fortuneBlocks.add(Blocks.WHEAT);
+		fortuneBlocks.add(Blocks.CARROTS);
+		fortuneBlocks.add(Blocks.POTATOES);
+		fortuneBlocks.add(Blocks.BEETROOTS);
+		fortuneBlocks.add(Blocks.NETHER_WART);
+		fortuneBlocks.add(Blocks.MELON);
 	}
 	
 	@Override
@@ -138,27 +189,36 @@ public final class AutoFarmHack extends Hack
 			
 			if(replant.isChecked())
 				blocksToReplant =
-					getBlocksToReplant(eyesVec, eyesBlock, rangeSq, blockRange);
+					getBlocksToReplant(eyesVec, eyesBlock,
+						MC.player.getMainHandStack(), rangeSq, blockRange);
 		}
 		
+		boolean harvesting = false;
 		boolean replanting = false;
-		while(!blocksToReplant.isEmpty())
+		
+		if(harvestFirst.isChecked())
+			harvesting = harvest(blocksToHarvest);
+		
+		if(!harvesting)
 		{
-			BlockPos pos = blocksToReplant.get(0);
-			Item neededItem = plants.get(pos);
-			if(tryToReplant(pos, neededItem))
+			Iterator<BlockPos> replantItr = blocksToReplant.iterator();
+			while(replantItr.hasNext())
 			{
-				replanting = true;
-				break;
+				BlockPos pos = replantItr.next();
+				Item neededItem = plants.get(pos);
+				if(tryToReplant(pos, neededItem))
+				{
+					replanting = true;
+					break;
+				}else
+					replantItr.remove();
 			}
-			
-			blocksToReplant.removeIf(p -> plants.get(p) == neededItem);
 		}
 		
-		if(!replanting)
+		if(!harvestFirst.isChecked() && !replanting)
 			harvest(blocksToHarvest);
 		
-		busy = !blocksToHarvest.isEmpty() || !blocksToReplant.isEmpty();
+		busy = harvesting || replanting;
 		updateVertexBuffers(blocksToHarvest, blocksToReplant);
 	}
 	
@@ -171,7 +231,7 @@ public final class AutoFarmHack extends Hack
 			.collect(Collectors.toList());
 	}
 	
-	private List<BlockPos> getBlocksToReplant(Vec3d eyesVec, BlockPos eyesBlock,
+	private List<BlockPos> getBlocksToReplant(Vec3d eyesVec, BlockPos eyesBlock, ItemStack stack,
 		double rangeSq, int blockRange)
 	{
 		return getBlockStream(eyesBlock, blockRange)
@@ -179,7 +239,8 @@ public final class AutoFarmHack extends Hack
 			.filter(
 				pos -> BlockUtils.getState(pos).getMaterial().isReplaceable())
 			.filter(pos -> plants.containsKey(pos)).filter(this::canBeReplanted)
-			.sorted(Comparator.comparingDouble(
+			.sorted(Comparator.<BlockPos>comparingInt(
+				pos -> stack.isEmpty() || stack.getItem() != plants.get(pos) ? 1 : 0).thenComparingDouble(
 				pos -> eyesVec.squaredDistanceTo(Vec3d.of(pos))))
 			.collect(Collectors.toList());
 	}
@@ -282,6 +343,9 @@ public final class AutoFarmHack extends Hack
 		Block block = BlockUtils.getBlock(pos);
 		BlockState state = BlockUtils.getState(pos);
 		
+		if(Collections.binarySearch(excluded.getBlockNames(), BlockUtils.getName(pos)) >= 0)
+			return false;
+		
 		if(block instanceof CropBlock)
 			return ((CropBlock)block).isMature(state);
 		if(block instanceof GourdBlock)
@@ -310,18 +374,9 @@ public final class AutoFarmHack extends Hack
 	
 	private void registerPlants(List<BlockPos> blocks)
 	{
-		HashMap<Block, Item> seeds = new HashMap<>();
-		seeds.put(Blocks.WHEAT, Items.WHEAT_SEEDS);
-		seeds.put(Blocks.CARROTS, Items.CARROT);
-		seeds.put(Blocks.POTATOES, Items.POTATO);
-		seeds.put(Blocks.BEETROOTS, Items.BEETROOT_SEEDS);
-		seeds.put(Blocks.PUMPKIN_STEM, Items.PUMPKIN_SEEDS);
-		seeds.put(Blocks.MELON_STEM, Items.MELON_SEEDS);
-		seeds.put(Blocks.NETHER_WART, Items.NETHER_WART);
-		seeds.put(Blocks.COCOA, Items.COCOA_BEANS);
-		
 		plants.putAll(blocks.parallelStream()
-			.filter(pos -> seeds.containsKey(BlockUtils.getBlock(pos)))
+			.filter(pos -> seeds.containsKey(BlockUtils.getBlock(pos))
+				&& Collections.binarySearch(excluded.getBlockNames(), BlockUtils.getName(pos)) < 0)
 			.collect(Collectors.toMap(pos -> pos,
 				pos -> seeds.get(BlockUtils.getBlock(pos)))));
 	}
@@ -347,16 +402,19 @@ public final class AutoFarmHack extends Hack
 		return false;
 	}
 	
+	/** 
+	 * Returns true if a replanting action has succeeded or is waiting for cooldown or rotation.
+	 */
 	private boolean tryToReplant(BlockPos pos, Item neededItem)
 	{
 		ClientPlayerEntity player = MC.player;
 		ItemStack heldItem = player.getMainHandStack();
 		
+		if(IMC.getItemUseCooldown() > 0)
+			return true;
+		
 		if(!heldItem.isEmpty() && heldItem.getItem() == neededItem)
-		{
-			placeBlockSimple(pos);
-			return IMC.getItemUseCooldown() <= 0;
-		}
+			return placeBlockSimple(pos);
 		
 		for(int slot = 0; slot < 36; slot++)
 		{
@@ -391,7 +449,7 @@ public final class AutoFarmHack extends Hack
 		return false;
 	}
 	
-	private void placeBlockSimple(BlockPos pos)
+	private boolean placeBlockSimple(BlockPos pos)
 	{
 		Direction side = null;
 		Direction[] sides = Direction.values();
@@ -440,18 +498,14 @@ public final class AutoFarmHack extends Hack
 			}
 		
 		if(side == null)
-			return;
+			return false;
 		
 		Vec3d hitVec = hitVecs[side.ordinal()];
 		
 		// face block
 		WURST.getRotationFaker().faceVectorPacket(hitVec);
 		if(RotationUtils.getAngleToLastReportedLookVec(hitVec) > 1)
-			return;
-		
-		// check timer
-		if(IMC.getItemUseCooldown() > 0)
-			return;
+			return true;
 		
 		// place block
 		IMC.getInteractionManager().rightClickBlock(pos.offset(side),
@@ -463,9 +517,11 @@ public final class AutoFarmHack extends Hack
 		
 		// reset timer
 		IMC.setItemUseCooldown(4);
+		
+		return true;
 	}
 	
-	private void harvest(List<BlockPos> blocksToHarvest)
+	private boolean harvest(List<BlockPos> blocksToHarvest)
 	{
 		if(MC.player.getAbilities().creativeMode)
 		{
@@ -485,16 +541,51 @@ public final class AutoFarmHack extends Hack
 			MC.interactionManager.cancelBlockBreaking();
 			progress = 1;
 			prevProgress = 1;
-			BlockBreaker.breakBlocksWithPacketSpam(blocksToHarvest2);
-			return;
+			BlockBreaker.breakBlocksWithPacketSpam(blocksToHarvest2, checkLOS.isChecked());
+			return !blocksToHarvest2.isEmpty();
 		}
 		
+		ClientPlayerEntity player = MC.player;
 		for(BlockPos pos : blocksToHarvest)
-			if(BlockBreaker.breakOneBlock(pos))
+		{
+			boolean chooseSilkTouch = silkTouch.isChecked() && BlockUtils.getBlock(pos) == Blocks.MELON;
+			if(chooseSilkTouch && EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, player.getMainHandStack()) <= 0)
+			{
+				int choose = -1;
+				for(int slot = 0; slot < 9; slot++)
+				{
+					if(slot == player.getInventory().selectedSlot)
+						continue;
+					
+					ItemStack stack = player.getInventory().getStack(slot);
+					if(EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack) > 0)
+						choose = slot;
+				}
+				if(choose != -1)
+					player.getInventory().selectedSlot = choose;
+			}
+			if(!chooseSilkTouch && fortune.isChecked() && fortuneBlocks.contains(BlockUtils.getBlock(pos)))
+			{
+				int level = EnchantmentHelper.getLevel(Enchantments.FORTUNE, player.getMainHandStack());
+				int choose = -1;
+				for(int slot = 0; slot < 9; slot++)
+				{
+					if(slot == player.getInventory().selectedSlot)
+						continue;
+					
+					ItemStack stack = player.getInventory().getStack(slot);
+					if(EnchantmentHelper.getLevel(Enchantments.FORTUNE, stack) > level)
+						choose = slot;
+				}
+				if(choose != -1)
+					player.getInventory().selectedSlot = choose;
+			}
+			if(BlockBreaker.breakOneBlock(pos, checkLOS.isChecked()))
 			{
 				currentBlock = pos;
 				break;
 			}
+		}
 		
 		if(currentBlock == null)
 			MC.interactionManager.cancelBlockBreaking();
@@ -512,6 +603,8 @@ public final class AutoFarmHack extends Hack
 			progress = 1;
 			prevProgress = 1;
 		}
+		
+		return currentBlock != null;
 	}
 	
 	private void updateVertexBuffers(List<BlockPos> blocksToHarvest,
