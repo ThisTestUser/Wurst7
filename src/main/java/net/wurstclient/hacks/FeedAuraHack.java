@@ -20,7 +20,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
@@ -199,9 +198,6 @@ public final class FeedAuraHack extends Hack
 		int regionZ = (camPos.getZ() >> 9) * 512;
 		
 		Box box = new Box(BlockPos.ORIGIN);
-		float p = 1;
-		LivingEntity le = renderTarget;
-		p = (le.getMaxHealth() - le.getHealth()) / le.getMaxHealth();
 		
 		matrixStack.translate(
 			MathHelper.lerp(partialTicks, renderTarget.prevX,
