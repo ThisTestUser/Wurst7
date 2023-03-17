@@ -25,7 +25,7 @@ import net.wurstclient.WurstClient;
 public abstract class HeldItemRendererMixin
 {
 	@Inject(at = {@At(value = "INVOKE",
-		target = "Lnet/minecraft/client/render/item/HeldItemRenderer;applyEquipOffset",
+		target = "Lnet/minecraft/client/render/item/HeldItemRenderer;applyEquipOffset(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/Arm;F)V",
 		ordinal = 4)},
 		method = "renderFirstPersonItem")
 	private void lowerShieldBlocking(AbstractClientPlayerEntity player, float tickDelta, float pitch,
@@ -37,7 +37,7 @@ public abstract class HeldItemRendererMixin
 	}
 	
 	@Inject(at = {@At(value = "INVOKE",
-		target = "Lnet/minecraft/client/render/item/HeldItemRenderer;applySwingOffset",
+		target = "Lnet/minecraft/client/render/item/HeldItemRenderer;applySwingOffset(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/Arm;F)V",
 		ordinal = 1)},
 		method = "renderFirstPersonItem")
 	private void lowerShieldNonBlocking(AbstractClientPlayerEntity player, float tickDelta, float pitch,
