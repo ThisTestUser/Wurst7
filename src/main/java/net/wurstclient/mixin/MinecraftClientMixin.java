@@ -28,11 +28,13 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.WindowEventHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.LanguageManager;
 import net.minecraft.client.util.ProfileKeys;
 import net.minecraft.client.util.Session;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ShieldItem;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
@@ -154,6 +156,26 @@ public abstract class MinecraftClientMixin
 		cir.setReturnValue(wurstProfileKeys);
 	}
 	
+	@Redirect(at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z",
+		ordinal = 2),
+		method = "handleInputEvents()V")
+	private boolean allowBlockHits(KeyBinding useKey)
+	{
+		boolean isOffhandShield = player.getActiveItem() != null 
+    		&& player.getActiveItem().getItem() instanceof ShieldItem
+    		&& WurstClient.INSTANCE.getHax().blockHitHack.isBlocking();
+		if(isOffhandShield)
+		{
+			// Allow attacks while using shield
+			while(((MinecraftClient)(Object)this).options.attackKey.wasPressed())
+				doAttack();
+			// Prevent stopUsingItem() from being called
+			return true;
+		}
+		return useKey.isPressed();
+	}
+	
 	@Override
 	public void rightClick()
 	{
@@ -219,6 +241,12 @@ public abstract class MinecraftClientMixin
 			e.printStackTrace();
 			return UserApiService.OFFLINE;
 		}
+	}
+	
+	@Shadow
+	private boolean doAttack()
+	{
+		return false;
 	}
 	
 	@Shadow
