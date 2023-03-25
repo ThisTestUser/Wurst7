@@ -28,6 +28,7 @@ import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
+import net.minecraft.item.AxeItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -76,12 +77,12 @@ public final class AutoFarmHack extends Hack
 	
 	private final CheckboxSetting fortune = new CheckboxSetting(
 		"Choose fortune tool",
-		"Chooses a fortune tool to harvest crops if available on the hotbar.",
+		"Chooses a fortune tool to harvest crops.",
 		false);
 	
 	private final CheckboxSetting silkTouch = new CheckboxSetting(
 		"Choose silk touch tool",
-		"Chooses a silk touch tool to harvest melons if available on the hotbar.",
+		"Chooses a silk touch tool to harvest melons. Axes will be prioritized.",
 		false);
 	
 	private final BlockListSetting excluded = new BlockListSetting("Excluded Crops",
@@ -402,6 +403,27 @@ public final class AutoFarmHack extends Hack
 		return false;
 	}
 	
+	private void setSlot(ClientPlayerEntity player, int slot)
+	{
+		if(slot < 9)
+			player.getInventory().selectedSlot = slot;
+		else if(player.getInventory().getEmptySlot() < 9)
+			IMC.getInteractionManager().windowClick_QUICK_MOVE(slot);
+		else if(player.getInventory().getEmptySlot() != -1)
+		{
+			IMC.getInteractionManager().windowClick_QUICK_MOVE(
+				player.getInventory().selectedSlot + 36);
+			IMC.getInteractionManager().windowClick_QUICK_MOVE(slot);
+		}else
+		{
+			IMC.getInteractionManager().windowClick_PICKUP(
+				player.getInventory().selectedSlot + 36);
+			IMC.getInteractionManager().windowClick_PICKUP(slot);
+			IMC.getInteractionManager().windowClick_PICKUP(
+				player.getInventory().selectedSlot + 36);
+		}
+	}
+	
 	/** 
 	 * Returns true if a replanting action has succeeded or is waiting for cooldown or rotation.
 	 */
@@ -425,23 +447,7 @@ public final class AutoFarmHack extends Hack
 			if(stack.isEmpty() || stack.getItem() != neededItem)
 				continue;
 			
-			if(slot < 9)
-				player.getInventory().selectedSlot = slot;
-			else if(player.getInventory().getEmptySlot() < 9)
-				IMC.getInteractionManager().windowClick_QUICK_MOVE(slot);
-			else if(player.getInventory().getEmptySlot() != -1)
-			{
-				IMC.getInteractionManager().windowClick_QUICK_MOVE(
-					player.getInventory().selectedSlot + 36);
-				IMC.getInteractionManager().windowClick_QUICK_MOVE(slot);
-			}else
-			{
-				IMC.getInteractionManager().windowClick_PICKUP(
-					player.getInventory().selectedSlot + 36);
-				IMC.getInteractionManager().windowClick_PICKUP(slot);
-				IMC.getInteractionManager().windowClick_PICKUP(
-					player.getInventory().selectedSlot + 36);
-			}
+			setSlot(player, slot);
 			
 			return true;
 		}
@@ -548,37 +554,62 @@ public final class AutoFarmHack extends Hack
 		ClientPlayerEntity player = MC.player;
 		for(BlockPos pos : blocksToHarvest)
 		{
+			ItemStack held = player.getMainHandStack();
 			boolean chooseSilkTouch = silkTouch.isChecked() && BlockUtils.getBlock(pos) == Blocks.MELON;
-			if(chooseSilkTouch && EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, player.getMainHandStack()) <= 0)
+			if(chooseSilkTouch)
 			{
-				int choose = -1;
-				for(int slot = 0; slot < 9; slot++)
+				// prioritize silk touch axes
+				boolean silkTouch = EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, held) > 0;
+				boolean axe = held.getItem() instanceof AxeItem;
+				if(!silkTouch || !axe)
 				{
-					if(slot == player.getInventory().selectedSlot)
-						continue;
-					
-					ItemStack stack = player.getInventory().getStack(slot);
-					if(EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack) > 0)
-						choose = slot;
+					int choose = -1;
+					for(int slot = 0; slot < 36; slot++)
+					{
+						if(slot == player.getInventory().selectedSlot)
+							continue;
+	
+						ItemStack stack = player.getInventory().getStack(slot);
+						
+						boolean curSilkTouch = EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack) > 0;
+						boolean curAxe = stack.getItem() instanceof AxeItem;
+						if((!silkTouch && curSilkTouch) || (!axe && curSilkTouch && curAxe))
+						{
+							choose = slot;
+							silkTouch = curSilkTouch;
+							axe = curAxe;
+						}
+					}
+					if(choose != -1)
+						setSlot(player, choose);
 				}
-				if(choose != -1)
-					player.getInventory().selectedSlot = choose;
 			}
 			if(!chooseSilkTouch && fortune.isChecked() && fortuneBlocks.contains(BlockUtils.getBlock(pos)))
 			{
-				int level = EnchantmentHelper.getLevel(Enchantments.FORTUNE, player.getMainHandStack());
-				int choose = -1;
-				for(int slot = 0; slot < 9; slot++)
+				int level = EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, held) > 0 ?
+					0 : EnchantmentHelper.getLevel(Enchantments.FORTUNE, held);
+				if(level == 0)
 				{
-					if(slot == player.getInventory().selectedSlot)
-						continue;
-					
-					ItemStack stack = player.getInventory().getStack(slot);
-					if(EnchantmentHelper.getLevel(Enchantments.FORTUNE, stack) > level)
-						choose = slot;
+					//prioritize fortune tools
+					int choose = -1;
+					for(int slot = 0; slot < 36; slot++)
+					{
+						if(slot == player.getInventory().selectedSlot)
+							continue;
+	
+						ItemStack stack = player.getInventory().getStack(slot);
+						
+						int curLevel = EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack) > 0 ?
+							0 : EnchantmentHelper.getLevel(Enchantments.FORTUNE, stack);
+						if(curLevel > level)
+						{
+							choose = slot;
+							level = curLevel;
+						}
+					}
+					if(choose != -1)
+						setSlot(player, choose);
 				}
-				if(choose != -1)
-					player.getInventory().selectedSlot = choose;
 			}
 			if(BlockBreaker.breakOneBlock(pos, checkLOS.isChecked()))
 			{
