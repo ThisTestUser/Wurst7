@@ -201,7 +201,7 @@ public final class FreecamHack extends Hack
 		matrixStack.pop();
 		
 		// line
-		Vec3d start = RotationUtils.getClientLookVec().
+		Vec3d start = RotationUtils.getClientLookVec(partialTicks).
 			add(RenderUtils.getCameraPos()).subtract(regionX, 0, regionZ);
 		Vec3d end = fakePlayer.getBoundingBox().getCenter()
 			.subtract(regionX, 0, regionZ);

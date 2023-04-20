@@ -108,7 +108,7 @@ public final class PlayerFinderHack extends Hack
 			VertexFormats.POSITION);
 		
 		// set start position
-		Vec3d start = RotationUtils.getClientLookVec().
+		Vec3d start = RotationUtils.getClientLookVec(partialTicks).
 			add(RenderUtils.getCameraPos()).subtract(regionX, 0, regionZ);
 		
 		// set end position
