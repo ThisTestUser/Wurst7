@@ -149,6 +149,7 @@ public final class HackList implements UpdateListener
 	public final PlayerCollisionHack playerCollisionHack = new PlayerCollisionHack();
 	public final PlayerEspHack playerEspHack = new PlayerEspHack();
 	public final PlayerFinderHack playerFinderHack = new PlayerFinderHack();
+	public final PlayerNotifierHack playerNotifierHack = new PlayerNotifierHack();
 	public final PortalGuiHack portalGuiHack = new PortalGuiHack();
 	public final PotionSaverHack potionSaverHack = new PotionSaverHack();
 	public final ProphuntEspHack prophuntEspHack = new ProphuntEspHack();

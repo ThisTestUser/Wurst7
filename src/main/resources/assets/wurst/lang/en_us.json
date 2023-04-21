@@ -130,6 +130,7 @@
   "description.wurst.hack.playercollision": "Changes the collision effect when colliding with entities.",
   "description.wurst.hack.playeresp": "Highlights nearby players.\nESP boxes of friends will appear in blue.",
   "description.wurst.hack.playerfinder": "Finds far away players during thunderstorms.",
+  "description.wurst.hack.playernotifier": "Notifies you when a player enters your view distance. Can also automatically disconnect when that happens.",
   "description.wurst.hack.portalgui": "Allows you to open GUIs in portals.",
   "description.wurst.hack.potionsaver": "Freezes all potion effects while you are standing still.",
   "description.wurst.hack.prophuntesp": "Allows you to see fake blocks in Prophunt.\nMade for Mineplex Prophunt. Might not work on other servers.",
