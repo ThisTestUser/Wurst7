@@ -899,7 +899,7 @@ public enum RenderUtils
 		NameTagsHack nameTagsHack = WurstClient.INSTANCE.getHax().nameTagsHack;
 		MinecraftClient MC = MinecraftClient.getInstance();
 		EntityRenderDispatcher dispatcher = MC.getEntityRenderDispatcher();
-		double dist = dispatcher.getSquaredDistanceToCamera((Entity)entity);
+		double dist = dispatcher.getSquaredDistanceToCamera(entity);
 		if(dist > limit * limit) 
 			return;
 		matrixStack.push();
