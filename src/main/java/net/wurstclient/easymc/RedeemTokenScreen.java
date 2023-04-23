@@ -208,13 +208,10 @@ public class RedeemTokenScreen extends Screen
 		if(!easymc.toFile().exists())
 			return null;
 		RedeemResponse response = null;
-		try
+		try(BufferedReader reader = Files.newBufferedReader(easymc))
 		{
-			try(BufferedReader reader = Files.newBufferedReader(easymc))
-			{
-				response = JsonUtils.GSON.fromJson(reader, RedeemResponse.class);
-			}
-		}catch(Exception e)
+			response = JsonUtils.GSON.fromJson(reader, RedeemResponse.class);
+		}catch(IOException e)
 		{
 			System.out.println("Failed to load " + easymc.getFileName());
 			e.printStackTrace();
