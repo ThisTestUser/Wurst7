@@ -34,6 +34,7 @@ import net.minecraft.client.gui.screen.NoticeScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
@@ -43,11 +44,13 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix4f;
 import net.wurstclient.WurstClient;
 import net.wurstclient.altmanager.*;
+import net.wurstclient.easymc.RedeemTokenScreen;
 import net.wurstclient.mixinterface.IScreen;
 import net.wurstclient.util.ListWidget;
 import net.wurstclient.util.MultiProcessingUtils;
@@ -57,6 +60,8 @@ import net.wurstclient.util.json.WsonObject;
 
 public final class AltManagerScreen extends Screen
 {
+	private static final Identifier easymc =
+		new Identifier("wurst", "easymcbutton.png");
 	private static final HashSet<Alt> failedLogins = new HashSet<>();
 	
 	private final Screen prevScreen;
@@ -142,6 +147,9 @@ public final class AltManagerScreen extends Screen
 		
 		addDrawableChild(exportButton = new ButtonWidget(58, 8, 50, 20,
 			Text.literal("Export"), b -> pressExportAlts()));
+		
+		addDrawableChild(new TexturedButtonWidget(8, 32, 20, 20, 0, 20, easymc,
+			b -> client.setScreen(new RedeemTokenScreen(this))));
 	}
 	
 	@Override

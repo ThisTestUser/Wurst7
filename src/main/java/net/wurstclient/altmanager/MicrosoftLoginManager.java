@@ -99,11 +99,12 @@ public enum MicrosoftLoginManager
 	{
 		MinecraftProfile mcProfile = getAccount(email, password);
 		
+		SessionManager.setSessionType(SessionManager.Type.PREMIUM_ALT);
 		Session session = new Session(mcProfile.getName(), mcProfile.getUUID(),
 			mcProfile.getAccessToken(), Optional.empty(), Optional.empty(),
 			Session.AccountType.MOJANG);
 		
-		WurstClient.IMC.setSession(session);
+		WurstClient.IMC.setSession(session, true);
 	}
 	
 	private static MinecraftProfile getAccount(String email, String password)
