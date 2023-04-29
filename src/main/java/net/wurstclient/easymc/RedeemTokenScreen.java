@@ -72,6 +72,7 @@ public class RedeemTokenScreen extends Screen
     
 	    tokenField = new TextFieldWidget(textRenderer, width / 2 - 100, 128, 200, 20, Text.literal(""));
 	    tokenField.setMaxLength(20);
+	    addSelectableChild(tokenField);
 	    
 	    setInitialFocus(tokenField);
 	}
