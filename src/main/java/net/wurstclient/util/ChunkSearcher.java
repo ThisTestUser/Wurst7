@@ -8,11 +8,15 @@
 package net.wurstclient.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.FluidBlock;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -25,16 +29,23 @@ import net.wurstclient.WurstClient;
 public final class ChunkSearcher
 {
 	private final Chunk chunk;
-	private final Block block;
+	private final List<String> blocks;
 	private final int dimensionId;
 	private final ArrayList<BlockPos> matchingBlocks = new ArrayList<>();
+	private final int minY;
+	private final int maxY;
+	private final boolean sourcesOnly;
 	private ChunkSearcher.Status status = Status.IDLE;
 	private Future<?> future;
 	
-	public ChunkSearcher(Chunk chunk, Block block, int dimensionId)
+	public ChunkSearcher(Chunk chunk, List<String> blocks, int minY, int maxY,
+		boolean sourcesOnly, int dimensionId)
 	{
 		this.chunk = chunk;
-		this.block = block;
+		this.blocks = blocks;
+		this.minY = minY;
+		this.maxY = maxY;
+		this.sourcesOnly = sourcesOnly;
 		this.dimensionId = dimensionId;
 	}
 	
@@ -57,10 +68,10 @@ public final class ChunkSearcher
 		ClientWorld world = WurstClient.MC.world;
 		
 		int minX = chunkPos.getStartX();
-		int minY = world.getBottomY();
+		int minY = Math.max(this.minY, world.getBottomY());
 		int minZ = chunkPos.getStartZ();
 		int maxX = chunkPos.getEndX();
-		int maxY = world.getTopY();
+		int maxY = Math.min(this.maxY, world.getTopY());
 		int maxZ = chunkPos.getEndZ();
 		
 		for(int x = minX; x <= maxX; x++)
@@ -71,8 +82,13 @@ public final class ChunkSearcher
 						return;
 					
 					BlockPos pos = new BlockPos(x, y, z);
-					Block block = BlockUtils.getBlock(pos);
-					if(!this.block.equals(block))
+					BlockState state = BlockUtils.getState(pos);
+					String name = BlockUtils.getName(state.getBlock());
+					int index = Collections.binarySearch(blocks, name);
+					if(sourcesOnly && state.getBlock() instanceof FluidBlock fluid
+						&& !fluid.getFluidState(state).isStill())
+						continue;
+					if(index < 0)
 						continue;
 					
 					matchingBlocks.add(pos);
@@ -108,14 +124,29 @@ public final class ChunkSearcher
 		return chunk;
 	}
 	
-	public Block getBlock()
+	public List<String> getBlocks()
 	{
-		return block;
+		return blocks;
 	}
 	
 	public int getDimensionId()
 	{
 		return dimensionId;
+	}
+	
+	public int getMinY()
+	{
+		return minY;
+	}
+	
+	public int getMaxY()
+	{
+		return maxY;
+	}
+	
+	public boolean isSourcesOnly()
+	{
+		return sourcesOnly;
 	}
 	
 	public ArrayList<BlockPos> getMatchingBlocks()

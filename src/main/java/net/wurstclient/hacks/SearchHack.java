@@ -7,13 +7,7 @@
  */
 package net.wurstclient.hacks;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +19,6 @@ import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.BufferBuilder;
@@ -44,17 +37,21 @@ import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.chunk.Chunk;
 import net.wurstclient.Category;
+import net.wurstclient.events.CameraTransformViewBobbingListener;
 import net.wurstclient.events.PacketInputListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.hacks.search.SearchArea;
-import net.wurstclient.settings.BlockSetting;
+import net.wurstclient.settings.BlockListSetting;
+import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.EnumSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
+import net.wurstclient.util.BlockUtils;
 import net.wurstclient.util.BlockVertexCompiler;
 import net.wurstclient.util.ChatUtils;
 import net.wurstclient.util.ChunkSearcher;
@@ -63,10 +60,10 @@ import net.wurstclient.util.RenderUtils;
 import net.wurstclient.util.RotationUtils;
 
 public final class SearchHack extends Hack
-	implements UpdateListener, PacketInputListener, RenderListener
+	implements UpdateListener, PacketInputListener, RenderListener, CameraTransformViewBobbingListener
 {
-	private final BlockSetting block = new BlockSetting("Block",
-		"The type of block to search for.", "minecraft:diamond_ore", false);
+	private final BlockListSetting blocks = new BlockListSetting("Blocks",
+		"The types of blocks to search for.", "minecraft:diamond_ore");
 	
 	private final EnumSetting<SearchArea> area = new EnumSetting<>("Area",
 		"The area around the player to search in.\n"
@@ -77,6 +74,27 @@ public final class SearchHack extends Hack
 		"The maximum number of blocks to display.\n"
 			+ "Higher values require a faster computer.",
 		4, 3, 6, 1, ValueDisplay.LOGARITHMIC);
+	
+	private final CheckboxSetting yLevel = new CheckboxSetting("Adjust Y-level",
+		"Allows you to adjust the y levels to search.", false);
+	private final SliderSetting minY = new SliderSetting("Min Y",
+		"The lowest Y-level to search. Requires ticking \"Adjust Y-level\".",
+		-64, -64, 320, 1, ValueDisplay.INTEGER);
+	private final SliderSetting maxY = new SliderSetting("Max Y",
+		"The highest Y-level to search. Requires ticking \"Adjust Y-level\".",
+		320, -64, 320, 1, ValueDisplay.INTEGER);
+	
+	private final CheckboxSetting sourcesOnly = new CheckboxSetting("Sources only",
+		"For liquids, show the source block only.", false);
+	
+	private final CheckboxSetting counter = new CheckboxSetting("Counter",
+		"Displays the number of blocks found.", false);
+	
+	private final CheckboxSetting tracers = new CheckboxSetting("Tracers",
+		"Draw tracer lines to blocks found.", false);
+	
+	private int foundBlocks;
+	
 	private int prevLimit;
 	private boolean notify;
 	
@@ -92,25 +110,48 @@ public final class SearchHack extends Hack
 	private VertexBuffer vertexBuffer;
 	private boolean bufferUpToDate;
 	
+	private HashSet<BlockPos> matchingBlocks;
+	
 	public SearchHack()
 	{
 		super("Search");
 		setCategory(Category.RENDER);
-		addSetting(block);
+		addSetting(blocks);
 		addSetting(area);
 		addSetting(limit);
+		addSetting(yLevel);
+		addSetting(minY);
+		addSetting(maxY);
+		addSetting(sourcesOnly);
+		
+		addSetting(counter);
+		addSetting(tracers);
 	}
 	
 	@Override
 	public String getRenderName()
 	{
-		return getName() + " [" + block.getBlockName().replace("minecraft:", "")
+		String name;
+		if(blocks.getBlockNames().size() == 0)
+			name = getName() + " [None]";
+		else if(blocks.getBlockNames().size() == 1)
+			name = getName() + " [" + blocks.getBlockNames().get(0).replace("minecraft:", "")
 			+ "]";
+		else
+			name = getName() + " [Multi]";
+		if(counter.isChecked())
+		{
+			boolean exceed = foundBlocks >= (int)Math.pow(10, limit.getValueI());
+			name += " (" + (exceed ? ">" : "") + foundBlocks + " found)";
+		}
+		return name;
 	}
 	
 	@Override
 	public void onEnable()
 	{
+		foundBlocks = 0;
+		
 		prevLimit = limit.getValueI();
 		notify = true;
 		
@@ -119,6 +160,7 @@ public final class SearchHack extends Hack
 		
 		bufferUpToDate = false;
 		
+		EVENTS.add(CameraTransformViewBobbingListener.class, this);
 		EVENTS.add(UpdateListener.class, this);
 		EVENTS.add(PacketInputListener.class, this);
 		EVENTS.add(RenderListener.class, this);
@@ -127,6 +169,7 @@ public final class SearchHack extends Hack
 	@Override
 	public void onDisable()
 	{
+		EVENTS.remove(CameraTransformViewBobbingListener.class, this);
 		EVENTS.remove(UpdateListener.class, this);
 		EVENTS.remove(PacketInputListener.class, this);
 		EVENTS.remove(RenderListener.class, this);
@@ -142,6 +185,15 @@ public final class SearchHack extends Hack
 		}
 		
 		chunksToUpdate.clear();
+		matchingBlocks = null;
+	}
+	
+	@Override
+	public void onCameraTransformViewBobbing(
+		CameraTransformViewBobbingEvent event)
+	{
+		if(tracers.isChecked())
+			event.cancel();
 	}
 	
 	@Override
@@ -180,16 +232,16 @@ public final class SearchHack extends Hack
 	@Override
 	public void onUpdate()
 	{
-		Block currentBlock = block.getBlock();
+		List<String> currentBlocks = new ArrayList<>(blocks.getBlockNames());
 		BlockPos eyesPos = new BlockPos(RotationUtils.getEyesPos());
 		
 		ChunkPos center = MC.player.getChunkPos();
 		int dimensionId = MC.world.getRegistryKey().toString().hashCode();
 		
-		addSearchersInRange(center, currentBlock, dimensionId);
+		addSearchersInRange(center, currentBlocks, dimensionId);
 		removeSearchersOutOfRange(center);
-		replaceSearchersWithDifferences(currentBlock, dimensionId);
-		replaceSearchersWithChunkUpdate(currentBlock, dimensionId);
+		replaceSearchersWithDifferences(currentBlocks, dimensionId);
+		replaceSearchersWithChunkUpdate(currentBlocks, dimensionId);
 		
 		if(!areAllChunkSearchersDone())
 			return;
@@ -240,6 +292,39 @@ public final class SearchHack extends Hack
 			VertexBuffer.unbind();
 		}
 		
+		if(tracers.isChecked() && matchingBlocks != null)
+		{
+			BlockPos camPos = RenderUtils.getCameraBlockPos();
+			int regionX = (camPos.getX() >> 9) * 512;
+			int regionZ = (camPos.getZ() >> 9) * 512;
+			
+			Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+			Tessellator tessellator = RenderSystem.renderThreadTesselator();
+			BufferBuilder bufferBuilder = tessellator.getBuffer();
+			
+			bufferBuilder.begin(VertexFormat.DrawMode.DEBUG_LINES,
+				VertexFormats.POSITION);
+			
+			Vec3d start = RotationUtils.getClientLookVec(partialTicks)
+				.add(RenderUtils.getCameraPos()).subtract(regionX, 0, regionZ);
+			
+			for(BlockPos pos : matchingBlocks)
+			{
+				Vec3d center = BlockUtils.canBeClicked(pos) ? BlockUtils.getBoundingBox(pos).getCenter()
+					: new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+				
+				Vec3d end = center.subtract(regionX, 0, regionZ);
+				
+				bufferBuilder.vertex(matrix,
+					(float)start.x, (float)start.y, (float)start.z).next();
+			
+				bufferBuilder.vertex(matrix,
+					(float)end.x, (float)end.y, (float)end.z).next();
+			}
+			
+			tessellator.draw();
+		}
+		
 		matrixStack.pop();
 		
 		// GL resets
@@ -249,7 +334,7 @@ public final class SearchHack extends Hack
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 	
-	private void addSearchersInRange(ChunkPos center, Block block,
+	private void addSearchersInRange(ChunkPos center, List<String> currentBlocks,
 		int dimensionId)
 	{
 		ArrayList<Chunk> chunksInRange =
@@ -260,7 +345,7 @@ public final class SearchHack extends Hack
 			if(searchers.containsKey(chunk))
 				continue;
 			
-			addSearcher(chunk, block, dimensionId);
+			addSearcher(chunk, currentBlocks, dimensionId);
 		}
 	}
 	
@@ -276,21 +361,26 @@ public final class SearchHack extends Hack
 		}
 	}
 	
-	private void replaceSearchersWithDifferences(Block currentBlock,
+	private void replaceSearchersWithDifferences(List<String> currentBlocks,
 		int dimensionId)
 	{
+		int minY = !yLevel.isChecked() ? Integer.MIN_VALUE : this.minY.getValueI();
+		int maxY = !yLevel.isChecked() ? Integer.MAX_VALUE : this.maxY.getValueI();
 		for(ChunkSearcher oldSearcher : new ArrayList<>(searchers.values()))
 		{
-			if(currentBlock.equals(oldSearcher.getBlock())
-				&& dimensionId == oldSearcher.getDimensionId())
+			if(currentBlocks.equals(oldSearcher.getBlocks())
+				&& dimensionId == oldSearcher.getDimensionId()
+				&& minY == oldSearcher.getMinY()
+				&& maxY == oldSearcher.getMaxY()
+				&& sourcesOnly.isChecked() == oldSearcher.isSourcesOnly())
 				continue;
 			
 			removeSearcher(oldSearcher);
-			addSearcher(oldSearcher.getChunk(), currentBlock, dimensionId);
+			addSearcher(oldSearcher.getChunk(), currentBlocks, dimensionId);
 		}
 	}
 	
-	private void replaceSearchersWithChunkUpdate(Block currentBlock,
+	private void replaceSearchersWithChunkUpdate(List<String> currentBlocks,
 		int dimensionId)
 	{
 		synchronized(chunksToUpdate)
@@ -307,17 +397,20 @@ public final class SearchHack extends Hack
 					continue;
 				
 				removeSearcher(oldSearcher);
-				addSearcher(chunk, currentBlock, dimensionId);
+				addSearcher(chunk, currentBlocks, dimensionId);
 				itr.remove();
 			}
 		}
 	}
 	
-	private void addSearcher(Chunk chunk, Block block, int dimensionId)
+	private void addSearcher(Chunk chunk, List<String> blocks, int dimensionId)
 	{
 		stopPool2Tasks();
 		
-		ChunkSearcher searcher = new ChunkSearcher(chunk, block, dimensionId);
+		int minY = !yLevel.isChecked() ? Integer.MIN_VALUE : this.minY.getValueI();
+		int maxY = !yLevel.isChecked() ? Integer.MAX_VALUE : this.maxY.getValueI();
+		ChunkSearcher searcher = new ChunkSearcher(chunk, blocks, minY, maxY,
+			sourcesOnly.isChecked(), dimensionId);
 		searchers.put(chunk, searcher);
 		searcher.startSearching(pool1);
 	}
@@ -395,7 +488,8 @@ public final class SearchHack extends Hack
 		
 		int maxBlocks = (int)Math.pow(10, limit.getValueI());
 		
-		if(matchingBlocks.size() < maxBlocks)
+		foundBlocks = matchingBlocks.size();
+		if(foundBlocks < maxBlocks)
 			notify = true;
 		else if(notify)
 		{
@@ -411,6 +505,7 @@ public final class SearchHack extends Hack
 	private void startCompileVerticesTask()
 	{
 		HashSet<BlockPos> matchingBlocks = getMatchingBlocksFromTask();
+		this.matchingBlocks = matchingBlocks;
 		
 		BlockPos camPos = RenderUtils.getCameraBlockPos();
 		int regionX = (camPos.getX() >> 9) * 512;
