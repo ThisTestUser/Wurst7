@@ -58,11 +58,12 @@ public enum NameResolver
 			
 			if(elem == null || !elem.isJsonObject())
 			{
-				//Player not found (offline mode or deleted account)
+				// Player not found (offline mode or deleted account)
 				failedLookups.add(uuid);
 				return new Response(Status.NOT_FOUND, null);
 			}
 
+			cache.put(uuid, elem.getAsJsonObject().get("name").getAsString());
 			return new Response(Status.SUCCESS, elem.getAsJsonObject().get("name").getAsString());
 		}catch(Exception e)
 		{

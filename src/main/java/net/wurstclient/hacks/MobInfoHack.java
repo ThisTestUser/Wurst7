@@ -91,7 +91,7 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 					: ((AbstractHorseEntity)entity).getOwnerUuid();
 				MutableText text = Text.literal("Owner: ");
 				if(uuid == null)
-					//Skeleton Horses
+					// Skeleton horses
 					text.append(Text.literal("Null").formatted(Formatting.DARK_RED));
 				else
 				{
@@ -105,12 +105,13 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 						online = false;
 					else
 					{
-						//Check online status (and resolve offline names)
+						// Check online status
 						for(PlayerListEntry entry : MC.player.networkHandler.getPlayerList())
 							if(entry.getProfile().getId().equals(uuid))
 							{
 								if(name == null)
 								{
+									// Offline UUIDs can only be resolved when the player is online
 									name = entry.getProfile().getName();
 									name = StringHelper.stripTextFormat(name);
 									NameResolver.addOfflineName(uuid, name);
