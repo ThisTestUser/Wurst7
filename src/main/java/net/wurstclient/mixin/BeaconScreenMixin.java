@@ -52,14 +52,14 @@ public abstract class BeaconScreenMixin extends HandledScreen<BeaconScreenHandle
 				x + (i / 2) * 25 + 25, y + i % 2 * 25 + 32,
 				effects[i], true, 0));
 			addButton(((BeaconScreen)(Object)this).new EffectButtonWidget(
-				x + (i / 2) * 25 + 132, y + i % 2 * 25 + 32,
+				x + (i / 2) * 25 + 133, y + i % 2 * 25 + 32,
 				effects[i], false, 0));
 		}
 		ci.cancel();
 	}
 	
 	@Inject(at = @At("TAIL"),
-		method = "drawBackground()V")
+		method = "drawBackground(Lnet/minecraft/client/util/math/MatrixStack;FII)V")
 	private void onDrawBackground(MatrixStack matrices, float delta, int mouseX,
 		int mouseY, CallbackInfo ci)
 	{
