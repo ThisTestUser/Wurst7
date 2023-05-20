@@ -18,6 +18,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.BeaconScreenHandler;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.wurstclient.WurstClient;
 
@@ -38,7 +39,7 @@ public abstract class BeaconScreenMixin extends HandledScreen<BeaconScreenHandle
 		ordinal = 1, shift = Shift.AFTER),
 		method = "init()V",
 		cancellable = true)
-	private void changeButtons(CallbackInfo ci)
+	private void addButtons(CallbackInfo ci)
 	{
 		if(!WurstClient.INSTANCE.getHax().beaconHack.isEnabled())
 			return;
@@ -53,7 +54,14 @@ public abstract class BeaconScreenMixin extends HandledScreen<BeaconScreenHandle
 				effects[i], true, 0));
 			addButton(((BeaconScreen)(Object)this).new EffectButtonWidget(
 				x + (i / 2) * 25 + 133, y + i % 2 * 25 + 32,
-				effects[i], false, 0));
+				effects[i], false, 0)
+			{
+				@Override
+				protected MutableText getEffectName(StatusEffect statusEffect)
+				{
+					return Text.translatable(statusEffect.getTranslationKey()).append(" II");
+				}
+			});
 		}
 		ci.cancel();
 	}
