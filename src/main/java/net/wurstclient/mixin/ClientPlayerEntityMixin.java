@@ -128,13 +128,18 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		EventManager.fire(PostMotionEvent.INSTANCE);
 	}
 	
-	@Inject(at = {@At("HEAD")},
-		method = {
-			"move(Lnet/minecraft/entity/MovementType;Lnet/minecraft/util/math/Vec3d;)V"})
-	private void onMove(MovementType type, Vec3d offset, CallbackInfo ci)
+	@Redirect(at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;move(Lnet/minecraft/entity/MovementType;Lnet/minecraft/util/math/Vec3d;)V",
+		opcode = Opcodes.INVOKESPECIAL,
+		ordinal = 0), method = "move(Lnet/minecraft/entity/MovementType;Lnet/minecraft/util/math/Vec3d;)V")
+	private void onMove(AbstractClientPlayerEntity entity, MovementType type, Vec3d offset)
 	{
-		PlayerMoveEvent event = new PlayerMoveEvent(this);
+		PlayerMoveEvent event = new PlayerMoveEvent(this, type, offset);
 		EventManager.fire(event);
+		if(event.isCancelled())
+			return;
+		offset = event.getOffset();
+		super.move(type, offset);
 	}
 	
 	@Inject(at = {@At("HEAD")},

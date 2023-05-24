@@ -15,7 +15,6 @@ import net.wurstclient.events.PlayerMoveListener;
 import net.wurstclient.events.SetOpaqueCubeListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
-import net.wurstclient.mixinterface.IClientPlayerEntity;
 
 @SearchTags({"no clip"})
 public final class NoClipHack extends Hack implements UpdateListener,
@@ -69,9 +68,9 @@ public final class NoClipHack extends Hack implements UpdateListener,
 	}
 	
 	@Override
-	public void onPlayerMove(IClientPlayerEntity player)
+	public void onPlayerMove(PlayerMoveEvent event)
 	{
-		player.setNoClip(true);
+		event.getPlayer().setNoClip(true);
 	}
 	
 	@Override
