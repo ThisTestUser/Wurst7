@@ -12,7 +12,10 @@ import net.minecraft.item.ElytraItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.events.PlayerMoveListener;
@@ -56,8 +59,14 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 	private final CheckboxSetting stopInWater =
 		new CheckboxSetting("Stop flying in water", true);
 	
+	private final CheckboxSetting hover =
+		new CheckboxSetting("Hover mode",
+			"The player will not be allowed to touch the ground unless the sneak key is long pressed.\n"
+			+ "You must not be looking down for this to work.", false);
+	
 	private int jumpTimer;
 	private int waterTimer;
+	private int sneakPressTime;
 	
 	public ExtraElytraHack()
 	{
@@ -72,6 +81,7 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 		
 		addSetting(idleLock);
 		addSetting(stopInWater);
+		addSetting(hover);
 	}
 	
 	@Override
@@ -79,6 +89,7 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 	{
 		EVENTS.add(PlayerMoveListener.class, this);
 		EVENTS.add(UpdateListener.class, this);
+		sneakPressTime = 0;
 		jumpTimer = 0;
 		waterTimer = 0;
 	}
@@ -104,11 +115,18 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 			&& !MC.options.leftKey.isPressed()
 			&& !MC.options.rightKey.isPressed())
 			event.setOffset(new Vec3d(0, 0, 0));
+		
+		forceHover(event);
 	}
 
 	@Override
 	public void onUpdate()
 	{
+		if(MC.options.sneakKey.isPressed())
+			sneakPressTime++;
+		else
+			sneakPressTime = 0;
+		
 		if(jumpTimer > 0)
 			jumpTimer--;
 		if(MC.player.isTouchingWater())
@@ -209,5 +227,26 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 		}
 		
 		sendStartStopPacket();
+	}
+	
+	private void forceHover(PlayerMoveEvent event)
+	{
+		if(!hover.isChecked() || sneakPressTime > 15)
+			return;
+		
+		Vec3d velocity = MC.player.getVelocity();
+		Vec3d move = event.getOffset();
+		
+		double offset = -3;
+		Iterable<VoxelShape> boxes =
+			MC.world.getBlockCollisions(MC.player,
+				MC.player.getBoundingBox().expand(velocity.x,
+					offset, velocity.z));
+		double closest = VoxelShapes.calculateMaxOffset(Direction.Axis.Y,
+			MC.player.getBoundingBox(), boxes, offset);
+
+		// Force player to hover 0.3 blocks above
+		if(Math.abs(closest) < Math.abs(offset))
+			event.setOffset(new Vec3d(move.x, Math.max(move.y, closest - offset / 10), move.z));
 	}
 }
