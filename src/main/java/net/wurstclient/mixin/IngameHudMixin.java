@@ -60,7 +60,7 @@ public class IngameHudMixin extends DrawableHelper
 	@Inject(at = @At("HEAD"),
 		method = "renderPortalOverlay(F)V",
 		cancellable = true)
-	private void renderPortalOverlay(float nauseaStrength, CallbackInfo ci)
+	private void onRenderPortalOverlay(float nauseaStrength, CallbackInfo ci)
 	{
 		if(!WurstClient.INSTANCE.getHax().noPortalOverlayHack.isEnabled())
 			return;
