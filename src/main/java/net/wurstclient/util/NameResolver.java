@@ -10,11 +10,13 @@ package net.wurstclient.util;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.google.gson.JsonElement;
 
@@ -24,9 +26,11 @@ public enum NameResolver
 {
 	;
 	
-	private static final Map<UUID, String> cache = new HashMap<>();
-	private static final Set<UUID> failedLookups = new HashSet<>();
-	private static long lastFailedTime = -1L;
+	private static final Map<UUID, String> cache = new ConcurrentHashMap<>();
+	private static final Set<UUID> failedLookups = ConcurrentHashMap.newKeySet();
+	private static final Set<UUID> pending = ConcurrentHashMap.newKeySet();
+	private static AtomicLong lastFailedTime = new AtomicLong(-1L);
+	private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 	
 	public static void addOfflineName(UUID uuid, String name)
 	{
@@ -39,37 +43,45 @@ public enum NameResolver
 			return new Response(Status.SUCCESS, cache.get(uuid));
 		if(failedLookups.contains(uuid))
 			return new Response(Status.NOT_FOUND, null);
-		if(lastFailedTime + 10000L > System.currentTimeMillis())
+		if(lastFailedTime.get() + 10000L > System.currentTimeMillis())
 			return new Response(Status.ERROR, null);
 		
-		try
+		if(!pending.contains(uuid))
 		{
-			String url = "https://sessionserver.mojang.com/session/minecraft/profile/";
-			BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(
-				url + uuid.toString().replace("-", "")).openStream()));
-			 
-			StringBuilder response = new StringBuilder();
-			String line;
-			while((line = reader.readLine()) != null)
-				response.append(line);
-			reader.close();
-			
-			JsonElement elem = JsonUtils.GSON.fromJson(response.toString(), JsonElement.class);
-			
-			if(elem == null || !elem.isJsonObject())
-			{
-				// Player not found (offline mode or deleted account)
-				failedLookups.add(uuid);
-				return new Response(Status.NOT_FOUND, null);
-			}
-
-			cache.put(uuid, elem.getAsJsonObject().get("name").getAsString());
-			return new Response(Status.SUCCESS, elem.getAsJsonObject().get("name").getAsString());
-		}catch(Exception e)
-		{
-			lastFailedTime = System.currentTimeMillis();
-			return new Response(Status.ERROR, null);
+			pending.add(uuid);
+			EXECUTOR_SERVICE.execute(new Runnable()
+		    {
+				@Override
+				public void run()
+				{
+					try
+					{
+						String url = "https://sessionserver.mojang.com/session/minecraft/profile/";
+						BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(
+							url + uuid.toString().replace("-", "")).openStream()));
+						 
+						StringBuilder response = new StringBuilder();
+						String line;
+						while((line = reader.readLine()) != null)
+							response.append(line);
+						reader.close();
+						
+						JsonElement elem = JsonUtils.GSON.fromJson(response.toString(), JsonElement.class);
+						
+						if(elem == null || !elem.isJsonObject())
+							// Player not found (offline mode or deleted account)
+							failedLookups.add(uuid);
+						else
+							cache.put(uuid, elem.getAsJsonObject().get("name").getAsString());
+					}catch(Exception e)
+					{
+						lastFailedTime.set(System.currentTimeMillis());
+					}
+					pending.remove(uuid);
+				}
+		    });
 		}
+		return new Response(Status.PENDING, null);
 	}
 	
 	public static class Response
@@ -97,6 +109,7 @@ public enum NameResolver
 	public enum Status
 	{
 		SUCCESS,
+		PENDING,
 		NOT_FOUND,
 		ERROR;
 	}
