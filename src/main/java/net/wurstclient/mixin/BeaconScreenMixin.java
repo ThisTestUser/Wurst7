@@ -32,7 +32,10 @@ public abstract class BeaconScreenMixin extends HandledScreen<BeaconScreenHandle
 	}
 	
 	@Shadow
-	protected abstract <T extends ClickableWidget> void addButton(T button);
+	private <T extends ClickableWidget> void addButton(T button)
+	{
+		
+	}
 	
 	@Inject(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/gui/screen/ingame/BeaconScreen;addButton(Lnet/minecraft/client/gui/widget/ClickableWidget;)V",

@@ -25,6 +25,7 @@
     "ClientPlayerInteractionManagerMixin",
     "ClientPlayNetworkHandlerMixin",
     "ContainerScreen54Mixin",
+    "CrossbowItemMixin",
     "CustomPayloadC2SPacketAccessor",
     "DeathScreenMixin",
     "DirectConnectScreenMixin",
