@@ -51,7 +51,7 @@ public enum EntityUtils
 	
 	public static Predicate<AnimalEntity> IS_VALID_ANIMAL =
 		a -> a != null && !a.isRemoved() && a.getHealth() > 0;
-		
+	
 	public static Vec3d getLerpedPos(Entity e, float partialTicks)
 	{
 		double x = MathHelper.lerp(partialTicks, e.lastRenderX, e.getX());
