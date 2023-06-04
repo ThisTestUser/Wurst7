@@ -9,6 +9,7 @@ package net.wurstclient.hacks;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +39,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.world.RaycastContext;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
@@ -125,27 +128,30 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		boolean accurate = displayMode.getSelected() == Display.ACCURATE;
 		for(AbstractClientPlayerEntity player : players)
 		{
-			Trajectory trajectory = getTrajectory(player,
+			List<Trajectory> trajectories = getTrajectories(player,
 				partialTicks, player == MC.player ? accurate : true);
-			ArrayList<Vec3d> path = trajectory.path;
-			
-			ColorSetting color;
-			if(!trajectory.hit.isEmpty())
-				color = entityHitColor;
-			else if(trajectory.land)
-				color = blockHitColor;
-			else
-				color = missColor;
-			
-			drawLine(matrixStack, path, color);
-			
-			if(!path.isEmpty() && trajectory.land)
+			for(Trajectory trajectory : trajectories)
 			{
-				Vec3d end = path.get(path.size() - 1);
-				drawEndOfLine(matrixStack, end, color);
+				ArrayList<Vec3d> path = trajectory.path;
+				
+				ColorSetting color;
+				if(!trajectory.hit.isEmpty())
+					color = entityHitColor;
+				else if(trajectory.land)
+					color = blockHitColor;
+				else
+					color = missColor;
+				
+				drawLine(matrixStack, path, color);
+				
+				if(!path.isEmpty() && trajectory.land)
+				{
+					Vec3d end = path.get(path.size() - 1);
+					drawEndOfLine(matrixStack, end, color);
+				}
+				for(Entity e : trajectory.hit)
+					drawEntityHit(matrixStack, e, partialTicks, color);
 			}
-			for(Entity e : trajectory.hit)
-				drawEntityHit(matrixStack, e, partialTicks, color);
 		}
 		
 		RenderSystem.setShaderColor(1, 1, 1, 1);
@@ -203,11 +209,7 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 	private void drawEntityHit(MatrixStack matrixStack, Entity hit,
 		float partialTicks, ColorSetting color)
 	{
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_LINE_SMOOTH);
 		GL11.glEnable(GL11.GL_CULL_FACE);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		
 		matrixStack.push();
 		RenderUtils.applyRegionalRenderOffset(matrixStack);
@@ -240,24 +242,14 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		RenderUtils.drawSolidBox(box, matrixStack);
 		
 		matrixStack.pop();
-		
-		// GL resets
-		RenderSystem.setShaderColor(1, 1, 1, 1);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 	
 	private record Trajectory(ArrayList<Vec3d> path, HashSet<Entity> hit, boolean land)
 	{}
 	
-	private Trajectory getTrajectory(AbstractClientPlayerEntity player,
+	private List<Trajectory> getTrajectories(AbstractClientPlayerEntity player,
 		float partialTicks, boolean accurate)
 	{
-		ArrayList<Vec3d> path = new ArrayList<>();
-		HashSet<Entity> hit = new HashSet<>();
-		boolean land = false;
-		
 		// find the hand with a throwable item
 		ItemStack stack = player.getMainHandStack();
 		if(!isThrowable(stack))
@@ -266,8 +258,24 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			
 			// if neither hand has a throwable item, return empty path
 			if(!isThrowable(stack))
-				return new Trajectory(path, hit, land);
+				return new ArrayList<>();
 		}
+		
+		if(stack.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(Enchantments.MULTISHOT, stack) != 0)
+		{
+			return Arrays.asList(getTrajectory(player, stack, partialTicks, accurate, 0),
+				getTrajectory(player, stack, partialTicks, accurate, -10),
+				getTrajectory(player, stack, partialTicks, accurate, 10));
+		}else
+			return Arrays.asList(getTrajectory(player, stack, partialTicks, accurate, 0));
+	}
+	
+	private Trajectory getTrajectory(AbstractClientPlayerEntity player, ItemStack stack,
+		float partialTicks, boolean accurate, float divergence)
+	{
+		ArrayList<Vec3d> path = new ArrayList<>();
+		HashSet<Entity> hit = new HashSet<>();
+		boolean land = false;
 		
 		Item item = stack.getItem();
 		boolean bow = item instanceof BowItem;
@@ -296,7 +304,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			.add(getHandOffset(player, fishingRod, fireworkBow, yaw, accurate));
 		
 		// calculate starting motion
-		Vec3d arrowMotion = getStartingMotion(fishingRod, potion || expBottle, yaw, pitch, player.getPitch(), throwPower);
+		Vec3d arrowMotion = getStartingMotion(player, fishingRod, potion || expBottle,
+			yaw, pitch, player.getPitch(), throwPower, divergence);
 		
 		// build the path
 		for(int i = 0; i < 400; i++)
@@ -322,7 +331,6 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 				// replace last pos with the collision point
 				path.set(path.size() - 1, bResult.getPos());
 				land = true;
-				break;
 			}
 			
 			// check for mob collision
@@ -347,7 +355,7 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 					break;
 				}
 			}
-			if(hit.size() == pierce)
+			if(land || hit.size() == pierce)
 				break;
 			
 			// fireworks travel in a straight line
@@ -411,8 +419,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		return new Vec3d(handOffsetX, handOffsetY, handOffsetZ);
 	}
 	
-	private Vec3d getStartingMotion(boolean fishingRod, boolean pitchDown,
-		double yaw, double pitch, double pitchDeg, double throwPower)
+	private Vec3d getStartingMotion(AbstractClientPlayerEntity player, boolean fishingRod, boolean pitchDown,
+		double yaw, double pitch, double pitchDeg, double throwPower, float divergence)
 	{
 		double cosOfPitch = Math.cos(pitch);
 		
@@ -439,8 +447,15 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			arrowMotionY = -Math.sin(pitchDown ? Math.toRadians(pitchDeg - 20) : pitch);
 			arrowMotionZ = Math.cos(yaw) * cosOfPitch;
 			
-			return new Vec3d(arrowMotionX, arrowMotionY, arrowMotionZ).normalize()
-				.multiply(throwPower);
+			if(divergence == 0)
+				return new Vec3d(arrowMotionX, arrowMotionY, arrowMotionZ).normalize()
+					.multiply(throwPower);
+			
+            Quaternion quaternion = new Quaternion(
+            	new Vec3f(player.getOppositeRotationVector(1.0f)), divergence, true);
+            Vec3f vec = new Vec3f(new Vec3d(arrowMotionX, arrowMotionY, arrowMotionZ));
+            vec.rotate(quaternion);
+            return new Vec3d(vec).normalize().multiply(throwPower);
 		}
 	}
 	
