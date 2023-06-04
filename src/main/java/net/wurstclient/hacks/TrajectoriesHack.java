@@ -330,6 +330,7 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			{
 				// replace last pos with the collision point
 				path.set(path.size() - 1, bResult.getPos());
+				arrowPos = bResult.getPos();
 				land = true;
 			}
 			
@@ -342,7 +343,7 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			while(true)
 			{
 				EntityHitResult eResult = ProjectileUtil.raycast(player,
-					lastPos, arrowPos, arrowBox.stretch(arrowMotion),
+					lastPos, arrowPos, arrowBox.stretch(arrowMotion).expand(1),
 					predicate, maxDistSq);
 				if(eResult == null)
 					break;
