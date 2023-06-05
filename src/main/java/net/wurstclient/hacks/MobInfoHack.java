@@ -129,17 +129,17 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 					else
 						text.append(Text.literal(uuid.toString()).formatted(Formatting.RED));
 				}
-				float offset = WURST.getHax().healthTagsHack.hasMobHealthTags() ? 0.5F : 0F;
+				double offset = WURST.getHax().healthTagsHack.hasMobHealthTags() ? 0.5 : 0;
 				if(!entity.hasCustomName())
-					offset += 0.5F;
+					offset += 0.5;
 				else
-					offset += 1F;
+					offset += 1;
 				RenderUtils.renderTag(matrixStack, text, entity, immediate, 16777215, offset, 75, partialTicks);
 			}
 			if(entity instanceof LlamaEntity llama && llama.getStrength() >= llamaThres.getValueI())
 			{
 				int strength = llama.getStrength();
-				float offset = WURST.getHax().healthTagsHack.hasMobHealthTags() ? 1F : 0.5F;
+				double offset = WURST.getHax().healthTagsHack.hasMobHealthTags() ? 1 : 0.5;
 				if(!llama.isTame())
 					offset -= 0.5;
 				if(!llama.hasCustomName())
