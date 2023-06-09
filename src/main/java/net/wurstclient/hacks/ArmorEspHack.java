@@ -12,6 +12,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Matrix3f;
+import net.minecraft.util.math.Matrix4f;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.events.RenderListener;
@@ -41,6 +43,9 @@ public final class ArmorEspHack extends Hack implements RenderListener
 	private static final EquipmentSlot[] SLOTS = {EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
 		EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 	
+	private Matrix4f position;
+	private Matrix3f normal;
+	
 	public ArmorEspHack()
 	{
 		super("ArmorESP");
@@ -66,6 +71,19 @@ public final class ArmorEspHack extends Hack implements RenderListener
 	@Override
 	public void onRender(MatrixStack matrixStack, float partialTicks)
 	{
+		position = matrixStack.peek().getPositionMatrix().copy();
+		normal = matrixStack.peek().getNormalMatrix().copy();
+	}
+	
+	public void renderArmor(float partialTicks)
+	{
+		if(position == null)
+			return;
+		
+		MatrixStack matrixStack = new MatrixStack();
+		matrixStack.peek().getPositionMatrix().load(position);
+		matrixStack.peek().getNormalMatrix().load(normal);
+		
 		for(Entity entity : mobs.isChecked() ? MC.world.getEntities() : MC.world.getPlayers())
 			if(entity instanceof LivingEntity living && entity != MC.player)
 			{
