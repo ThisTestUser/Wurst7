@@ -7,6 +7,8 @@
  */
 package net.wurstclient.mixinterface;
 
+import com.mojang.authlib.minecraft.UserApiService;
+
 import net.minecraft.client.util.Session;
 
 public interface IMinecraftClient
@@ -25,5 +27,7 @@ public interface IMinecraftClient
 	
 	public IWorld getWorld();
 	
-	public void setSession(Session session);
+	public void setSession(Session session, boolean online);
+	
+	public UserApiService getUserApiService();
 }

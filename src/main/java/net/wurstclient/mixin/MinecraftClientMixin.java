@@ -75,6 +75,9 @@ public abstract class MinecraftClientMixin
 	@Shadow
 	@Final
 	private YggdrasilAuthenticationService authenticationService;
+	@Shadow
+	@Final
+	private UserApiService userApiService;
 	
 	private Session wurstSession;
 	private ProfileKeysImpl wurstProfileKeys;
@@ -245,15 +248,21 @@ public abstract class MinecraftClientMixin
 	}
 	
 	@Override
-	public void setSession(Session session)
+	public void setSession(Session session, boolean online)
 	{
 		wurstSession = session;
 		
 		UserApiService userApiService =
-			wurst_createUserApiService(session.getAccessToken());
+			online ? wurst_createUserApiService(session.getAccessToken()) : UserApiService.OFFLINE;
 		UUID uuid = wurstSession.getProfile().getId();
 		wurstProfileKeys =
 			new ProfileKeysImpl(userApiService, uuid, runDirectory.toPath());
+	}
+	
+	@Override
+	public UserApiService getUserApiService()
+	{
+		return userApiService;
 	}
 	
 	private UserApiService wurst_createUserApiService(String accessToken)

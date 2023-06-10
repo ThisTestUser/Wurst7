@@ -43,10 +43,11 @@ public enum LoginManager
 			String uuid = profile.getId().toString();
 			String accessToken = auth.getAuthenticatedToken();
 			
+			SessionManager.setSessionType(SessionManager.Type.PREMIUM_ALT);
 			Session session = new Session(username, uuid, accessToken,
 				Optional.empty(), Optional.empty(), Session.AccountType.MOJANG);
 			
-			WurstClient.IMC.setSession(session);
+			WurstClient.IMC.setSession(session, true);
 			
 		}catch(AuthenticationUnavailableException e)
 		{
@@ -83,9 +84,10 @@ public enum LoginManager
 	
 	public static void changeCrackedName(String newName)
 	{
+		SessionManager.setSessionType(SessionManager.Type.CRACKED_ALT);
 		Session session = new Session(newName, "", "", Optional.empty(),
 			Optional.empty(), Session.AccountType.MOJANG);
 		
-		WurstClient.IMC.setSession(session);
+		WurstClient.IMC.setSession(session, false);
 	}
 }
