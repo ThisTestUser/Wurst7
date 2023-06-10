@@ -141,7 +141,7 @@ public abstract class ClientPlayNetworkHandlerMixin
 		WurstClient.INSTANCE.getHax().playerNotifierHack.onAppear(entity);
 		world.addPlayer(id, entity);
 	}
-
+	
 	@Inject(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/network/packet/s2c/play/EntitiesDestroyS2CPacket;getEntityIds()Lit/unimi/dsi/fastutil/ints/IntList;",
 		ordinal = 0),
