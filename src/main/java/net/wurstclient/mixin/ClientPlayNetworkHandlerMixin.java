@@ -19,10 +19,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.toast.SystemToast;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ChunkData;
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ServerMetadataS2CPacket;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.wurstclient.WurstClient;
@@ -100,5 +97,33 @@ public abstract class ClientPlayNetworkHandlerMixin
 		packet.visitUpdates(
 			(pos, state) -> WurstClient.INSTANCE.getHax().newChunksHack
 				.afterUpdateBlock(pos));
+	}
+	
+	@Inject(at = {@At("HEAD")},
+		method = {"onGameJoin(Lnet/minecraft/network/packet/s2c/play/GameJoinS2CPacket;)V"})
+	private void onGameJoin(GameJoinS2CPacket packet, CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.onJoin();
+	}
+
+	@Inject(at = {@At("HEAD")},
+		method = {"onEntitySpawn(Lnet/minecraft/network/packet/s2c/play/EntitySpawnS2CPacket;)V"})
+	private void onEntitySpawn(EntitySpawnS2CPacket packet, CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.startTimer();
+	}
+
+	@Inject(at = {@At("HEAD")},
+		method = {"onPlayerRespawn(Lnet/minecraft/network/packet/s2c/play/PlayerRespawnS2CPacket;)V"})
+	private void onPlayerRespawn(PlayerRespawnS2CPacket packet, CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.checkEntityPackets();
+	}
+
+	@Inject(at = {@At("HEAD")},
+		method = {"onAdvancements(Lnet/minecraft/network/packet/s2c/play/AdvancementUpdateS2CPacket;)V"})
+	private void onAdvancements(AdvancementUpdateS2CPacket packet, CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.removeTimer();
 	}
 }
