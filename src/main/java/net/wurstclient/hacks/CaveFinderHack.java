@@ -8,13 +8,7 @@
 package net.wurstclient.hacks;
 
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -27,7 +21,6 @@ import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -58,7 +51,6 @@ import net.wurstclient.settings.ColorSetting;
 import net.wurstclient.settings.EnumSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
-import net.wurstclient.util.BlockUtils;
 import net.wurstclient.util.BlockVertexCompiler;
 import net.wurstclient.util.ChatUtils;
 import net.wurstclient.util.ChunkSearcher;
@@ -181,17 +173,17 @@ public final class CaveFinderHack extends Hack
 	@Override
 	public void onUpdate()
 	{
-		Block currentBlock = BlockUtils.getBlockFromName("minecraft:cave_air");
+		List<String> currentBlocks = Collections.singletonList("minecraft:cave_air");
 		BlockPos eyesPos = BlockPos.ofFloored(RotationUtils.getEyesPos());
 		
 		ChunkPos center = getPlayerChunkPos(eyesPos);
 		int range = area.getSelected().chunkRange;
 		int dimensionId = MC.world.getRegistryKey().toString().hashCode();
 		
-		addSearchersInRange(center, range, currentBlock, dimensionId);
+		addSearchersInRange(center, range, currentBlocks, dimensionId);
 		removeSearchersOutOfRange(center, range);
-		replaceSearchersWithDifferences(currentBlock, dimensionId);
-		replaceSearchersWithChunkUpdate(currentBlock, dimensionId);
+		replaceSearchersWithDifferences(currentBlocks, dimensionId);
+		replaceSearchersWithChunkUpdate(currentBlocks, dimensionId);
 		
 		if(!areAllChunkSearchersDone())
 			return;
@@ -263,7 +255,7 @@ public final class CaveFinderHack extends Hack
 	}
 	
 	private void addSearchersInRange(ChunkPos center, int chunkRange,
-		Block block, int dimensionId)
+		List<String> currentBlocks, int dimensionId)
 	{
 		ArrayList<Chunk> chunksInRange = getChunksInRange(center, chunkRange);
 		
@@ -272,7 +264,7 @@ public final class CaveFinderHack extends Hack
 			if(searchers.containsKey(chunk))
 				continue;
 			
-			addSearcher(chunk, block, dimensionId);
+			addSearcher(chunk, currentBlocks, dimensionId);
 		}
 	}
 	
@@ -307,21 +299,20 @@ public final class CaveFinderHack extends Hack
 		}
 	}
 	
-	private void replaceSearchersWithDifferences(Block currentBlock,
+	private void replaceSearchersWithDifferences(List<String> currentBlocks,
 		int dimensionId)
 	{
 		for(ChunkSearcher oldSearcher : new ArrayList<>(searchers.values()))
 		{
-			if(currentBlock.equals(oldSearcher.getBlock())
-				&& dimensionId == oldSearcher.getDimensionId())
+			if(dimensionId == oldSearcher.getDimensionId())
 				continue;
 			
 			removeSearcher(oldSearcher);
-			addSearcher(oldSearcher.getChunk(), currentBlock, dimensionId);
+			addSearcher(oldSearcher.getChunk(), currentBlocks, dimensionId);
 		}
 	}
 	
-	private void replaceSearchersWithChunkUpdate(Block currentBlock,
+	private void replaceSearchersWithChunkUpdate(List<String> currentBlocks,
 		int dimensionId)
 	{
 		synchronized(chunksToUpdate)
@@ -338,17 +329,18 @@ public final class CaveFinderHack extends Hack
 					continue;
 				
 				removeSearcher(oldSearcher);
-				addSearcher(chunk, currentBlock, dimensionId);
+				addSearcher(chunk, currentBlocks, dimensionId);
 				itr.remove();
 			}
 		}
 	}
 	
-	private void addSearcher(Chunk chunk, Block block, int dimensionId)
+	private void addSearcher(Chunk chunk, List<String> blocks, int dimensionId)
 	{
 		stopPool2Tasks();
 		
-		ChunkSearcher searcher = new ChunkSearcher(chunk, block, dimensionId);
+		ChunkSearcher searcher = new ChunkSearcher(chunk, blocks,
+			Integer.MIN_VALUE, Integer.MAX_VALUE, false, dimensionId);
 		searchers.put(chunk, searcher);
 		searcher.startSearching(pool1);
 	}
