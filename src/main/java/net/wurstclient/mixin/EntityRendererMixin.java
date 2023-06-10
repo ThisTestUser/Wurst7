@@ -96,7 +96,7 @@ public abstract class EntityRendererMixin<T extends Entity>
 		// draw background
 		tr.draw(text, labelX, labelY, 0x20FFFFFF, false, matrix,
 			vertexConsumers,
-			notSneaky ? TextLayerType.SEE_THROUGH : TextLayerType.NORMAL,
+			notSneaky && !nameTags.isSeeThrough() ? TextLayerType.SEE_THROUGH : TextLayerType.NORMAL,
 			bgColor, light);
 		
 		// use the see-through layer for text if configured in NameTags
