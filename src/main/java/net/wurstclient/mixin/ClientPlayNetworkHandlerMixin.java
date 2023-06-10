@@ -12,11 +12,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.toast.SystemToast;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.*;
@@ -125,5 +130,28 @@ public abstract class ClientPlayNetworkHandlerMixin
 	private void onAdvancements(AdvancementUpdateS2CPacket packet, CallbackInfo ci)
 	{
 		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.removeTimer();
+	}
+	
+	@Redirect(at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/client/world/ClientWorld;addPlayer(ILnet/minecraft/client/network/AbstractClientPlayerEntity;)V",
+		ordinal = 0),
+		method = {"onPlayerSpawn(Lnet/minecraft/network/packet/s2c/play/PlayerSpawnS2CPacket;)V"})
+	private void onPlayerSpawn(ClientWorld world, int id, AbstractClientPlayerEntity entity)
+	{
+		WurstClient.INSTANCE.getHax().playerNotifierHack.onAppear(entity);
+		world.addPlayer(id, entity);
+	}
+
+	@Inject(at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/network/packet/s2c/play/EntitiesDestroyS2CPacket;getEntityIds()Lit/unimi/dsi/fastutil/ints/IntList;",
+		ordinal = 0),
+		method = {"onEntitiesDestroy(Lnet/minecraft/network/packet/s2c/play/EntitiesDestroyS2CPacket;)V"})
+	private void onEntitiesDestroy(EntitiesDestroyS2CPacket packet, CallbackInfo ci)
+	{
+		packet.getEntityIds().forEach(id -> {
+			Entity entity = WurstClient.MC.world.getEntityById(id);
+			if (entity != null && entity instanceof PlayerEntity player)
+				WurstClient.INSTANCE.getHax().playerNotifierHack.onDisappear(player);
+		});
 	}
 }
