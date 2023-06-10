@@ -18,11 +18,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -32,6 +35,7 @@ import net.wurstclient.events.CameraTransformViewBobbingListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.ColorSetting;
 import net.wurstclient.settings.EnumSetting;
 import net.wurstclient.util.RenderUtils;
@@ -41,6 +45,9 @@ import net.wurstclient.util.RotationUtils;
 public final class ItemEspHack extends Hack implements UpdateListener,
 	CameraTransformViewBobbingListener, RenderListener
 {
+	private final CheckboxSetting names =
+		new CheckboxSetting("Show item names", true);
+	
 	private final EnumSetting<Style> style =
 		new EnumSetting<>("Style", Style.values(), Style.BOXES);
 	
@@ -59,6 +66,7 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 		super("ItemESP");
 		setCategory(Category.RENDER);
 		
+		addSetting(names);
 		addSetting(style);
 		addSetting(boxSize);
 		addSetting(color);
@@ -123,11 +131,12 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 		GL11.glDisable(GL11.GL_BLEND);
 	}
 	
-	private void renderBoxes(MatrixStack matrixStack, double partialTicks,
+	private void renderBoxes(MatrixStack matrixStack, float partialTicks,
 		int regionX, int regionZ)
 	{
 		float extraSize = boxSize.getSelected().extraSize;
 		
+		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
 		for(ItemEntity e : items)
 		{
 			matrixStack.push();
@@ -154,11 +163,19 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 				matrixStack.pop();
 			}
 			
+			if(names.isChecked())
+			{
+				ItemStack stack = e.getStack();
+				Text text = Text.literal(stack.getCount() + "x ").append(stack.getName());
+				RenderUtils.renderTag(matrixStack, text, e, immediate, 16777215, 1, 30, partialTicks);
+			}
+			
 			matrixStack.pop();
 		}
+		immediate.draw();
 	}
 	
-	private void renderTracers(MatrixStack matrixStack, double partialTicks,
+	private void renderTracers(MatrixStack matrixStack, float partialTicks,
 		int regionX, int regionZ)
 	{
 		GL11.glEnable(GL11.GL_BLEND);
