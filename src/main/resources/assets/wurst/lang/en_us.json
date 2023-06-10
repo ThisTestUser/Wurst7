@@ -103,6 +103,7 @@
   "description.wurst.hack.masstpa": "Sends a TPA request to all players.\nStops if someone accepts.",
   "description.wurst.hack.mileycyrus": "Makes you twerk.",
   "description.wurst.hack.mobesp": "Highlights nearby mobs.",
+  "description.wurst.hack.mobinfo": "Displays the mob owner above eligible mobs, along with some other attributes.",
   "description.wurst.hack.mobspawnesp": "Highlights areas where mobs can spawn.\n§eyellow§r - mobs can spawn at night\n§cred§r - mobs can always spawn",
   "description.wurst.hack.multiaura": "Faster Killaura that attacks multiple entities at once.",
   "description.wurst.hack.nameprotect": "Hides all player names.",
