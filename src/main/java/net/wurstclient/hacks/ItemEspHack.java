@@ -165,8 +165,10 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 			
 			if(names.isChecked())
 			{
+				RenderSystem.setShaderColor(1, 1, 1, 1);
 				ItemStack stack = e.getStack();
-				Text text = Text.literal(stack.getCount() + "x ").append(stack.getName());
+				Text name = Text.empty().append(stack.getName()).formatted(stack.getRarity().formatting);
+				Text text = Text.literal(stack.getCount() + "x ").append(name);
 				RenderUtils.renderTag(matrixStack, text, e, immediate, 16777215, 1, 30, partialTicks);
 			}
 			
