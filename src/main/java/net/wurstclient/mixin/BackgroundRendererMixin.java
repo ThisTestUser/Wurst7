@@ -41,7 +41,7 @@ public class BackgroundRendererMixin
 	{
 		if(WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled())
 			return false;
-
+		
 		return living.hasStatusEffect(effect);
 	}
 }
