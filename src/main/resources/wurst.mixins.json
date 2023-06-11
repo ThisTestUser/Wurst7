@@ -27,6 +27,7 @@
     "ClientPlayerInteractionManagerMixin",
     "ClientPlayNetworkHandlerMixin",
     "CreativeInventoryScreenMixin",
+    "CrossbowItemMixin",
     "CustomPayloadC2SPacketAccessor",
     "DeathScreenMixin",
     "DirectConnectScreenMixin",
