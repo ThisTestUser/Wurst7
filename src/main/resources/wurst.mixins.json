@@ -11,6 +11,7 @@
     "AllowedAddressResolverMixin",
     "ArmorItemMixin",
     "BackgroundRendererMixin",
+    "BeaconScreenMixin",
   	"BlockEntityRenderDispatcherMixin",
   	"BlockMixin",
   	"BlockModelRendererMixin",
