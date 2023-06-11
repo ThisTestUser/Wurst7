@@ -86,6 +86,15 @@ public abstract class GameRendererMixin
 		EventManager.fire(event);
 	}
 	
+	@Inject(at = {@At(value = "INVOKE",
+		target = "Lnet/minecraft/client/render/WorldRenderer;drawEntityOutlinesFramebuffer()V",
+		ordinal = 0)},
+		method = "render(FJZ)V")
+	private void render(float partialTicks, long startTime, boolean tick, CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getHax().armorEspHack.renderArmor(partialTicks);
+	}
+	
 	@Inject(at = @At(value = "RETURN", ordinal = 1),
 		method = "getFov(Lnet/minecraft/client/render/Camera;FZ)D",
 		cancellable = true)

@@ -7,6 +7,8 @@
  */
 package net.wurstclient.util;
 
+import java.util.Map.Entry;
+
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
@@ -22,6 +24,8 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.render.BufferBuilder.BuiltBuffer;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
@@ -950,6 +954,80 @@ public enum RenderUtils
 		int labelX = -MC.textRenderer.getWidth(text) / 2;
 		MC.textRenderer.draw(text, labelX, 0, color, false, matrix, provider, TextLayerType.NORMAL, bgColor, 15728880);
 		MC.textRenderer.draw(text, labelX, 0, -1, false, matrix, provider, TextLayerType.SEE_THROUGH, 0, 15728880);
+		matrixStack.pop();
+	}
+	
+	public static void renderArmor(MatrixStack matrixStack, Entity entity,
+		ItemStack stack, double height, int limit, int armorId, double multiplier, 
+		boolean showEnchants, boolean impossible, float partialTicks)
+	{
+		MinecraftClient MC = MinecraftClient.getInstance();
+		EntityRenderDispatcher dispatcher = MC.getEntityRenderDispatcher();
+		double dist = dispatcher.getSquaredDistanceToCamera(entity);
+		if(dist > limit * limit) 
+			return;
+		matrixStack.push();
+		
+		RenderUtils.applyCameraRotationOnly();
+		Vec3d camPos = RenderUtils.getCameraPos();
+		matrixStack.translate(
+			-camPos.x + entity.prevX
+			+ (entity.getX() - entity.prevX) * partialTicks,
+			-camPos.y + entity.prevY
+			+ (entity.getY() - entity.prevY) * partialTicks + entity.getHeight() + height,
+			-camPos.z + entity.prevZ
+			+ (entity.getZ() - entity.prevZ) * partialTicks);
+		
+		matrixStack.multiply(dispatcher.getRotation());
+		
+		float scale = 0.025F;
+		double distance = MC.player.distanceTo(entity);
+		
+		if(distance > 10)
+			scale *= distance / 10;
+		scale *= multiplier;
+		
+		matrixStack.scale(-scale, -scale, scale);
+		
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		
+		// render item icon
+		matrixStack.translate(0, 0, -150);
+		DiffuseLighting.enableGuiDepthLighting();
+		MC.getItemRenderer().renderInGuiWithOverrides(matrixStack, stack,
+			-50 + armorId * 20, -20);
+		DiffuseLighting.disableGuiDepthLighting();
+		matrixStack.translate(0, 0, -50);
+		MC.getItemRenderer().renderGuiItemOverlay(
+			matrixStack, MC.textRenderer, stack, -50 + armorId * 20, -20);
+		matrixStack.translate(0, 0, 200);
+		
+		// render enchants
+		if(showEnchants && stack.hasEnchantments())
+		{
+			RenderSystem.disableBlend();
+			matrixStack.scale(0.5F, 0.5F, 0.5F);
+			int index = 0;
+			VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+			Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+			for(Entry<Enchantment, Integer> entry : EnchantmentHelper.get(stack).entrySet())
+			{
+				if(impossible && !entry.getKey().target.isAcceptableItem(stack.getItem()))
+					continue;
+				index++;
+				Text text = EnchantmentUtils.getShortName(entry.getKey()).append(Integer.toString(entry.getValue()));
+				MC.textRenderer.draw(text, -95 + armorId * 40 - MC.textRenderer.getWidth(text), 
+					-60 + MC.textRenderer.fontHeight * index, 16777215, false, matrix,
+					immediate, TextLayerType.NORMAL, 0, 15728880);
+				MC.textRenderer.draw(text, -95 + armorId * 40 - MC.textRenderer.getWidth(text), 
+					-60 + MC.textRenderer.fontHeight * index, -1, false, matrix,
+					immediate, TextLayerType.SEE_THROUGH, 0, 15728880);
+			}
+			immediate.draw();
+		}
+		
+		RenderSystem.disableBlend();
 		matrixStack.pop();
 	}
 }
