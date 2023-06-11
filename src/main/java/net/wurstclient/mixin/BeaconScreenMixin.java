@@ -83,7 +83,7 @@ public abstract class BeaconScreenMixin extends HandledScreen<BeaconScreenHandle
 	{
 		if(!WurstClient.INSTANCE.getHax().beaconHack.isEnabled())
 			return;
-
+		
 		DrawableHelper.fill(matrices, x + 13, y + 19, x + 40,
 			y + 94, 0xFF212121);
 		DrawableHelper.fill(matrices, x + 152, y + 20, x + 182,
