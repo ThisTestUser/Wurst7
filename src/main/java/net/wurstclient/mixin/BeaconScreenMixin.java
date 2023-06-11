@@ -31,7 +31,7 @@ import net.wurstclient.WurstClient;
 
 @Mixin(BeaconScreen.class)
 public abstract class BeaconScreenMixin extends HandledScreen<BeaconScreenHandler>
-{	
+{
 	private BeaconScreenMixin(WurstClient wurst, BeaconScreenHandler handler,
 		PlayerInventory inventory, Text title)
 	{
