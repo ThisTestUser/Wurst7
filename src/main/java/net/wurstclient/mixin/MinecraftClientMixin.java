@@ -8,7 +8,6 @@
 package net.wurstclient.mixin;
 
 import java.io.File;
-import java.util.UUID;
 
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
@@ -31,7 +30,6 @@ import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.LanguageManager;
 import net.minecraft.client.util.ProfileKeys;
-import net.minecraft.client.util.ProfileKeysImpl;
 import net.minecraft.client.util.Session;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -80,7 +78,7 @@ public abstract class MinecraftClientMixin
 	private UserApiService userApiService;
 	
 	private Session wurstSession;
-	private ProfileKeysImpl wurstProfileKeys;
+	private ProfileKeys wurstProfileKeys;
 	
 	private MinecraftClientMixin(WurstClient wurst, String string_1)
 	{
@@ -254,9 +252,7 @@ public abstract class MinecraftClientMixin
 		
 		UserApiService userApiService =
 			online ? wurst_createUserApiService(session.getAccessToken()) : UserApiService.OFFLINE;
-		UUID uuid = wurstSession.getProfile().getId();
-		wurstProfileKeys =
-			new ProfileKeysImpl(userApiService, uuid, runDirectory.toPath());
+		wurstProfileKeys = ProfileKeys.create(userApiService, session, runDirectory.toPath());
 	}
 	
 	@Override
