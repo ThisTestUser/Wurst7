@@ -998,10 +998,9 @@ public enum RenderUtils
 		MC.getItemRenderer().renderInGuiWithOverrides(matrixStack, stack,
 			-50 + armorId * 20, -20);
 		DiffuseLighting.disableGuiDepthLighting();
-		matrixStack.translate(0, 0, -50);
+		matrixStack.translate(0, 0, 150);
 		MC.getItemRenderer().renderGuiItemOverlay(
 			matrixStack, MC.textRenderer, stack, -50 + armorId * 20, -20);
-		matrixStack.translate(0, 0, 200);
 		
 		// render enchants
 		if(showEnchants && stack.hasEnchantments())

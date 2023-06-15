@@ -7,9 +7,6 @@
  */
 package net.wurstclient.hacks;
 
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
-
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -17,7 +14,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
-import net.wurstclient.events.RenderListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
@@ -25,7 +21,7 @@ import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.RenderUtils;
 
 @SearchTags({"armor esp"})
-public final class ArmorEspHack extends Hack implements RenderListener
+public final class ArmorEspHack extends Hack
 {
 	private final CheckboxSetting mobs = new CheckboxSetting(
 		"Mobs", "Show armor of mobs also.", false);
@@ -44,8 +40,7 @@ public final class ArmorEspHack extends Hack implements RenderListener
 	private static final EquipmentSlot[] SLOTS = {EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
 		EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 	
-	private Matrix4f position;
-	private Matrix3f normal;
+	private boolean rendering;
 	
 	public ArmorEspHack()
 	{
@@ -57,34 +52,12 @@ public final class ArmorEspHack extends Hack implements RenderListener
 		addSetting(scale);
 	}
 	
-	@Override
-	public void onEnable()
+	public void renderArmor(MatrixStack matrixStack, float partialTicks)
 	{
-		EVENTS.add(RenderListener.class, this);
-	}
-	
-	@Override
-	public void onDisable()
-	{
-		EVENTS.remove(RenderListener.class, this);
-	}
-	
-	@Override
-	public void onRender(MatrixStack matrixStack, float partialTicks)
-	{
-		position = new Matrix4f(matrixStack.peek().getPositionMatrix());
-		normal = new Matrix3f(matrixStack.peek().getNormalMatrix());
-	}
-	
-	public void renderArmor(float partialTicks)
-	{
-		if(position == null)
+		if(!isEnabled())
 			return;
 		
-		MatrixStack matrixStack = new MatrixStack();
-		matrixStack.peek().getPositionMatrix().set(position);
-		matrixStack.peek().getNormalMatrix().set(normal);
-		
+		rendering = true;
 		for(Entity entity : mobs.isChecked() ? MC.world.getEntities() : MC.world.getPlayers())
 			if(entity instanceof LivingEntity living && entity != MC.player)
 			{
@@ -98,5 +71,11 @@ public final class ArmorEspHack extends Hack implements RenderListener
 					i++;
 				}
 			}
+		rendering = false;
+	}
+	
+	public boolean isRendering()
+	{
+		return rendering;
 	}
 }
