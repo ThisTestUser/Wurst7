@@ -91,7 +91,7 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 					: ((AbstractHorseEntity)entity).getOwnerUuid();
 				MutableText text = Text.literal("Owner: ");
 				if(uuid == null)
-					// Skeleton horses
+					// Entity is tamed but owner cannot be resolved
 					text.append(Text.literal("Null").formatted(Formatting.DARK_RED));
 				else
 				{
