@@ -35,7 +35,10 @@ public class ItemRendererMixin
 		TextLayerType layerType, int backgroundColor, int light)
 	{
 		if(WurstClient.INSTANCE.getHax().armorEspHack.isRendering())
+		{
+			renderer.draw(text, x, y, -1, false, matrix, vertexConsumers, TextLayerType.SEE_THROUGH, 0, light);
 			return renderer.draw(text, x, y, color, false, matrix, vertexConsumers, layerType, backgroundColor, light);
+		}
 		
 		return renderer.draw(text, x, y, color, shadow, matrix, vertexConsumers, layerType, backgroundColor, light);
 	}
