@@ -36,7 +36,7 @@ public final class VehicleHack extends Hack implements UpdateListener
 			"Prevents your vehicle from sinking into the water by forcing it to float.", true);
 	
 	private final SliderSetting swimSpeed = new SliderSetting(
-		"Swim Speed", "Speed to automatically swim up when in water, if \u00a7eAuto swim\u00a7r is enabled.",
+		"Swim Speed", "Speed to automatically swim up when in water, if \u00a7eAuto Swim\u00a7r is enabled.",
 		0.04, 0.04, 0.2, 0.01, SliderSetting.ValueDisplay.DECIMAL);
 	
 	private final CheckboxSetting allowGlide = new CheckboxSetting(
