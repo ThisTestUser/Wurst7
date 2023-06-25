@@ -127,8 +127,7 @@ public final class XRayHack extends Hack implements UpdateListener,
 		ISimpleOption<Double> gammaOption =
 			(ISimpleOption<Double>)(Object)MC.options.getGamma();
 		
-		if(!WURST.getHax().fullbrightHack.isEnabled()
-			|| WURST.getHax().fullbrightHack.isNightVisionActive())
+		if(!WURST.getHax().fullbrightHack.isEnabled() || !WURST.getHax().fullbrightHack.isGammaOption())
 			gammaOption.forceSetValue(WURST.getHax().fullbrightHack.getDefaultGamma());
 	}
 	
