@@ -116,6 +116,13 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 			&& !MC.options.rightKey.isPressed())
 			event.setOffset(new Vec3d(0, 0, 0));
 		
+		if(ignorePitch.isChecked() && !MC.options.sneakKey.isPressed()
+			&& !MC.options.jumpKey.isPressed())
+		{
+			Vec3d offset = event.getOffset();
+			event.setOffset(new Vec3d(offset.x, 0, offset.z));
+		}
+		
 		forceHover(event);
 	}
 	
