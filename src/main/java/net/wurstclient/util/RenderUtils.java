@@ -993,12 +993,10 @@ public enum RenderUtils
 		RenderSystem.defaultBlendFunc();
 		
 		// render item icon
-		matrixStack.translate(0, 0, -150);
-		DiffuseLighting.enableGuiDepthLighting();
+		matrixStack.translate(0, 0, -149);
 		MC.getItemRenderer().renderInGuiWithOverrides(matrixStack, stack,
 			-50 + armorId * 20, -20);
-		DiffuseLighting.disableGuiDepthLighting();
-		matrixStack.translate(0, 0, 150);
+		matrixStack.translate(0, 0, 149);
 		MC.getItemRenderer().renderGuiItemOverlay(
 			matrixStack, MC.textRenderer, stack, -50 + armorId * 20, -20);
 		
@@ -1028,5 +1026,11 @@ public enum RenderUtils
 		
 		RenderSystem.disableBlend();
 		matrixStack.pop();
+		
+		// reset lighting
+		if(WurstClient.MC.world.getDimensionEffects().isDarkened())
+			DiffuseLighting.enableForLevel(matrixStack.peek().getPositionMatrix());
+		else
+			DiffuseLighting.disableForLevel(matrixStack.peek().getPositionMatrix());
 	}
 }
