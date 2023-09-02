@@ -42,9 +42,9 @@ public enum SearchArea
 		this.chunkRange = chunkRange;
 	}
 	
-	public ArrayList<Chunk> getChunksInRange(ChunkPos center)
+	public ArrayList<ChunkPos> getChunksInRange(ChunkPos center)
 	{
-		ArrayList<Chunk> chunksInRange = new ArrayList<>();
+		ArrayList<ChunkPos> chunksInRange = new ArrayList<>();
 		
 		for(int x = center.x - chunkRange; x <= center.x + chunkRange; x++)
 			for(int z = center.z - chunkRange; z <= center.z + chunkRange; z++)
@@ -53,7 +53,7 @@ public enum SearchArea
 				if(chunk instanceof EmptyChunk)
 					continue;
 				
-				chunksInRange.add(chunk);
+				chunksInRange.add(chunk.getPos());
 			}
 		
 		return chunksInRange;

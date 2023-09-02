@@ -28,7 +28,7 @@ import net.wurstclient.WurstClient;
  */
 public final class ChunkSearcher
 {
-	private final Chunk chunk;
+	private final ChunkPos chunkPos;
 	private final List<String> blocks;
 	private final int dimensionId;
 	private final ArrayList<BlockPos> matchingBlocks = new ArrayList<>();
@@ -38,10 +38,10 @@ public final class ChunkSearcher
 	private ChunkSearcher.Status status = Status.IDLE;
 	private Future<?> future;
 	
-	public ChunkSearcher(Chunk chunk, List<String> blocks, int minY, int maxY,
+	public ChunkSearcher(ChunkPos chunkPos, List<String> blocks, int minY, int maxY,
 		boolean sourcesOnly, int dimensionId)
 	{
-		this.chunk = chunk;
+		this.chunkPos = chunkPos;
 		this.blocks = blocks;
 		this.minY = minY;
 		this.maxY = maxY;
@@ -64,7 +64,6 @@ public final class ChunkSearcher
 			|| !matchingBlocks.isEmpty())
 			throw new IllegalStateException();
 		
-		ChunkPos chunkPos = chunk.getPos();
 		ClientWorld world = WurstClient.MC.world;
 		
 		int minX = chunkPos.getStartX();
@@ -119,9 +118,9 @@ public final class ChunkSearcher
 		status = Status.IDLE;
 	}
 	
-	public Chunk getChunk()
+	public ChunkPos getChunkPos()
 	{
-		return chunk;
+		return chunkPos;
 	}
 	
 	public List<String> getBlocks()

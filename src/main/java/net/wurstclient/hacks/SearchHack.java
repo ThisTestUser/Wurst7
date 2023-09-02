@@ -38,7 +38,6 @@ import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.chunk.Chunk;
 import net.wurstclient.Category;
 import net.wurstclient.events.CameraTransformViewBobbingListener;
 import net.wurstclient.events.PacketInputListener;
@@ -98,8 +97,8 @@ public final class SearchHack extends Hack
 	private int prevLimit;
 	private boolean notify;
 	
-	private final HashMap<Chunk, ChunkSearcher> searchers = new HashMap<>();
-	private final Set<Chunk> chunksToUpdate =
+	private final HashMap<ChunkPos, ChunkSearcher> searchers = new HashMap<>();
+	private final Set<ChunkPos> chunksToUpdate =
 		Collections.synchronizedSet(new HashSet<>());
 	private ExecutorService pool1;
 	
@@ -205,12 +204,12 @@ public final class SearchHack extends Hack
 			return;
 		
 		Packet<?> packet = event.getPacket();
-		Chunk chunk;
+		ChunkPos chunkPos;
 		
 		if(packet instanceof BlockUpdateS2CPacket change)
 		{
 			BlockPos pos = change.getPos();
-			chunk = world.getChunk(pos);
+			chunkPos = new ChunkPos(pos);
 			
 		}else if(packet instanceof ChunkDeltaUpdateS2CPacket change)
 		{
@@ -219,14 +218,14 @@ public final class SearchHack extends Hack
 			if(changedBlocks.isEmpty())
 				return;
 			
-			chunk = world.getChunk(changedBlocks.get(0));
+			chunkPos = new ChunkPos(changedBlocks.get(0));
 			
 		}else if(packet instanceof ChunkDataS2CPacket chunkData)
-			chunk = world.getChunk(chunkData.getX(), chunkData.getZ());
+			chunkPos = new ChunkPos(chunkData.getX(), chunkData.getZ());
 		else
 			return;
 		
-		chunksToUpdate.add(chunk);
+		chunksToUpdate.add(chunkPos);
 	}
 	
 	@Override
@@ -335,15 +334,15 @@ public final class SearchHack extends Hack
 	private void addSearchersInRange(ChunkPos center, List<String> currentBlocks,
 		int dimensionId)
 	{
-		ArrayList<Chunk> chunksInRange =
+		ArrayList<ChunkPos> chunksInRange =
 			area.getSelected().getChunksInRange(center);
 		
-		for(Chunk chunk : chunksInRange)
+		for(ChunkPos chunkPos : chunksInRange)
 		{
-			if(searchers.containsKey(chunk))
+			if(searchers.containsKey(chunkPos))
 				continue;
 			
-			addSearcher(chunk, currentBlocks, dimensionId);
+			addSearcher(chunkPos, currentBlocks, dimensionId);
 		}
 	}
 	
@@ -351,7 +350,7 @@ public final class SearchHack extends Hack
 	{
 		for(ChunkSearcher searcher : new ArrayList<>(searchers.values()))
 		{
-			ChunkPos searcherPos = searcher.getChunk().getPos();
+			ChunkPos searcherPos = searcher.getChunkPos();
 			if(area.getSelected().isInRange(searcherPos, center))
 				continue;
 			
@@ -374,7 +373,7 @@ public final class SearchHack extends Hack
 				continue;
 			
 			removeSearcher(oldSearcher);
-			addSearcher(oldSearcher.getChunk(), currentBlocks, dimensionId);
+			addSearcher(oldSearcher.getChunkPos(), currentBlocks, dimensionId);
 		}
 	}
 	
@@ -386,30 +385,30 @@ public final class SearchHack extends Hack
 			if(chunksToUpdate.isEmpty())
 				return;
 			
-			for(Iterator<Chunk> itr = chunksToUpdate.iterator(); itr.hasNext();)
+			for(Iterator<ChunkPos> itr = chunksToUpdate.iterator(); itr.hasNext();)
 			{
-				Chunk chunk = itr.next();
+				ChunkPos chunkPos = itr.next();
 				
-				ChunkSearcher oldSearcher = searchers.get(chunk);
+				ChunkSearcher oldSearcher = searchers.get(chunkPos);
 				if(oldSearcher == null)
 					continue;
 				
 				removeSearcher(oldSearcher);
-				addSearcher(chunk, currentBlocks, dimensionId);
+				addSearcher(chunkPos, currentBlocks, dimensionId);
 				itr.remove();
 			}
 		}
 	}
 	
-	private void addSearcher(Chunk chunk, List<String> blocks, int dimensionId)
+	private void addSearcher(ChunkPos chunkPos, List<String> blocks, int dimensionId)
 	{
 		stopPool2Tasks();
 		
 		int minY = !yLevel.isChecked() ? Integer.MIN_VALUE : this.minY.getValueI();
 		int maxY = !yLevel.isChecked() ? Integer.MAX_VALUE : this.maxY.getValueI();
-		ChunkSearcher searcher = new ChunkSearcher(chunk, blocks, minY, maxY,
+		ChunkSearcher searcher = new ChunkSearcher(chunkPos, blocks, minY, maxY,
 			sourcesOnly.isChecked(), dimensionId);
-		searchers.put(chunk, searcher);
+		searchers.put(chunkPos, searcher);
 		searcher.startSearching(pool1);
 	}
 	
@@ -417,7 +416,7 @@ public final class SearchHack extends Hack
 	{
 		stopPool2Tasks();
 		
-		searchers.remove(searcher.getChunk());
+		searchers.remove(searcher.getChunkPos());
 		searcher.cancelSearching();
 	}
 	
