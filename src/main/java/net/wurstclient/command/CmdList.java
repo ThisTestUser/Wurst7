@@ -62,6 +62,7 @@ public final class CmdList
 	public final SetModeCmd setModeCmd = new SetModeCmd();
 	public final SetSliderCmd setSliderCmd = new SetSliderCmd();
 	public final SettingsCmd settingsCmd = new SettingsCmd();
+	public final SpectTpCmd spectTpCmd = new SpectTpCmd();
 	public final TacoCmd tacoCmd = new TacoCmd();
 	public final TCmd tCmd = new TCmd();
 	public final TooManyHaxCmd tooManyHaxCmd = new TooManyHaxCmd();
