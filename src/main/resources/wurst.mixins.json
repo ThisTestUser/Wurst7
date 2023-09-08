@@ -57,6 +57,7 @@
     "PackScreenMixin",
     "PlayerEntityMixin",
     "PlayerInventoryMixin",
+    "PlayerPositionLookS2CPacketAccessor",
     "PlayerSkinProviderMixin",
     "PowderSnowBlockMixin",
     "RenderTickCounterMixin",
