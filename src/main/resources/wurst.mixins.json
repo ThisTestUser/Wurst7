@@ -55,7 +55,6 @@
     "MouseMixin",
     "MultiplayerScreenMixin",
     "PackScreenMixin",
-    "PlayerEntityMixin",
     "PlayerInventoryMixin",
     "PlayerPositionLookS2CPacketAccessor",
     "PlayerSkinProviderMixin",

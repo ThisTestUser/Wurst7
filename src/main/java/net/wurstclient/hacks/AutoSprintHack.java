@@ -19,17 +19,14 @@ public final class AutoSprintHack extends Hack implements UpdateListener
 {
 	private final CheckboxSetting allDirections = new CheckboxSetting(
 		"Omnidirectional Sprint", "Sprint in all directions, not just forward.", false);
-	private final CheckboxSetting attack = new CheckboxSetting(
-		"Attack Sprint", "Keep sprinting when attacking.", false);
 	private final CheckboxSetting hungry = new CheckboxSetting(
 		"Hungry Sprint", "Sprint even on low hunger.", false);
-
+	
 	public AutoSprintHack()
 	{
 		super("AutoSprint");
 		setCategory(Category.MOVEMENT);
 		addSetting(allDirections);
-		addSetting(attack);
 		addSetting(hungry);
 	}
 	
@@ -61,12 +58,7 @@ public final class AutoSprintHack extends Hack implements UpdateListener
 				&& (MC.player.getVelocity().x != 0 || MC.player.getVelocity().z != 0)))
 			player.setSprinting(true);
 	}
-
-	public boolean shouldSprintAttack()
-	{
-		return isEnabled() && attack.isChecked();
-	}
-
+	
 	public boolean shouldSprintHungry()
 	{
 		return isEnabled() && hungry.isChecked();
