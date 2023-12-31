@@ -79,7 +79,7 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	}
 	
 	/**
-	 * Allows the player to keep sprinting even without the forward key down.
+	 * This mixin makes AutoSprint's "Omnidirectional Sprint" setting work.
 	 */
 	@Redirect(
 		at = @At(value = "INVOKE",
@@ -88,9 +88,8 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		method = "tickMovement()V")
 	private boolean hasForwardMovement(Input input)
 	{
-		if(WurstClient.INSTANCE.getHax().autoSprintHack
-			.shouldSprintAllDirections())
-			return true;
+		if(WurstClient.INSTANCE.getHax().autoSprintHack.shouldOmniSprint())
+			return input.getMovementInput().length() > 1e-5F;
 		
 		return input.hasForwardMovement();
 	}
