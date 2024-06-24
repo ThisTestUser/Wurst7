@@ -22,6 +22,7 @@ import net.minecraft.client.toast.SystemToast;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.*;
@@ -40,16 +41,20 @@ public abstract class ClientPlayNetworkHandlerMixin
 	@Final
 	private MinecraftClient client;
 	
-	@Inject(at = @At("HEAD"),
-		method = "sendPacket(Lnet/minecraft/network/packet/Packet;)V",
-		cancellable = true)
-	private void onSendPacket(Packet<?> packet, CallbackInfo ci)
+	@Shadow
+	@Final
+	private ClientConnection connection;
+	
+	@Redirect(method = "sendPacket(Lnet/minecraft/network/packet/Packet;)V",
+		at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/packet/Packet;)V"))
+	private void redirectSendPacket(ClientConnection connection, Packet<?> packet)
 	{
 		PacketOutputEvent event = new PacketOutputEvent(packet);
 		EventManager.fire(event);
 		
-		if(event.isCancelled())
-			ci.cancel();
+		if(!event.isCancelled())
+			connection.send(event.getPacket());
 	}
 	
 	@Inject(at = @At("TAIL"),
