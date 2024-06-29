@@ -41,14 +41,10 @@ public abstract class ClientPlayNetworkHandlerMixin
 	@Final
 	private MinecraftClient client;
 	
-	@Shadow
-	@Final
-	private ClientConnection connection;
-	
 	@Redirect(method = "sendPacket(Lnet/minecraft/network/packet/Packet;)V",
 		at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/packet/Packet;)V"))
-	private void redirectSendPacket(ClientConnection connection, Packet<?> packet)
+	private void onSendPacket(ClientConnection connection, Packet<?> packet)
 	{
 		PacketOutputEvent event = new PacketOutputEvent(packet);
 		EventManager.fire(event);
