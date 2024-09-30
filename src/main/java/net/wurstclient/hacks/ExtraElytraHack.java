@@ -62,7 +62,11 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 	private final CheckboxSetting hover =
 		new CheckboxSetting("Hover mode",
 			"The player will not be allowed to touch the ground unless the sneak key is long pressed.\n"
-			+ "You must not be looking down for this to work.", false);
+			+ "You must not be looking down for this to work, unless you have fake pitch enabled.", false);
+	
+	private final CheckboxSetting fakePitch =
+		new CheckboxSetting("Fake Pitch",
+			"Prevents the player from touching the ground with hover mode enabled by faking your pitch.", false);
 	
 	private int jumpTimer;
 	private int waterTimer;
@@ -82,6 +86,7 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 		addSetting(idleLock);
 		addSetting(stopInWater);
 		addSetting(hover);
+		addSetting(fakePitch);
 	}
 	
 	@Override
@@ -154,6 +159,9 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 			}
 			
 			controlMotion();
+			
+			if(fakePitch.isChecked() && !WURST.getRotationFaker().isFakeRotation())
+				WURST.getRotationFaker().setServerRotation(MC.player.getYaw(), -10);
 			return;
 		}
 		

@@ -78,6 +78,11 @@ public final class RotationFaker
 		WurstClient.MC.player.setPitch(0);
 	}
 	
+	public boolean isFakeRotation()
+	{
+		return fakeRotation;
+	}
+	
 	public float getServerYaw()
 	{
 		return fakeRotation ? serverYaw : WurstClient.MC.player.getYaw();
@@ -86,5 +91,12 @@ public final class RotationFaker
 	public float getServerPitch()
 	{
 		return fakeRotation ? serverPitch : WurstClient.MC.player.getPitch();
+	}
+	
+	public void setServerRotation(float yaw, float pitch)
+	{
+		fakeRotation = true;
+		serverYaw = yaw;
+		serverPitch = pitch;
 	}
 }
