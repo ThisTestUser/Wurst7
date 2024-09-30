@@ -54,6 +54,13 @@ public abstract class ClientPlayerInteractionManagerMixin
 	@Shadow
 	private int blockBreakingCooldown;
 	
+	@Inject(at = {@At("HEAD")},
+		method = "breakBlock(Lnet/minecraft/util/math/BlockPos;)Z")
+	private void onBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir)
+	{
+		WurstClient.INSTANCE.getHax().civBreakHack.updateBlock(pos);
+	}
+	
 	@Inject(at = {@At(value = "INVOKE",
 		target = "Lnet/minecraft/client/network/ClientPlayerEntity;getId()I",
 		ordinal = 0)},

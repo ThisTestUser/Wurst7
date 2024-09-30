@@ -62,6 +62,7 @@
   "description.wurst.hack.cavefinder": "Helps you to find caves by highlighting them in the selected color.",
   "description.wurst.hack.chattranslator": "Translates incoming chat messages using Google Translate.",
   "description.wurst.hack.chestesp": "Highlights nearby chests.",
+  "description.wurst.hack.civbreak": "Instantly breaks a block at a position after breaking it legitimately once.",
   "description.wurst.hack.clickaura": "Automatically attacks the closest valid entity whenever you click.\n\n§c§lWARNING:§r ClickAuras generally look more suspicious than Killauras and are easier for plugins to detect. It is recommended to use Killaura or TriggerBot instead.",
   "description.wurst.hack.clickgui": "Window-based ClickGUI.",
   "description.wurst.hack.crashchest": "Generates a chest that essentially bans people from the server if they have too many copies of it in their inventory. §c§lWARNING:§r §cThis cannot be undone. Use with caution!§r\n\nIf copies are instead placed in a chest, anyone who opens the chest will be kicked from the server (just once).",
