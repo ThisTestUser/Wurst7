@@ -124,6 +124,7 @@ public final class HackList implements UpdateListener
 	public final KillauraHack killauraHack = new KillauraHack();
 	public final KillPotionHack killPotionHack = new KillPotionHack();
 	public final LagIndicatorHack lagIndicatorHack = new LagIndicatorHack();
+	public final LiquidFillHack liquidFillHack = new LiquidFillHack();
 	public final LiquidsHack liquidsHack = new LiquidsHack();
 	public final LsdHack lsdHack = new LsdHack();
 	public final MassTpaHack massTpaHack = new MassTpaHack();
