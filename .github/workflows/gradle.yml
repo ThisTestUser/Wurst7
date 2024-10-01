@@ -65,3 +65,29 @@ jobs:
         files: |
           ./build/libs/*.jar
       continue-on-error: true
+
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Wurst
+        path: build/libs/
+
+    - name: Read data from gradle.properties
+      id: read_properties
+      uses: christian-draeger/read-properties@1.1.1
+      with:
+        path: './gradle.properties'
+        properties: 'minecraft_version mod_version'
+
+    - name: Trim whitespace from mod version
+      run: echo "MOD_VERSION=$(echo ${{ steps.read_properties.outputs.mod_version }} | tr -d '[:space:]')" >> $GITHUB_ENV
+
+    - name: Release
+      uses: "ThisTestUser/marvinpinto-action-automatic-releases@1.0"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "v${{ steps.read_properties.outputs.minecraft_version }}"
+        prerelease: false
+        title: "Wurst Client - ThisTestUser's Edition for ${{ steps.read_properties.outputs.minecraft_version }}"
+        files: |
+          build/libs/Wurst-Client-${{ env.MOD_VERSION }}.jar
