@@ -7,9 +7,9 @@
  */
 package net.wurstclient.hacks;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.FluidBlock;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BucketItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -124,12 +124,11 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 							continue;
 						
 						BlockPos pos = new BlockPos(x, y, z);
-						BlockState state = BlockUtils.getState(pos);
+						FluidState state = MC.world.getFluidState(pos);
 						
-						if(!(state.getBlock() instanceof FluidBlock fluid)
-							|| !fluid.getFluidState(state).isStill())
+						if(state.isEmpty() || !state.isStill())
 							continue;
-						boolean isWater = state.getBlock() == Blocks.WATER;
+						boolean isWater = state.isOf(Fluids.WATER);
 						if((isWater && !water.isChecked()) || (!isWater && !lava.isChecked()))
 							continue;
 						
