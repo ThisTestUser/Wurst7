@@ -19,11 +19,12 @@ import net.wurstclient.command.Command;
 import net.wurstclient.util.ChatUtils;
 
 public final class SpectTpCmd extends Command
-{	
+{
 	public SpectTpCmd()
 	{
-		super("specttp", "Allows you to spectate an entity, specified with a UUID\n"
-			+ "or a player name. Requires spectator mode.",
+		super("specttp",
+			"Allows you to spectate an entity, specified with a UUID\n"
+				+ "or a player name. Requires spectator mode.",
 			".specttp [<entity>]");
 	}
 	
@@ -39,16 +40,18 @@ public final class SpectTpCmd extends Command
 				try
 				{
 					UUID uuid = UUID.fromString(args[0]);
-					MC.player.networkHandler.sendPacket(new SpectatorTeleportC2SPacket(uuid));
+					MC.player.networkHandler
+						.sendPacket(new SpectatorTeleportC2SPacket(uuid));
 					ChatUtils.message("Spectate request sent.");
 				}catch(IllegalArgumentException e)
 				{
 					throw new CmdSyntaxError("Invalid UUID specified.");
 				}
-			}else 
+			}else
 			{
 				UUID uuid = null;
-				for(PlayerListEntry entry : MC.player.networkHandler.getPlayerList())
+				for(PlayerListEntry entry : MC.player.networkHandler
+					.getPlayerList())
 				{
 					String name = entry.getProfile().getName();
 					name = StringHelper.stripTextFormat(name);
@@ -57,8 +60,10 @@ public final class SpectTpCmd extends Command
 						uuid = entry.getProfile().getId();
 				}
 				if(uuid == null)
-					throw new CmdError("Player \"" + args[0] + "\" could not be found.");
-				MC.player.networkHandler.sendPacket(new SpectatorTeleportC2SPacket(uuid));
+					throw new CmdError(
+						"Player \"" + args[0] + "\" could not be found.");
+				MC.player.networkHandler
+					.sendPacket(new SpectatorTeleportC2SPacket(uuid));
 				ChatUtils.message("Spectate request sent.");
 			}
 		}else

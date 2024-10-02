@@ -20,7 +20,8 @@ public final class InfoCmd extends Command
 {
 	public InfoCmd()
 	{
-		super("info", "Gives you information about either the client or the server.",
+		super("info",
+			"Gives you information about either the client or the server.",
 			".info (client|server)");
 	}
 	
@@ -31,8 +32,7 @@ public final class InfoCmd extends Command
 		{
 			if(args[0].equalsIgnoreCase("client"))
 			{
-				String version =
-					"Version: " + SharedConstants.VERSION_NAME;
+				String version = "Version: " + SharedConstants.VERSION_NAME;
 				String protocolversion = "Protocol Version: "
 					+ SharedConstants.RELEASE_TARGET_PROTOCOL_VERSION;
 				String name = "Name: " + MC.getSession().getUsername();
@@ -52,11 +52,13 @@ public final class InfoCmd extends Command
 				String version = "Server version: " + info.version.getString();
 				String ping = "Ping: " + info.ping;
 				String list = "Players: " + info.playerListSummary;
-				String slots = "Player Slots: " + info.playerCountLabel.getString();
+				String slots =
+					"Player Slots: " + info.playerCountLabel.getString();
 				String ip = "IP: " + info.address;
-				String motd ="MOTD: " + info.label.toString();
+				String motd = "MOTD: " + info.label.toString();
 				String name = "Server Name: " + info.name;
-				String brand = "Server Brand: " + MC.player.networkHandler.getBrand();
+				String brand =
+					"Server Brand: " + MC.player.networkHandler.getBrand();
 				String protocolversion = "Protocol version: " + info.version;
 				ChatUtils.message(version);
 				ChatUtils.message(ping);
