@@ -32,6 +32,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.wurstclient.WurstClient;
 import net.wurstclient.event.EventManager;
 import net.wurstclient.events.BlockBreakingProgressListener.BlockBreakingProgressEvent;
 import net.wurstclient.events.PlayerAttacksEntityListener.PlayerAttacksEntityEvent;
@@ -45,6 +46,13 @@ public abstract class ClientPlayerInteractionManagerMixin
 	@Shadow
 	@Final
 	private MinecraftClient client;
+	
+	@Inject(at = @At("HEAD"),
+		method = "breakBlock(Lnet/minecraft/util/math/BlockPos;)Z")
+	private void onBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir)
+	{
+		WurstClient.INSTANCE.getHax().civBreakHack.updateBlock(pos);
+	}
 	
 	@Inject(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/network/ClientPlayerEntity;getId()I",
