@@ -10,6 +10,7 @@
     "AllowedAddressResolverMixin",
     "BackgroundRendererMixin",
     "BasicBakedModelMixin",
+    "BeaconScreenMixin",
     "BlockEntityRenderDispatcherMixin",
     "BlockMixin",
     "CactusBlockMixin",
