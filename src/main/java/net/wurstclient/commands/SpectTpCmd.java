@@ -23,8 +23,8 @@ public final class SpectTpCmd extends Command
 	public SpectTpCmd()
 	{
 		super("specttp",
-			"Allows you to spectate an entity, specified with a UUID\n"
-				+ "or a player name. Requires spectator mode.",
+			"Allows you to spectate an entity with a UUID "
+				+ "or player name. Requires spectator mode.",
 			".specttp [<entity>]");
 	}
 	
