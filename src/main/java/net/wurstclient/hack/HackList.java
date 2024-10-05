@@ -70,6 +70,7 @@ public final class HackList implements UpdateListener
 	public final BeaconHack beaconHack = new BeaconHack();
 	public final BlinkHack blinkHack = new BlinkHack();
 	public final BoatFlyHack boatFlyHack = new BoatFlyHack();
+	public final BlockHitHack blockHitHack = new BlockHitHack();
 	public final BonemealAuraHack bonemealAuraHack = new BonemealAuraHack();
 	public final BowAimbotHack bowAimbotHack = new BowAimbotHack();
 	public final BuildRandomHack buildRandomHack = new BuildRandomHack();
