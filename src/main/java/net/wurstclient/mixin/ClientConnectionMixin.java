@@ -16,10 +16,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import io.netty.channel.ChannelHandlerContext;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+
 import io.netty.channel.SimpleChannelInboundHandler;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.PacketCallbacks;
+import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
 import net.wurstclient.event.EventManager;
 import net.wurstclient.events.ConnectionPacketOutputListener.ConnectionPacketOutputEvent;
@@ -32,19 +35,18 @@ public abstract class ClientConnectionMixin
 	private ConcurrentLinkedQueue<ConnectionPacketOutputEvent> events =
 		new ConcurrentLinkedQueue<>();
 	
-	@Inject(at = @At(value = "INVOKE",
+	@WrapOperation(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/network/ClientConnection;handlePacket(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/listener/PacketListener;)V",
 		ordinal = 0),
-		method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;)V",
-		cancellable = true)
-	private void onChannelRead0(ChannelHandlerContext context, Packet<?> packet,
-		CallbackInfo ci)
+		method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;)V")
+	private void onPacketReceived(Packet<?> packet, PacketListener listener,
+		Operation<Void> original)
 	{
 		PacketInputEvent event = new PacketInputEvent(packet);
 		EventManager.fire(event);
 		
-		if(event.isCancelled())
-			ci.cancel();
+		if(!event.isCancelled())
+			original.call(event.getPacket(), listener);
 	}
 	
 	@ModifyVariable(at = @At("HEAD"),
