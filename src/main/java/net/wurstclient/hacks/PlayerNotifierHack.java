@@ -22,12 +22,11 @@ import net.wurstclient.util.ChatUtils;
 @SearchTags({"player notifier", "auto disconnect"})
 public final class PlayerNotifierHack extends Hack implements UpdateListener
 {
-	public final CheckboxSetting disconnect = new CheckboxSetting(
+	private final CheckboxSetting disconnect = new CheckboxSetting(
 		"Disconnect", "If a player shows up in multiplayer,"
 			+ "disconnect from the server.", false);
-	private String message;
-	private boolean disconnecting;
 	
+	private String disconnectMessage;
 	private static final DecimalFormat DF = new DecimalFormat("0.#");
 	
 	public PlayerNotifierHack()
@@ -37,18 +36,17 @@ public final class PlayerNotifierHack extends Hack implements UpdateListener
 		addSetting(disconnect);
 	}
 	
-	public void onAppear(PlayerEntity player)
+	public void onAppear(PlayerEntity player, double x, double y, double z)
 	{
 		if(!isEnabled())
 			return;
 		
 		String displayMsg = player.getName().getString() + " has entered into your render distance at "
-			+ DF.format(player.prevX) + " " + DF.format(player.prevY) + " " + DF.format(player.prevZ);
+			+ DF.format(x) + " " + DF.format(y) + " " + DF.format(z);
 		ChatUtils.message(displayMsg);
-		if(!disconnecting && !MC.isInSingleplayer() && disconnect.isChecked())
+		if(disconnectMessage == null && !MC.isInSingleplayer() && disconnect.isChecked())
 		{
-			disconnecting = true;
-			message = displayMsg;
+			disconnectMessage = displayMsg;
 			EVENTS.add(UpdateListener.class, this);
 		}
 	}
@@ -66,9 +64,9 @@ public final class PlayerNotifierHack extends Hack implements UpdateListener
 	public void onUpdate()
 	{
 		ClientPlayerEntity player = MC.player;
-		MC.getNetworkHandler().getConnection().disconnect(Text.literal(message + "\nYour Position: "
+		MC.getNetworkHandler().getConnection().disconnect(Text.literal(disconnectMessage + "\nYour Position: "
 			+ DF.format(player.getX()) + " " + DF.format(player.getY()) + " " + DF.format(player.getZ())));
-		disconnecting = false;
+		disconnectMessage = null;
 		EVENTS.remove(UpdateListener.class, this);
 	}
 }

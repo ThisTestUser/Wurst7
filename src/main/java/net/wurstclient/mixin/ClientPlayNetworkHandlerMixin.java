@@ -126,7 +126,7 @@ public abstract class ClientPlayNetworkHandlerMixin
 	private void onCreateEntity(EntitySpawnS2CPacket packet, CallbackInfoReturnable<Entity> cir)
 	{
 		if(cir.getReturnValue() instanceof PlayerEntity player)
-			WurstClient.INSTANCE.getHax().playerNotifierHack.onAppear(player);
+			WurstClient.INSTANCE.getHax().playerNotifierHack.onAppear(player, packet.getX(), packet.getY(), packet.getZ());
 	}
 	
 	@Inject(at = @At(value = "INVOKE",
