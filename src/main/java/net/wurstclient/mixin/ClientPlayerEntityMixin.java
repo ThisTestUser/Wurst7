@@ -52,6 +52,8 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	@Shadow
 	@Final
 	protected MinecraftClient client;
+	@Shadow
+	private float mountJumpStrength;
 	
 	private Screen tempCurrentScreen;
 	private boolean hideNextItemUse;
@@ -128,6 +130,15 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	private void afterIsUsingItem(CallbackInfo ci)
 	{
 		hideNextItemUse = false;
+	}
+	
+	@Inject(at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/client/network/ClientPlayerEntity;getMountJumpStrength()F"),
+		method = "tickMovement()V")
+	private void setHorseJump(CallbackInfo ci)
+	{
+		if(WurstClient.INSTANCE.getHax().vehicleHack.forceHighestJump())
+			mountJumpStrength = 1;
 	}
 	
 	@Inject(at = @At("HEAD"), method = "sendMovementPackets()V")

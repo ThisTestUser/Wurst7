@@ -71,7 +71,6 @@ public final class HackList implements UpdateListener
 	public final BaseFinderHack baseFinderHack = new BaseFinderHack();
 	public final BeaconHack beaconHack = new BeaconHack();
 	public final BlinkHack blinkHack = new BlinkHack();
-	public final BoatFlyHack boatFlyHack = new BoatFlyHack();
 	public final BlockHitHack blockHitHack = new BlockHitHack();
 	public final BonemealAuraHack bonemealAuraHack = new BonemealAuraHack();
 	public final BowAimbotHack bowAimbotHack = new BowAimbotHack();
@@ -197,6 +196,7 @@ public final class HackList implements UpdateListener
 	public final TrollPotionHack trollPotionHack = new TrollPotionHack();
 	public final TrueSightHack trueSightHack = new TrueSightHack();
 	public final TunnellerHack tunnellerHack = new TunnellerHack();
+	public final VehicleHack vehicleHack = new VehicleHack();
 	public final XRayHack xRayHack = new XRayHack();
 	
 	private final TreeMap<String, Hack> hax =
