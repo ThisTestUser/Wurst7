@@ -13,6 +13,7 @@
     "BeaconScreenMixin",
     "BlockEntityRenderDispatcherMixin",
     "BlockMixin",
+    "BucketItemMixin",
     "CactusBlockMixin",
     "CameraMixin",
     "ChatHudMixin",
