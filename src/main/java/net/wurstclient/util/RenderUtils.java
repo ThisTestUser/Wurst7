@@ -13,6 +13,8 @@ import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
+
 import net.minecraft.block.Blocks;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.font.TextRenderer.TextLayerType;
@@ -22,8 +24,11 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.render.BufferBuilder.BuiltBuffer;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -943,5 +948,84 @@ public enum RenderUtils
 			TextLayerType.SEE_THROUGH, 0, 15728880);
 		
 		matrixStack.pop();
+	}
+	
+	public static void renderArmor(MatrixStack matrixStack, ItemStack stack,
+		Entity entity, int armorId, boolean showEnchants, boolean impossible,
+		float multiplier, double vOffset, float partialTicks)
+	{
+		NameTagsHack nameTags = WurstClient.INSTANCE.getHax().nameTagsHack;
+		
+		EntityRenderDispatcher dispatcher =
+			WurstClient.MC.getEntityRenderDispatcher();
+		double dist = dispatcher.getSquaredDistanceToCamera(entity);
+		if(dist > 4096 && !nameTags.isUnlimitedRange())
+			return;
+		
+		matrixStack.push();
+		
+		Vec3d camPos = RenderUtils.getCameraPos();
+		Vec3d tagPos = EntityUtils.getLerpedPos(entity, partialTicks)
+			.subtract(camPos).add(0, entity.getHeight() + vOffset, 0);
+		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
+		
+		matrixStack.multiply(dispatcher.getRotation());
+		
+		float scale = 0.025F * multiplier;
+		if(nameTags.isEnabled())
+		{
+			double distance = WurstClient.MC.player.distanceTo(entity);
+			if(distance > 10)
+				scale *= distance / 10;
+		}
+		matrixStack.scale(-scale, -scale, scale);
+		
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		TextRenderer tr = WurstClient.MC.textRenderer;
+		
+		// render item icon
+		DrawContext context = new DrawContext(WurstClient.MC, WurstClient.MC.getBufferBuilders().getEntityVertexConsumers());
+		context.getMatrices().multiplyPositionMatrix(matrixStack.peek().getPositionMatrix());
+		context.getMatrices().translate(0, 0, -149);
+		context.drawItem(stack, -50 + armorId * 20, -20);
+		context.getMatrices().translate(0, 0, 149);
+		context.drawItemInSlot(tr, stack, -50 + armorId * 20, -20);
+		context.draw();
+		
+		// render enchants
+		if(showEnchants && stack.hasEnchantments())
+		{
+			RenderSystem.disableBlend();
+			matrixStack.scale(0.5F, 0.5F, 0.5F);
+			int index = 0;
+			VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+			Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+			for(Entry<RegistryEntry<Enchantment>> entry : EnchantmentHelper.getEnchantments(stack).getEnchantmentsMap())
+			{
+				Enchantment enchantment = entry.getKey().value();
+				if(impossible && !enchantment.isAcceptableItem(stack))
+					continue;
+				index++;
+				Text text = EnchantmentUtils.getShortName(enchantment).append(Integer.toString(entry.getIntValue()));
+				
+				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
+					-60 + tr.fontHeight * index, 0xffffff, false, matrix,
+					immediate, TextLayerType.NORMAL, 0, 15728880);
+				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
+					-60 + tr.fontHeight * index, -1, false, matrix,
+					immediate, TextLayerType.SEE_THROUGH, 0, 15728880);
+			}
+			immediate.draw();
+		}
+		
+		RenderSystem.disableBlend();
+		matrixStack.pop();
+		
+		// reset lighting
+		if(WurstClient.MC.world.getDimensionEffects().isDarkened())
+			DiffuseLighting.enableForLevel();
+		else
+			DiffuseLighting.disableForLevel();
 	}
 }
