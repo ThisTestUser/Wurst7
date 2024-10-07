@@ -72,6 +72,34 @@ public enum InventoryUtils
 			.findFirst().orElse(-1);
 	}
 	
+	/**
+	 * Searches the player's inventory from slot 0 to {@code maxInvSlot-1} for
+	 * all items that matches the given predicate.
+	 *
+	 * @param predicate
+	 *            checks if an item is the one you want
+	 * @param maxInvSlot
+	 *            the maximum slot to search (exclusive), usually 9 for the
+	 *            hotbar or 36 for the whole inventory
+	 * @param includeOffhand
+	 *            also search the offhand (slot 40), even if maxInvSlot is lower
+	 * @return
+	 *         all the slots the item was found as an array
+	 */
+	public static int[] indicesOf(Predicate<ItemStack> predicate, int maxInvSlot,
+		boolean includeOffhand)
+	{
+		PlayerInventory inventory = MC.player.getInventory();
+		
+		// create a stream of all slots that we want to search
+		IntStream stream = IntStream.range(0, maxInvSlot);
+		if(includeOffhand)
+			stream = IntStream.concat(stream, IntStream.of(40));
+		
+		// find the slots of the item we want
+		return stream.filter(i -> predicate.test(inventory.getStack(i))).toArray();
+	}
+	
 	public static int count(Item item)
 	{
 		return count(stack -> stack.isOf(item), 36, false);
