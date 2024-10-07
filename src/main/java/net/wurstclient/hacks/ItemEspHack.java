@@ -18,11 +18,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
@@ -31,9 +34,12 @@ import net.wurstclient.events.CameraTransformViewBobbingListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.ColorSetting;
 import net.wurstclient.settings.EspBoxSizeSetting;
 import net.wurstclient.settings.EspStyleSetting;
+import net.wurstclient.settings.SliderSetting;
+import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.EntityUtils;
 import net.wurstclient.util.RegionPos;
 import net.wurstclient.util.RenderUtils;
@@ -43,6 +49,14 @@ import net.wurstclient.util.RotationUtils;
 public final class ItemEspHack extends Hack implements UpdateListener,
 	CameraTransformViewBobbingListener, RenderListener
 {
+	private final CheckboxSetting names =
+		new CheckboxSetting("Show item names", true);
+	
+	private final SliderSetting range = new SliderSetting("Item name range",
+		"Items names will be shown if less than this distance.\n"
+		+ "200 = always display item names", 30,
+		5, 200, 1, ValueDisplay.DECIMAL.withLabel(200, "always show"));
+	
 	private final EspStyleSetting style = new EspStyleSetting();
 	
 	private final EspBoxSizeSetting boxSize = new EspBoxSizeSetting(
@@ -59,6 +73,8 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 		super("ItemESP");
 		setCategory(Category.RENDER);
 		
+		addSetting(names);
+		addSetting(range);
 		addSetting(style);
 		addSetting(boxSize);
 		addSetting(color);
@@ -126,6 +142,7 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 	{
 		float extraSize = boxSize.getExtraSize();
 		
+		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
 		for(ItemEntity e : items)
 		{
 			matrixStack.push();
@@ -146,11 +163,21 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 				RenderUtils.drawOutlinedBox(new Box(-0.5, 0, -0.5, 0.5, 1, 0.5),
 					matrixStack);
 				
+				RenderSystem.setShaderColor(1, 1, 1, 1);
 				matrixStack.pop();
+			}
+			
+			if(names.isChecked() && (range.getValue() >= 200 || e.squaredDistanceTo(MC.player) < range.getValueSq()))
+			{
+				ItemStack stack = e.getStack();
+				Text name = Text.empty().append(stack.getName()).formatted(stack.getRarity().getFormatting());
+				Text text = Text.literal(stack.getCount() + "x ").append(name);
+				RenderUtils.renderTag(matrixStack, text, e, immediate, 0xffffff, 1, partialTicks);
 			}
 			
 			matrixStack.pop();
 		}
+		immediate.draw();
 	}
 	
 	private void renderTracers(MatrixStack matrixStack, float partialTicks,
