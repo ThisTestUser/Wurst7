@@ -93,32 +93,11 @@ public abstract class ClientPlayNetworkHandlerMixin
 				.afterUpdateBlock(pos));
 	}
 	
-	@Inject(at = @At("TAIL"),
+	@Inject(at = @At("HEAD"),
 		method = "onGameJoin(Lnet/minecraft/network/packet/s2c/play/GameJoinS2CPacket;)V")
 	private void onGameJoin(GameJoinS2CPacket packet, CallbackInfo ci)
 	{
-		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.onJoin();
-	}
-	
-	@Inject(at = @At("HEAD"),
-		method = "onEntitySpawn(Lnet/minecraft/network/packet/s2c/play/EntitySpawnS2CPacket;)V")
-	private void onEntitySpawn(EntitySpawnS2CPacket packet, CallbackInfo ci)
-	{
-		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.startTimer();
-	}
-	
-	@Inject(at = @At("HEAD"),
-		method = "onPlayerRespawn(Lnet/minecraft/network/packet/s2c/play/PlayerRespawnS2CPacket;)V")
-	private void onPlayerRespawn(PlayerRespawnS2CPacket packet, CallbackInfo ci)
-	{
-		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.checkEntityPackets();
-	}
-	
-	@Inject(at = @At("HEAD"),
-		method = "onAdvancements(Lnet/minecraft/network/packet/s2c/play/AdvancementUpdateS2CPacket;)V")
-	private void onAdvancements(AdvancementUpdateS2CPacket packet, CallbackInfo ci)
-	{
-		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.removeTimer();
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.onJoin((ClientPlayNetworkHandler)(Object)this);
 	}
 	
 	@Inject(at = @At("RETURN"),
@@ -137,7 +116,7 @@ public abstract class ClientPlayNetworkHandlerMixin
 	{
 		packet.getEntityIds().forEach(id -> {
 			Entity entity = WurstClient.MC.world.getEntityById(id);
-			if (entity != null && entity instanceof PlayerEntity player)
+			if(entity != null && entity instanceof PlayerEntity player)
 				WurstClient.INSTANCE.getHax().playerNotifierHack.onDisappear(player);
 		});
 	}

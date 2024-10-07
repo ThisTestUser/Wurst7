@@ -16,9 +16,13 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.ServerInfo;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
@@ -28,11 +32,12 @@ import net.wurstclient.command.CmdError;
 import net.wurstclient.command.CmdException;
 import net.wurstclient.command.CmdSyntaxError;
 import net.wurstclient.command.Command;
+import net.wurstclient.events.PacketInputListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.util.ChatUtils;
 import net.wurstclient.util.json.JsonUtils;
 
-public final class VisitorDetectorCmd extends Command implements UpdateListener
+public final class VisitorDetectorCmd extends Command implements UpdateListener, PacketInputListener
 {
 	private final File folder = 
 		WurstClient.INSTANCE.getWurstFolder().resolve("visitordetector").toFile();
@@ -41,6 +46,7 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 	private boolean waitingForEntity;
 	private long firstMobTime;
 	private boolean warnPos;
+	private List<EntityEntry> foundEntities = new ArrayList<>();
 	
 	public VisitorDetectorCmd()
 	{
@@ -69,19 +75,21 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 			ChatUtils.message("Servers where VisitorDetector is active: " + count);
 			servers.forEach(s -> ChatUtils.message(s));
 			return;
-		}else if(args.length == 1 && (args[0].equalsIgnoreCase("checkpos")
-			|| args[0].equalsIgnoreCase("poscheck")))
+		}else if(args.length == 1 && args[0].equalsIgnoreCase("checkpos"))
 			checkPos = true;
 		else if(args.length != 0)
 			throw new CmdSyntaxError();
+		
 		if(MC.isInSingleplayer())
 			throw new CmdError("VisitorDetector is intended for servers!");
+		
+		Vec3d playerPos = MC.player.getPos();
 		List<Entity> entities = new ArrayList<>();
+		
 		Entity[] entitiesPerAxis = new Entity[4];
 		double[] distances = new double[] {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE,
 			Double.MAX_VALUE};
-		Vec3d playerPos = MC.player.getPos();
-		//Diagonals
+		// find entities in diagonals
 		for(Entity en : MC.world.getEntities())
 			if(en instanceof LivingEntity && !(en instanceof PlayerEntity))
 			{
@@ -98,10 +106,11 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 		for(Entity en : entitiesPerAxis)
 			if(en != null)
 				entities.add(en);
+		
 		entitiesPerAxis = new Entity[4];
 		distances = new double[] {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE,
 			Double.MAX_VALUE};
-		//Cardinals
+		// find entities in cardinals
 		for(Entity en : MC.world.getEntities())
 			if(!entities.contains(en) && en instanceof LivingEntity && !(en instanceof PlayerEntity))
 			{
@@ -126,8 +135,11 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 		for(Entity en : entitiesPerAxis)
 			if(en != null)
 				entities.add(en);
+		
 		if(entities.isEmpty())
 			throw new CmdError("No mobs were detected in render distance!");
+		
+		// save entity data
 		File serverFile = new File(folder, MC.getCurrentServerEntry().address.replace(".", "_").replace(":", "_") + ".json");
 		folder.mkdirs();
 		boolean exists = serverFile.exists();
@@ -139,6 +151,7 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 			e.printStackTrace();
 			throw new CmdError("Failed to create VisitorDetector file!");
 		}
+		
 		List<EntityEntry> entityInfo = new ArrayList<>();
 		for(Entity en : entities)
 			entityInfo.add(new EntityEntry(en.getType().getUntranslatedName(), en.getX(), en.getY(), en.getZ(),
@@ -160,17 +173,20 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 			"VisitorDetector successfully activated." + (exists ? " Note: A previous instance was overwritten." : "")));
 	}
 	
-	public void onJoin()
+	public void onJoin(ClientPlayNetworkHandler networkHandler)
 	{
 		if(MC.isInSingleplayer() || !folder.exists())
 			return;
-		//Force single instance
-		if(address != null && MC.getCurrentServerEntry().address.equals(address))
+		
+		// force single instance
+		ServerInfo info = networkHandler.getServerInfo();
+		if(address != null && info.address.equals(address))
 		{
 			waitingForEntity = true;
 			return;
 		}
-		File serverFile = new File(folder, MC.getCurrentServerEntry().address.replace(".", "_").replace(":", "_") + ".json");
+		
+		File serverFile = new File(folder, info.address.replace(".", "_").replace(":", "_") + ".json");
 		if(!serverFile.exists())
 			return;
 		try
@@ -183,12 +199,16 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 					ChatUtils.warning("An unfinished instance of VisitorDetector was terminated! "
 						+ "IP: " + address);
 					EVENTS.remove(UpdateListener.class, this);
+					EVENTS.remove(PacketInputListener.class, this);
 				}
+				
+				// start new instance (wait for entity spawns)
 				serverData = data;
-				address = MC.getCurrentServerEntry().address;
+				address = info.address;
 				warnPos = false;
 				waitingForEntity = true;
 				EVENTS.add(UpdateListener.class, this);
+				EVENTS.add(PacketInputListener.class, this);
 			}
 		}catch(Exception e)
 		{
@@ -197,24 +217,19 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 			serverData = null;
 			address = null;
 			EVENTS.remove(UpdateListener.class, this);
+			EVENTS.remove(PacketInputListener.class, this);
 		}
 	}
 	
 	@Override
 	public void onUpdate()
 	{
-		if(waitingForEntity)
-			return;
-		if(System.currentTimeMillis() < firstMobTime + 1000)
-			return;
 		if(MC.isInSingleplayer())
 		{
 			ChatUtils.warning(address + " was left before VisitorDetector finished running!");
 			removeListeners();
 			return;
 		}
-		if(MC.player == null || MC.world == null)
-			return;
 		if(!MC.player.getUuid().toString().equals(serverData.uuid))
 		{
 			ChatUtils.warning("VisitorDetector is active for this server, but will not run"
@@ -222,6 +237,9 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 			removeListeners();
 			return;
 		}
+		
+		if(MC.player == null || MC.world == null)
+			return;
 		if(serverData.checkPos && (Math.abs(MC.player.getX() - serverData.playerX) > 1
 			|| Math.abs(MC.player.getY() - serverData.playerY) > 1
 			|| Math.abs(MC.player.getZ() - serverData.playerZ) > 1))
@@ -234,28 +252,36 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 			}
 			return;
 		}
-		List<Entity> verified = new ArrayList<>();
+		
+		// wait 3 seconds after first entity spawns
+		if(waitingForEntity)
+			return;
+		if(System.currentTimeMillis() < firstMobTime + 3000)
+			return;
+		
+		// verify entities
+		List<EntityEntry> verified = new ArrayList<>();
 		int index = 1;
 		for(EntityEntry entry : serverData.entityData)
 		{
-			Entity closestMatch = null;
+			EntityEntry closestMatch = null;
 			double distanceSq = -1;
-			for(Entity en : MC.world.getEntities())
-				if(!verified.contains(en) && en.getType().getUntranslatedName().equals(entry.type)
-					&& en.squaredDistanceTo(entry.x, entry.y, entry.z) < 100)
+			for(EntityEntry found : foundEntities)
+				if(!verified.contains(found) && found.type.equals(entry.type)
+					&& found.squaredDistanceTo(entry.x, entry.y, entry.z) < 100)
 				{
-					float yawDiff = (en.getYaw() - entry.yaw) % 360;
+					float yawDiff = (found.yaw - entry.yaw) % 360;
 					if(yawDiff < 0)
 						yawDiff += 360;
 					yawDiff = Math.min(yawDiff, (yawDiff + 360) % 360);
-					double curDistSq = squaredDiff(en.getX(), entry.x) * 5
-						+ squaredDiff(en.getY(), entry.y) * 5
-						+ squaredDiff(en.getZ(), entry.z) * 5
-						+ squaredDiff(en.getPitch(), entry.pitch) * 0.2
+					double curDistSq = squaredDiff(found.x, entry.x) * 5
+						+ squaredDiff(found.y, entry.y) * 5
+						+ squaredDiff(found.z, entry.z) * 5
+						+ squaredDiff(found.pitch, entry.pitch) * 0.2
 						+ Math.pow(yawDiff, 2) * 0.5;
 					if(closestMatch == null || distanceSq > curDistSq)
 					{
-						closestMatch = en;
+						closestMatch = found;
 						distanceSq = curDistSq;
 					}
 				}
@@ -265,27 +291,27 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 			{
 				ChatUtils.message("Entity #" + index + " discrepancies:");
 				boolean anyFail = false;
-				if(Math.abs(closestMatch.getX() - entry.x) > 0.1)
+				if(Math.abs(closestMatch.x - entry.x) > 0.1)
 				{
-					ChatUtils.message("X Position off by " + Math.abs(closestMatch.getX() - entry.x));
+					ChatUtils.message("X Position off by " + Math.abs(closestMatch.x - entry.x));
 					anyFail = true;
 				}
-				if(Math.abs(closestMatch.getY() - entry.y) > 0.1)
+				if(Math.abs(closestMatch.y - entry.y) > 0.1)
 				{
-					ChatUtils.message("Y Position off by " + Math.abs(closestMatch.getY() - entry.y));
+					ChatUtils.message("Y Position off by " + Math.abs(closestMatch.y - entry.y));
 					anyFail = true;
 				}
-				if(Math.abs(closestMatch.getZ() - entry.z) > 0.1)
+				if(Math.abs(closestMatch.z - entry.z) > 0.1)
 				{
-					ChatUtils.message("Z Position off by " + Math.abs(closestMatch.getZ() - entry.z));
+					ChatUtils.message("Z Position off by " + Math.abs(closestMatch.z - entry.z));
 					anyFail = true;
 				}
-				if(Math.abs(closestMatch.getPitch() - entry.pitch) > 1.5)
+				if(Math.abs(closestMatch.pitch - entry.pitch) > 1.5)
 				{
-					ChatUtils.message("Pitch rotation off by " + Math.abs(closestMatch.getPitch() - entry.pitch));
+					ChatUtils.message("Pitch rotation off by " + Math.abs(closestMatch.pitch - entry.pitch));
 					anyFail = true;
 				}
-				float yawDiff = Math.abs(MathHelper.wrapDegrees(closestMatch.getYaw()) - MathHelper.wrapDegrees(entry.yaw));
+				float yawDiff = Math.abs(MathHelper.wrapDegrees(closestMatch.yaw) - MathHelper.wrapDegrees(entry.yaw));
 				if(yawDiff > 1)
 				{
 					ChatUtils.message("Yaw Position off by " + yawDiff);
@@ -308,30 +334,31 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 		return Math.pow(one - two, 2);
 	}
 	
+	@Override
+	public void onReceivedPacket(PacketInputEvent event)
+	{
+		if(!(event.getPacket() instanceof EntitySpawnS2CPacket spawn) || spawn.getEntityType() == EntityType.PLAYER)
+			return;
+		
+		if(waitingForEntity)
+		{
+			// mob spawned, start timer
+			waitingForEntity = false;
+			firstMobTime = System.currentTimeMillis();
+		}
+		
+		// store entity data
+		foundEntities.add(new EntityEntry(spawn.getEntityType().getUntranslatedName(), spawn.getX(), spawn.getY(), spawn.getZ(),
+			spawn.getYaw(), spawn.getPitch()));
+	}
+	
 	private void removeListeners()
 	{
 		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(PacketInputListener.class, this);
 		serverData = null;
 		address = null;
-	}
-	
-	public void checkEntityPackets()
-	{
-		waitingForEntity = true;
-	}
-	
-	public void startTimer()
-	{
-		if(!waitingForEntity)
-			return;
-		waitingForEntity = false;
-		firstMobTime = System.currentTimeMillis();
-	}
-	
-	public void removeTimer()
-	{
-		waitingForEntity = false;
-		firstMobTime = 0;
+		foundEntities.clear();
 	}
 	
 	public class LogoutData
@@ -372,6 +399,12 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener
 			this.z = z;
 			this.yaw = yaw;
 			this.pitch = pitch;
+		}
+		
+		public double squaredDistanceTo(double x, double y, double z)
+		{
+			return squaredDiff(this.x, x) + squaredDiff(this.y, y)
+				+ squaredDiff(this.z, z);
 		}
 	}
 }
