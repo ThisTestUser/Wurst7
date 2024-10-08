@@ -70,13 +70,13 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		new ColorSetting("Block Hit Color",
 			"Color of the trajectory when it hits a block.", Color.GREEN);
 	
-	private final EnumSetting<Display> displayMode =
-		new EnumSetting<>("Display Mode",
-			"\u00a7lFancy\u00a7r mode shows trajectories that look better,"
-				+ " but with a slight inaccuracy.\n"
-				+ "\u00a7lAccurate\u00a7r mode is slightly more accurate"
-				+ " but is visually unappealing.",
-			Display.values(), Display.FANCY);
+	private final EnumSetting<Display> displayMode = new EnumSetting<>(
+		"Display Mode",
+		"\u00a7lFancy\u00a7r mode shows trajectories that look better,"
+			+ " but with a slight inaccuracy.\n"
+			+ "\u00a7lAccurate\u00a7r mode is slightly more accurate"
+			+ " but is visually unappealing.",
+		Display.values(), Display.FANCY);
 	
 	private final EnumSetting<FireworkLifespan> fireworkLifespan =
 		new EnumSetting<>("Firework Lifespan",
@@ -84,8 +84,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 				+ "This option allows you to choose which lifespan to use.",
 			FireworkLifespan.values(), FireworkLifespan.AVERAGE);
 	
-	private final CheckboxSetting otherPlayer = new CheckboxSetting(
-		"Trajectories for other players", false);
+	private final CheckboxSetting otherPlayer =
+		new CheckboxSetting("Trajectories for other players", false);
 	
 	public TrajectoriesHack()
 	{
@@ -122,8 +122,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		
 		RenderUtils.applyCameraRotationOnly();
 		
-		List<AbstractClientPlayerEntity> players = otherPlayer.isChecked() ? MC.world.getPlayers()
-			: Collections.singletonList(MC.player);
+		List<AbstractClientPlayerEntity> players = otherPlayer.isChecked()
+			? MC.world.getPlayers() : Collections.singletonList(MC.player);
 		boolean accurate = displayMode.getSelected() == Display.ACCURATE;
 		for(AbstractClientPlayerEntity player : players)
 		{
@@ -217,12 +217,9 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		int regionZ = (camPos.getZ() >> 9) * 512;
 		
 		matrixStack.translate(
-			MathHelper.lerp(partialTicks, hit.prevX,
-				hit.getX()) - regionX,
-			MathHelper.lerp(partialTicks, hit.prevY,
-				hit.getY()),
-			MathHelper.lerp(partialTicks, hit.prevZ,
-				hit.getZ()) - regionZ);
+			MathHelper.lerp(partialTicks, hit.prevX, hit.getX()) - regionX,
+			MathHelper.lerp(partialTicks, hit.prevY, hit.getY()),
+			MathHelper.lerp(partialTicks, hit.prevZ, hit.getZ()) - regionZ);
 		
 		Box box = new Box(BlockPos.ORIGIN);
 		
@@ -242,7 +239,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		matrixStack.pop();
 	}
 	
-	private record Trajectory(ArrayList<Vec3d> path, HashSet<Entity> hit, boolean land)
+	private record Trajectory(ArrayList<Vec3d> path, HashSet<Entity> hit,
+		boolean land)
 	{}
 	
 	private List<Trajectory> getTrajectories(AbstractClientPlayerEntity player,
@@ -259,17 +257,20 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 				return new ArrayList<>();
 		}
 		
-		if(stack.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(Enchantments.MULTISHOT, stack) != 0)
+		if(stack.getItem() instanceof CrossbowItem
+			&& EnchantmentHelper.getLevel(Enchantments.MULTISHOT, stack) != 0)
 		{
-			return Arrays.asList(getTrajectory(player, stack, partialTicks, accurate, 0),
+			return Arrays.asList(
+				getTrajectory(player, stack, partialTicks, accurate, 0),
 				getTrajectory(player, stack, partialTicks, accurate, -10),
 				getTrajectory(player, stack, partialTicks, accurate, 10));
 		}else
-			return Arrays.asList(getTrajectory(player, stack, partialTicks, accurate, 0));
+			return Arrays.asList(
+				getTrajectory(player, stack, partialTicks, accurate, 0));
 	}
 	
-	private Trajectory getTrajectory(AbstractClientPlayerEntity player, ItemStack stack,
-		float partialTicks, boolean accurate, float divergence)
+	private Trajectory getTrajectory(AbstractClientPlayerEntity player,
+		ItemStack stack, float partialTicks, boolean accurate, float divergence)
 	{
 		ArrayList<Vec3d> path = new ArrayList<>();
 		HashSet<Entity> hit = new HashSet<>();
@@ -278,17 +279,22 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		Item item = stack.getItem();
 		boolean bow = item instanceof BowItem;
 		boolean crossbow = item instanceof CrossbowItem;
-		boolean fireworkBow = crossbow && stack.get(DataComponentTypes.CHARGED_PROJECTILES) != null
-			&& stack.get(DataComponentTypes.CHARGED_PROJECTILES).contains(Items.FIREWORK_ROCKET);
+		boolean fireworkBow = crossbow
+			&& stack.get(DataComponentTypes.CHARGED_PROJECTILES) != null
+			&& stack.get(DataComponentTypes.CHARGED_PROJECTILES)
+				.contains(Items.FIREWORK_ROCKET);
 		boolean trident = item instanceof TridentItem;
 		boolean riptide = trident && EnchantmentHelper.getRiptide(stack) > 0;
 		boolean fishingRod = stack.getItem() instanceof FishingRodItem;
 		boolean potion = item instanceof ThrowablePotionItem;
 		boolean expBottle = item instanceof ExperienceBottleItem;
 		
-		int pierce = crossbow && !fireworkBow ? 1 + EnchantmentHelper.getLevel(Enchantments.PIERCING, stack) : 1;
-		int fireworkSpan = fireworkBow ? 1 + stack.get(DataComponentTypes.CHARGED_PROJECTILES).getProjectiles().get(0)
-			.get(DataComponentTypes.FIREWORKS).flightDuration() : 0;
+		int pierce = crossbow && !fireworkBow
+			? 1 + EnchantmentHelper.getLevel(Enchantments.PIERCING, stack) : 1;
+		int fireworkSpan = fireworkBow ? 1
+			+ stack.get(DataComponentTypes.CHARGED_PROJECTILES).getProjectiles()
+				.get(0).get(DataComponentTypes.FIREWORKS).flightDuration()
+			: 0;
 		
 		// calculate item-specific values
 		double throwPower = getThrowPower(player, stack, item);
@@ -304,8 +310,9 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			.add(getHandOffset(player, fishingRod, fireworkBow, yaw, accurate));
 		
 		// calculate starting motion
-		Vec3d arrowMotion = getStartingMotion(player, fishingRod, potion || expBottle,
-			yaw, pitch, player.getPitch(), throwPower, divergence);
+		Vec3d arrowMotion =
+			getStartingMotion(player, fishingRod, potion || expBottle, yaw,
+				pitch, player.getPitch(), throwPower, divergence);
 		
 		// build the path
 		for(int i = 0; i < 400; i++)
@@ -333,10 +340,13 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			}
 			
 			// check for mob collision
-			double halfBB = bow || (crossbow && !fireworkBow) || trident ? 0.25 : 0.125;
+			double halfBB =
+				bow || (crossbow && !fireworkBow) || trident ? 0.25 : 0.125;
 			Box arrowBox = new Box(lastPos.x - halfBB, lastPos.y,
-				lastPos.z - halfBB, lastPos.x + halfBB, lastPos.y + halfBB * 2, lastPos.z + halfBB);
-			Predicate<Entity> predicate = e -> !e.isSpectator() && e.isAlive() && e.canHit() && !hit.contains(e);
+				lastPos.z - halfBB, lastPos.x + halfBB, lastPos.y + halfBB * 2,
+				lastPos.z + halfBB);
+			Predicate<Entity> predicate = e -> !e.isSpectator() && e.isAlive()
+				&& e.canHit() && !hit.contains(e);
 			double maxDistSq = 64 * 64;
 			while(true)
 			{
@@ -364,7 +374,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 				int lifetime = 10 * fireworkSpan;
 				if(fireworkLifespan.getSelected() == FireworkLifespan.AVERAGE)
 					lifetime += 5;
-				else if(fireworkLifespan.getSelected() == FireworkLifespan.MAXIMUM)
+				else if(fireworkLifespan
+					.getSelected() == FireworkLifespan.MAXIMUM)
 					lifetime += 11;
 				
 				if(i > lifetime)
@@ -373,7 +384,9 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			}
 			
 			// apply drag
-			if(BlockUtils.getState(new BlockPos(MathHelper.floor(arrowPos.x), MathHelper.floor(arrowPos.y), MathHelper.floor(arrowPos.z)))
+			if(BlockUtils
+				.getState(new BlockPos(MathHelper.floor(arrowPos.x),
+					MathHelper.floor(arrowPos.y), MathHelper.floor(arrowPos.z)))
 				.getBlock() == Blocks.WATER && !trident)
 			{
 				if(bow)
@@ -398,8 +411,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		return new Trajectory(path, hit, land);
 	}
 	
-	private Vec3d getHandOffset(AbstractClientPlayerEntity player, boolean fishingRod, boolean fireworkBow,
-		double yaw, boolean accurate)
+	private Vec3d getHandOffset(AbstractClientPlayerEntity player,
+		boolean fishingRod, boolean fireworkBow, double yaw, boolean accurate)
 	{
 		double factor = accurate ? 0 : 0.16;
 		double yOffset = fishingRod ? 0 : fireworkBow ? 0.15 : 0.1;
@@ -417,8 +430,9 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		return new Vec3d(handOffsetX, handOffsetY, handOffsetZ);
 	}
 	
-	private Vec3d getStartingMotion(AbstractClientPlayerEntity player, boolean fishingRod, boolean pitchDown,
-		double yaw, double pitch, double pitchDeg, double throwPower, float divergence)
+	private Vec3d getStartingMotion(AbstractClientPlayerEntity player,
+		boolean fishingRod, boolean pitchDown, double yaw, double pitch,
+		double pitchDeg, double throwPower, float divergence)
 	{
 		double cosOfPitch = Math.cos(pitch);
 		
@@ -429,7 +443,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		if(fishingRod)
 		{
 			arrowMotionX = -Math.sin(-yaw - Math.PI);
-			arrowMotionY = MathHelper.clamp(Math.sin(-pitch) / Math.cos(-pitch), -5, 5);
+			arrowMotionY =
+				MathHelper.clamp(Math.sin(-pitch) / Math.cos(-pitch), -5, 5);
 			arrowMotionZ = -Math.cos(-yaw - Math.PI);
 			
 			double arrowMotion = Math.sqrt(arrowMotionX * arrowMotionX
@@ -438,26 +453,30 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			arrowMotionY *= 0.6 / arrowMotion + 0.5;
 			arrowMotionZ *= 0.6 / arrowMotion + 0.5;
 			
-			return new Vec3d(arrowMotionX, arrowMotionY, arrowMotionZ).multiply(throwPower);
+			return new Vec3d(arrowMotionX, arrowMotionY, arrowMotionZ)
+				.multiply(throwPower);
 		}else
 		{
 			arrowMotionX = -Math.sin(yaw) * cosOfPitch;
-			arrowMotionY = -Math.sin(pitchDown ? Math.toRadians(pitchDeg - 20) : pitch);
+			arrowMotionY =
+				-Math.sin(pitchDown ? Math.toRadians(pitchDeg - 20) : pitch);
 			arrowMotionZ = Math.cos(yaw) * cosOfPitch;
 			
 			if(divergence == 0)
-				return new Vec3d(arrowMotionX, arrowMotionY, arrowMotionZ).normalize()
-					.multiply(throwPower);
+				return new Vec3d(arrowMotionX, arrowMotionY, arrowMotionZ)
+					.normalize().multiply(throwPower);
 			
 			Vec3d rotVec = player.getOppositeRotationVector(1.0f);
 			Quaternionf quaternion = new Quaternionf().setAngleAxis(
 				Math.toRadians(divergence), rotVec.x, rotVec.y, rotVec.z);
-			Vector3f vec = new Vec3d(arrowMotionX, arrowMotionY, arrowMotionZ).toVector3f().rotate(quaternion);
+			Vector3f vec = new Vec3d(arrowMotionX, arrowMotionY, arrowMotionZ)
+				.toVector3f().rotate(quaternion);
 			return new Vec3d(vec).normalize().multiply(throwPower);
 		}
 	}
 	
-	private double getThrowPower(AbstractClientPlayerEntity player, ItemStack stack, Item item)
+	private double getThrowPower(AbstractClientPlayerEntity player,
+		ItemStack stack, Item item)
 	{
 		if(!(item instanceof BowItem))
 		{
@@ -479,7 +498,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 			if(item instanceof CrossbowItem)
 			{
 				if(stack.get(DataComponentTypes.CHARGED_PROJECTILES) != null
-					&& stack.get(DataComponentTypes.CHARGED_PROJECTILES).contains(Items.FIREWORK_ROCKET))
+					&& stack.get(DataComponentTypes.CHARGED_PROJECTILES)
+						.contains(Items.FIREWORK_ROCKET))
 					return 1.6;
 				
 				return 3.15;
@@ -501,7 +521,8 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 	
 	private double getProjectileGravity(ItemStack stack, Item item)
 	{
-		if(item instanceof TridentItem && EnchantmentHelper.getRiptide(stack) > 0)
+		if(item instanceof TridentItem
+			&& EnchantmentHelper.getRiptide(stack) > 0)
 			return 0.08;
 		
 		if(item instanceof BowItem || item instanceof CrossbowItem

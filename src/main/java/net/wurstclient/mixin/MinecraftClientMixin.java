@@ -181,19 +181,22 @@ public abstract class MinecraftClientMixin
 			!WurstClient.INSTANCE.getOtfs().noTelemetryOtf.isEnabled());
 	}
 	
-	@WrapOperation(at = @At(value = "INVOKE",
-		target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z",
-		ordinal = 2),
+	@WrapOperation(
+		at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z",
+			ordinal = 2),
 		method = "handleInputEvents()V")
-	private boolean allowBlockHits(KeyBinding useKey, Operation<Boolean> original)
+	private boolean allowBlockHits(KeyBinding useKey,
+		Operation<Boolean> original)
 	{
-		boolean isBlocking = player.getActiveItem() != null 
+		boolean isBlocking = player.getActiveItem() != null
 			&& player.getActiveItem().getItem() instanceof ShieldItem
 			&& WurstClient.INSTANCE.getHax().blockHitHack.isBlocking();
 		if(isBlocking)
 		{
 			// allow attacks while using shield
-			while(((MinecraftClient)(Object)this).options.attackKey.wasPressed())
+			while(((MinecraftClient)(Object)this).options.attackKey
+				.wasPressed())
 				doAttack();
 			
 			// prevent stopUsingItem() from being called
@@ -219,9 +222,13 @@ public abstract class MinecraftClientMixin
 	{
 		wurstSession = session;
 		
-		UserApiService userApiService = session.getAccountType() == Session.AccountType.MSA ?
-			authenticationService.createUserApiService(session.getAccessToken()) : UserApiService.OFFLINE;
-		wurstProfileKeys = ProfileKeys.create(userApiService, session, runDirectory.toPath());
+		UserApiService userApiService =
+			session.getAccountType() == Session.AccountType.MSA
+				? authenticationService.createUserApiService(
+					session.getAccessToken())
+				: UserApiService.OFFLINE;
+		wurstProfileKeys =
+			ProfileKeys.create(userApiService, session, runDirectory.toPath());
 	}
 	
 	@Shadow

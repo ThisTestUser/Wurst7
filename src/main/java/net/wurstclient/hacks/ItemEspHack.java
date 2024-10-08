@@ -54,8 +54,8 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 	
 	private final SliderSetting range = new SliderSetting("Item name range",
 		"Items names will be shown if less than this distance.\n"
-		+ "200 = always display item names", 30,
-		5, 200, 1, ValueDisplay.DECIMAL.withLabel(200, "always show"));
+			+ "200 = always display item names",
+		30, 5, 200, 1, ValueDisplay.DECIMAL.withLabel(200, "always show"));
 	
 	private final EspStyleSetting style = new EspStyleSetting();
 	
@@ -142,7 +142,8 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 	{
 		float extraSize = boxSize.getExtraSize();
 		
-		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider
+			.immediate(Tessellator.getInstance().getBuffer());
 		for(ItemEntity e : items)
 		{
 			matrixStack.push();
@@ -167,12 +168,15 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 				matrixStack.pop();
 			}
 			
-			if(names.isChecked() && (range.getValue() >= 200 || e.squaredDistanceTo(MC.player) < range.getValueSq()))
+			if(names.isChecked() && (range.getValue() >= 200
+				|| e.squaredDistanceTo(MC.player) < range.getValueSq()))
 			{
 				ItemStack stack = e.getStack();
-				Text name = Text.empty().append(stack.getName()).formatted(stack.getRarity().getFormatting());
+				Text name = Text.empty().append(stack.getName())
+					.formatted(stack.getRarity().getFormatting());
 				Text text = Text.literal(stack.getCount() + "x ").append(name);
-				RenderUtils.renderTag(matrixStack, text, e, immediate, 0xffffff, 1, partialTicks);
+				RenderUtils.renderTag(matrixStack, text, e, immediate, 0xffffff,
+					1, partialTicks);
 			}
 			
 			matrixStack.pop();

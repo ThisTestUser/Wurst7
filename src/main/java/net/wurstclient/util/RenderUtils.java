@@ -982,8 +982,10 @@ public enum RenderUtils
 		TextRenderer tr = WurstClient.MC.textRenderer;
 		
 		// render item icon
-		DrawContext context = new DrawContext(WurstClient.MC, WurstClient.MC.getBufferBuilders().getEntityVertexConsumers());
-		context.getMatrices().multiplyPositionMatrix(matrixStack.peek().getPositionMatrix());
+		DrawContext context = new DrawContext(WurstClient.MC,
+			WurstClient.MC.getBufferBuilders().getEntityVertexConsumers());
+		context.getMatrices()
+			.multiplyPositionMatrix(matrixStack.peek().getPositionMatrix());
 		context.getMatrices().translate(0, 0, -149);
 		context.drawItem(stack, -50 + armorId * 20, -20);
 		context.getMatrices().translate(0, 0, 149);
@@ -996,22 +998,25 @@ public enum RenderUtils
 			RenderSystem.disableBlend();
 			matrixStack.scale(0.5F, 0.5F, 0.5F);
 			int index = 0;
-			VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+			VertexConsumerProvider.Immediate immediate = VertexConsumerProvider
+				.immediate(Tessellator.getInstance().getBuffer());
 			Matrix4f matrix = matrixStack.peek().getPositionMatrix();
-			for(Entry<RegistryEntry<Enchantment>> entry : EnchantmentHelper.getEnchantments(stack).getEnchantmentsMap())
+			for(Entry<RegistryEntry<Enchantment>> entry : EnchantmentHelper
+				.getEnchantments(stack).getEnchantmentsMap())
 			{
 				Enchantment enchantment = entry.getKey().value();
 				if(impossible && !enchantment.isAcceptableItem(stack))
 					continue;
 				index++;
-				Text text = EnchantmentUtils.getShortName(enchantment).append(Integer.toString(entry.getIntValue()));
+				Text text = EnchantmentUtils.getShortName(enchantment)
+					.append(Integer.toString(entry.getIntValue()));
 				
 				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
 					-60 + tr.fontHeight * index, 0xffffff, false, matrix,
 					immediate, TextLayerType.NORMAL, 0, 15728880);
 				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
-					-60 + tr.fontHeight * index, -1, false, matrix,
-					immediate, TextLayerType.SEE_THROUGH, 0, 15728880);
+					-60 + tr.fontHeight * index, -1, false, matrix, immediate,
+					TextLayerType.SEE_THROUGH, 0, 15728880);
 			}
 			immediate.draw();
 		}

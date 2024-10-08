@@ -31,8 +31,8 @@ public class BlockHitHack extends Hack implements UpdateListener
 		"Determines how close the entity has to get for BlockHit to start blocking.",
 		4, 2, 9, 0.1, ValueDisplay.DECIMAL);
 	
-	private final CheckboxSetting alwaysBlock = new CheckboxSetting(
-		"Always block", false);
+	private final CheckboxSetting alwaysBlock =
+		new CheckboxSetting("Always block", false);
 	
 	private final EntityFilterList entityFilters =
 		EntityFilterList.genericCombat();
@@ -70,25 +70,31 @@ public class BlockHitHack extends Hack implements UpdateListener
 		stream = stream.filter(e -> MC.player.squaredDistanceTo(e) <= rangeSq);
 		stream = entityFilters.applyTo(stream);
 		
-		boolean hasShield = MC.player.getOffHandStack().getItem() instanceof ShieldItem;
+		boolean hasShield =
+			MC.player.getOffHandStack().getItem() instanceof ShieldItem;
 		
 		boolean isEntityNear = hasShield && stream.count() > 0;
 		boolean permaBlock = alwaysBlock.isChecked() && hasShield;
 		
 		ItemStack item = MC.player.getMainHandStack();
 		boolean isUsingItem = MC.options.useKey.isPressed()
-			&& item.getUseAction() != UseAction.BLOCK && item.getUseAction() != UseAction.NONE;
+			&& item.getUseAction() != UseAction.BLOCK
+			&& item.getUseAction() != UseAction.NONE;
 		if((isEntityNear || permaBlock) && !isUsingItem)
 			shouldBlock = true;
 		else
 			shouldBlock = false;
 		
-		if(isUsingItem && MC.player.getActiveItem().getItem() instanceof ShieldItem)
+		if(isUsingItem
+			&& MC.player.getActiveItem().getItem() instanceof ShieldItem)
 			MC.interactionManager.stopUsingItem(MC.player);
-		if(shouldBlock && hasShield && (!prevShouldBlock || !MC.player.isBlocking()))
+		if(shouldBlock && hasShield
+			&& (!prevShouldBlock || !MC.player.isBlocking()))
 		{
-			if(MC.interactionManager.interactItem(MC.player, Hand.OFF_HAND) == ActionResult.SUCCESS)
-				MC.gameRenderer.firstPersonRenderer.resetEquipProgress(Hand.OFF_HAND);
+			if(MC.interactionManager.interactItem(MC.player,
+				Hand.OFF_HAND) == ActionResult.SUCCESS)
+				MC.gameRenderer.firstPersonRenderer
+					.resetEquipProgress(Hand.OFF_HAND);
 		}
 		prevShouldBlock = shouldBlock;
 	}

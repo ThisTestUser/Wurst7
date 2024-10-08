@@ -59,7 +59,8 @@ public class IngameHudMixin
 	@Inject(at = @At("HEAD"),
 		method = "renderPortalOverlay(Lnet/minecraft/client/gui/DrawContext;F)V",
 		cancellable = true)
-	private void onRenderPortalOverlay(DrawContext context, float nauseaStrength, CallbackInfo ci)
+	private void onRenderPortalOverlay(DrawContext context,
+		float nauseaStrength, CallbackInfo ci)
 	{
 		if(!WurstClient.INSTANCE.getHax().noPortalOverlayHack.isEnabled())
 			return;

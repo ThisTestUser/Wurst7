@@ -39,8 +39,7 @@ import net.wurstclient.util.RotationUtils;
 @SearchTags({"LavaFill", "WaterFill"})
 public class LiquidFillHack extends Hack implements UpdateListener
 {
-	private final CheckboxSetting lava =
-		new CheckboxSetting("Fill lava", true);
+	private final CheckboxSetting lava = new CheckboxSetting("Fill lava", true);
 	
 	private final CheckboxSetting water =
 		new CheckboxSetting("Fill water", false);
@@ -53,35 +52,36 @@ public class LiquidFillHack extends Hack implements UpdateListener
 		4, 1, 6, 0.25, ValueDisplay.DECIMAL);
 	
 	private final CheckboxSetting liquids =
-		new CheckboxSetting("Place on liquids", "Allow placement against liquids, not just solid blocks.", true);
+		new CheckboxSetting("Place on liquids",
+			"Allow placement against liquids, not just solid blocks.", true);
 	
-	private final SliderSetting delay =
-		new SliderSetting("Placement Delay", "Delay in MS between block placements.",
-			300, 0, 2000, 50, ValueDisplay.INTEGER);
+	private final SliderSetting delay = new SliderSetting("Placement Delay",
+		"Delay in MS between block placements.", 300, 0, 2000, 50,
+		ValueDisplay.INTEGER);
 	
-	private final CheckboxSetting topCheck =
-		new CheckboxSetting("Top Check",
-			"Only place on non-source liquids if it is the top block.", false);
+	private final CheckboxSetting topCheck = new CheckboxSetting("Top Check",
+		"Only place on non-source liquids if it is the top block.", false);
 	
 	private ItemListSetting blacklist = new ItemListSetting("Blacklist",
 		"Items in this category will not be used for filling.");
 	
 	private ItemListSetting whitelist = new ItemListSetting("Whitelist",
 		"Items in this category will be used for filling.\n"
-		+ "This is used for including items that are not blocks.");
+			+ "This is used for including items that are not blocks.");
 	
-	private final CheckboxSetting refill =
-		new CheckboxSetting("Refill",
-			"Automatically moves blocks of the same type"
-			+ " to your hand when your held stack is used up.", false);
+	private final CheckboxSetting refill = new CheckboxSetting("Refill",
+		"Automatically moves blocks of the same type"
+			+ " to your hand when your held stack is used up.",
+		false);
 	
 	private final SliderSetting refillDelay = new SliderSetting("Refill Delay",
 		"Delay in ticks before replenishing your held block.", 4, 1, 20, 1,
 		ValueDisplay.INTEGER);
 	
-	private final SliderSetting refillSwitchDelay = new SliderSetting("Refill Switch Delay",
-		"Additional delay when moving blocks from inventory to hotbar.", 2, 1, 20, 1,
-		ValueDisplay.INTEGER);
+	private final SliderSetting refillSwitchDelay =
+		new SliderSetting("Refill Switch Delay",
+			"Additional delay when moving blocks from inventory to hotbar.", 2,
+			1, 20, 1, ValueDisplay.INTEGER);
 	
 	private Item refillItem;
 	private int refillTimer;
@@ -174,12 +174,15 @@ public class LiquidFillHack extends Hack implements UpdateListener
 	{
 		BlockPos playerPos = BlockPos.ofFloored(MC.player.getPos());
 		int searchRange = (int)(range.getValueI() + 2);
-		for(int y = playerPos.getY() + searchRange; y >= playerPos.getY() - searchRange; y--)
+		for(int y = playerPos.getY() + searchRange; y >= playerPos.getY()
+			- searchRange; y--)
 			for(int x = 0; x <= range.getValueI() * 2 + 4; x++)
 				for(int z = 0; z <= range.getValueI() * 2 + 4; z++)
 				{
-					int realX = playerPos.getX() + (x % 2 == 1 ? (-x - 1) / 2 : x / 2);
-					int realZ = playerPos.getZ() + (z % 2 == 1 ? (-z - 1) / 2 : z / 2);
+					int realX =
+						playerPos.getX() + (x % 2 == 1 ? (-x - 1) / 2 : x / 2);
+					int realZ =
+						playerPos.getZ() + (z % 2 == 1 ? (-z - 1) / 2 : z / 2);
 					BlockPos pos = new BlockPos(realX, y, realZ);
 					if(MC.player.getBoundingBox().intersects(new Box(pos)))
 						continue;
@@ -188,8 +191,10 @@ public class LiquidFillHack extends Hack implements UpdateListener
 					if(state.isEmpty())
 						continue;
 					
-					boolean isWater = state.isOf(Fluids.WATER) || state.isOf(Fluids.FLOWING_WATER);
-					if((isWater && !water.isChecked()) || (!isWater && !lava.isChecked()))
+					boolean isWater = state.isOf(Fluids.WATER)
+						|| state.isOf(Fluids.FLOWING_WATER);
+					if((isWater && !water.isChecked())
+						|| (!isWater && !lava.isChecked()))
 						continue;
 					if(sources && !state.isStill())
 						continue;
@@ -199,7 +204,8 @@ public class LiquidFillHack extends Hack implements UpdateListener
 					if(topCheck.isChecked() && !sources)
 					{
 						FluidState topState = MC.world.getFluidState(pos.up());
-						if(!topState.isEmpty() && topState.getFluid().matchesType(state.getFluid()))
+						if(!topState.isEmpty() && topState.getFluid()
+							.matchesType(state.getFluid()))
 							continue;
 					}
 					
@@ -220,7 +226,8 @@ public class LiquidFillHack extends Hack implements UpdateListener
 			BlockPos neighbor = pos.offset(side);
 			
 			// check if neighbor can be right clicked
-			boolean allowLiquidPlace = liquids.isChecked() && BlockUtils.getState(neighbor).getBlock() instanceof FluidBlock;
+			boolean allowLiquidPlace = liquids.isChecked() && BlockUtils
+				.getState(neighbor).getBlock() instanceof FluidBlock;
 			if(!allowLiquidPlace && (!BlockUtils.canBeClicked(neighbor)
 				|| BlockUtils.getState(neighbor).isReplaceable()))
 				continue;
@@ -237,7 +244,8 @@ public class LiquidFillHack extends Hack implements UpdateListener
 				continue;
 			
 			// sneak
-			if(isInteractable(BlockUtils.getBlock(neighbor)) && !MC.player.isSneaking())
+			if(isInteractable(BlockUtils.getBlock(neighbor))
+				&& !MC.player.isSneaking())
 			{
 				MC.player.networkHandler.sendPacket(new ClientCommandC2SPacket(
 					MC.player, Mode.PRESS_SHIFT_KEY));
@@ -270,30 +278,39 @@ public class LiquidFillHack extends Hack implements UpdateListener
 	private boolean isInteractable(Block block)
 	{
 		// all blocks here have ActionResult.CONSUME or ActionResult.success
-		return block instanceof AbstractFurnaceBlock || block instanceof AnvilBlock
-			|| block instanceof BarrelBlock || block instanceof BeaconBlock
-			|| block instanceof BedBlock || block instanceof BellBlock
-			|| block instanceof BrewingStandBlock || block instanceof ButtonBlock
-			|| block instanceof CakeBlock || block instanceof CandleBlock
-			|| block instanceof CandleCakeBlock || block instanceof CartographyTableBlock
+		return block instanceof AbstractFurnaceBlock
+			|| block instanceof AnvilBlock || block instanceof BarrelBlock
+			|| block instanceof BeaconBlock || block instanceof BedBlock
+			|| block instanceof BellBlock || block instanceof BrewingStandBlock
+			|| block instanceof ButtonBlock || block instanceof CakeBlock
+			|| block instanceof CandleBlock || block instanceof CandleCakeBlock
+			|| block instanceof CartographyTableBlock
 			|| block instanceof CaveVines || block instanceof ChestBlock
-			|| block instanceof ChiseledBookshelfBlock || block instanceof CommandBlock
-			|| block instanceof ComparatorBlock || block instanceof ComposterBlock
-			|| block instanceof CrafterBlock || block instanceof CraftingTableBlock
-			|| block instanceof DaylightDetectorBlock || block instanceof DecoratedPotBlock
+			|| block instanceof ChiseledBookshelfBlock
+			|| block instanceof CommandBlock || block instanceof ComparatorBlock
+			|| block instanceof ComposterBlock || block instanceof CrafterBlock
+			|| block instanceof CraftingTableBlock
+			|| block instanceof DaylightDetectorBlock
+			|| block instanceof DecoratedPotBlock
 			|| block instanceof DispenserBlock || block instanceof DoorBlock
-			|| block instanceof DragonEggBlock || block instanceof EnchantingTableBlock
-			|| block instanceof EnderChestBlock || block instanceof FenceGateBlock
-			|| block instanceof FlowerPotBlock || block instanceof GrindstoneBlock
-			|| block instanceof HopperBlock || block instanceof JigsawBlock
-			|| block instanceof JukeboxBlock || block instanceof LecternBlock
-			|| block instanceof LeverBlock || block instanceof LightBlock
-			|| block instanceof LoomBlock || block instanceof NoteBlock
-			|| block instanceof RepeaterBlock || block instanceof RespawnAnchorBlock
-			|| block instanceof ShulkerBoxBlock || block instanceof SmithingTableBlock
-			|| block instanceof StonecutterBlock || block instanceof StructureBlock
-			|| block instanceof SweetBerryBushBlock || block instanceof TrapdoorBlock
-			|| block instanceof VaultBlock || block instanceof PistonExtensionBlock;
+			|| block instanceof DragonEggBlock
+			|| block instanceof EnchantingTableBlock
+			|| block instanceof EnderChestBlock
+			|| block instanceof FenceGateBlock
+			|| block instanceof FlowerPotBlock
+			|| block instanceof GrindstoneBlock || block instanceof HopperBlock
+			|| block instanceof JigsawBlock || block instanceof JukeboxBlock
+			|| block instanceof LecternBlock || block instanceof LeverBlock
+			|| block instanceof LightBlock || block instanceof LoomBlock
+			|| block instanceof NoteBlock || block instanceof RepeaterBlock
+			|| block instanceof RespawnAnchorBlock
+			|| block instanceof ShulkerBoxBlock
+			|| block instanceof SmithingTableBlock
+			|| block instanceof StonecutterBlock
+			|| block instanceof StructureBlock
+			|| block instanceof SweetBerryBushBlock
+			|| block instanceof TrapdoorBlock || block instanceof VaultBlock
+			|| block instanceof PistonExtensionBlock;
 	}
 	
 	private boolean isCorrectItem(ItemStack stack)

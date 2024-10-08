@@ -97,27 +97,32 @@ public abstract class ClientPlayNetworkHandlerMixin
 		method = "onGameJoin(Lnet/minecraft/network/packet/s2c/play/GameJoinS2CPacket;)V")
 	private void onGameJoin(GameJoinS2CPacket packet, CallbackInfo ci)
 	{
-		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.onJoin((ClientPlayNetworkHandler)(Object)this);
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd
+			.onJoin((ClientPlayNetworkHandler)(Object)this);
 	}
 	
 	@Inject(at = @At("RETURN"),
 		method = "createEntity(Lnet/minecraft/network/packet/s2c/play/EntitySpawnS2CPacket;)Lnet/minecraft/entity/Entity;")
-	private void onCreateEntity(EntitySpawnS2CPacket packet, CallbackInfoReturnable<Entity> cir)
+	private void onCreateEntity(EntitySpawnS2CPacket packet,
+		CallbackInfoReturnable<Entity> cir)
 	{
 		if(cir.getReturnValue() instanceof PlayerEntity player)
-			WurstClient.INSTANCE.getHax().playerNotifierHack.onAppear(player, packet.getX(), packet.getY(), packet.getZ());
+			WurstClient.INSTANCE.getHax().playerNotifierHack.onAppear(player,
+				packet.getX(), packet.getY(), packet.getZ());
 	}
 	
 	@Inject(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/network/packet/s2c/play/EntitiesDestroyS2CPacket;getEntityIds()Lit/unimi/dsi/fastutil/ints/IntList;",
 		ordinal = 0),
 		method = "onEntitiesDestroy(Lnet/minecraft/network/packet/s2c/play/EntitiesDestroyS2CPacket;)V")
-	private void onEntitiesDestroy(EntitiesDestroyS2CPacket packet, CallbackInfo ci)
+	private void onEntitiesDestroy(EntitiesDestroyS2CPacket packet,
+		CallbackInfo ci)
 	{
 		packet.getEntityIds().forEach(id -> {
 			Entity entity = WurstClient.MC.world.getEntityById(id);
 			if(entity != null && entity instanceof PlayerEntity player)
-				WurstClient.INSTANCE.getHax().playerNotifierHack.onDisappear(player);
+				WurstClient.INSTANCE.getHax().playerNotifierHack
+					.onDisappear(player);
 		});
 	}
 }

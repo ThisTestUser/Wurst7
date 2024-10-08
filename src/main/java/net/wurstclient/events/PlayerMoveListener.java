@@ -18,7 +18,8 @@ public interface PlayerMoveListener extends Listener
 {
 	public void onPlayerMove(PlayerMoveEvent event);
 	
-	public static class PlayerMoveEvent extends CancellableEvent<PlayerMoveListener>
+	public static class PlayerMoveEvent
+		extends CancellableEvent<PlayerMoveListener>
 	{
 		private final MovementType type;
 		private Vec3d offset;

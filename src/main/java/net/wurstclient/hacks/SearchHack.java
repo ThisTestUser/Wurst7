@@ -47,8 +47,8 @@ import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.*;
 
 @SearchTags({"BlockESP", "block esp"})
-public final class SearchHack extends Hack
-	implements UpdateListener, RenderListener, CameraTransformViewBobbingListener
+public final class SearchHack extends Hack implements UpdateListener,
+	RenderListener, CameraTransformViewBobbingListener
 {
 	private final BlockListSetting blocks = new BlockListSetting("Blocks",
 		"The types of blocks to search for.", "minecraft:diamond_ore");
@@ -69,8 +69,7 @@ public final class SearchHack extends Hack
 	private final CheckboxSetting tracers = new CheckboxSetting("Tracers",
 		"Draw tracer lines to blocks found.", false);
 	
-	public final CheckboxSetting alert = new CheckboxSetting("Alert",
-		false);
+	public final CheckboxSetting alert = new CheckboxSetting("Alert", false);
 	
 	private boolean alertState;
 	private int foundBlocks;
@@ -110,13 +109,14 @@ public final class SearchHack extends Hack
 		if(blocks.getBlockNames().size() == 0)
 			name = getName() + " [None]";
 		else if(blocks.getBlockNames().size() == 1)
-			name = getName() + " [" + blocks.getBlockNames().get(0).replace("minecraft:", "")
-				+ "]";
+			name = getName() + " ["
+				+ blocks.getBlockNames().get(0).replace("minecraft:", "") + "]";
 		else
 			name = getName() + " [Multi]";
 		if(counter.isChecked())
 		{
-			boolean exceed = foundBlocks >= (int)Math.pow(10, limit.getValueI());
+			boolean exceed =
+				foundBlocks >= (int)Math.pow(10, limit.getValueI());
 			name += " (" + (exceed ? ">" : "") + foundBlocks + " found)";
 		}
 		return name;
@@ -179,8 +179,8 @@ public final class SearchHack extends Hack
 		if(!currentBlocks.equals(lastBlocks))
 		{
 			lastBlocks = currentBlocks;
-			coordinator.setQuery(
-				(pos, state) -> Collections.binarySearch(lastBlocks,
+			coordinator
+				.setQuery((pos, state) -> Collections.binarySearch(lastBlocks,
 					BlockUtils.getName(state.getBlock())) >= 0);
 			searchersChanged = true;
 		}
@@ -221,7 +221,9 @@ public final class SearchHack extends Hack
 		
 		if(alert.isChecked() && foundBlocks > 0 && !alertState)
 		{
-			ChatUtils.message("Alert: Search has found blocks near your location of " + MC.player.getPos());
+			ChatUtils
+				.message("Alert: Search has found blocks near your location of "
+					+ MC.player.getPos());
 			alertState = true;
 		}
 		
@@ -274,16 +276,18 @@ public final class SearchHack extends Hack
 			
 			for(BlockPos pos : matchingBlocks)
 			{
-				Vec3d center = BlockUtils.canBeClicked(pos) ? BlockUtils.getBoundingBox(pos).getCenter()
-					: new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+				Vec3d center = BlockUtils.canBeClicked(pos)
+					? BlockUtils.getBoundingBox(pos).getCenter() : new Vec3d(
+						pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
 				
 				Vec3d end = center.subtract(regionX, 0, regionZ);
 				
-				bufferBuilder.vertex(matrix,
-					(float)start.x, (float)start.y, (float)start.z).next();
+				bufferBuilder.vertex(matrix, (float)start.x, (float)start.y,
+					(float)start.z).next();
 				
-				bufferBuilder.vertex(matrix,
-					(float)end.x, (float)end.y, (float)end.z).next();
+				bufferBuilder
+					.vertex(matrix, (float)end.x, (float)end.y, (float)end.z)
+					.next();
 			}
 			
 			tessellator.draw();

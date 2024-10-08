@@ -86,8 +86,8 @@ public enum InventoryUtils
 	 * @return
 	 *         all the slots the item was found as an array
 	 */
-	public static int[] indicesOf(Predicate<ItemStack> predicate, int maxInvSlot,
-		boolean includeOffhand)
+	public static int[] indicesOf(Predicate<ItemStack> predicate,
+		int maxInvSlot, boolean includeOffhand)
 	{
 		PlayerInventory inventory = MC.player.getInventory();
 		
@@ -97,7 +97,8 @@ public enum InventoryUtils
 			stream = IntStream.concat(stream, IntStream.of(40));
 		
 		// find the slots of the item we want
-		return stream.filter(i -> predicate.test(inventory.getStack(i))).toArray();
+		return stream.filter(i -> predicate.test(inventory.getStack(i)))
+			.toArray();
 	}
 	
 	public static int count(Item item)

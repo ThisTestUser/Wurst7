@@ -28,8 +28,8 @@ public class DrawContextMixin
 		target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V",
 		ordinal = 0),
 		method = "drawItemInSlot(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/item/ItemStack;IILjava/lang/String;)V")
-	private void removeTranslation(MatrixStack matrices, float x, float y, float z,
-		Operation<Void> original)
+	private void removeTranslation(MatrixStack matrices, float x, float y,
+		float z, Operation<Void> original)
 	{
 		if(WurstClient.INSTANCE.getHax().armorEspHack.isRendering())
 			return;
@@ -41,16 +41,22 @@ public class DrawContextMixin
 		target = "Lnet/minecraft/client/font/TextRenderer;draw(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I",
 		ordinal = 0),
 		method = "drawText(Lnet/minecraft/client/font/TextRenderer;Ljava/lang/String;IIIZ)I")
-	private int removeShadow(TextRenderer renderer, String text, float x, float y,
-		int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumers,
-		TextLayerType layerType, int backgroundColor, int light, boolean rightToLeft, Operation<Integer> original)
+	private int removeShadow(TextRenderer renderer, String text, float x,
+		float y, int color, boolean shadow, Matrix4f matrix,
+		VertexConsumerProvider vertexConsumers, TextLayerType layerType,
+		int backgroundColor, int light, boolean rightToLeft,
+		Operation<Integer> original)
 	{
 		if(WurstClient.INSTANCE.getHax().armorEspHack.isRendering())
 		{
-			renderer.draw(text, x, y, -1, false, matrix, vertexConsumers, TextLayerType.SEE_THROUGH, 0, light, rightToLeft);
-			return original.call(renderer, text, x, y, color, false, matrix, vertexConsumers, layerType, backgroundColor, light, rightToLeft);
+			renderer.draw(text, x, y, -1, false, matrix, vertexConsumers,
+				TextLayerType.SEE_THROUGH, 0, light, rightToLeft);
+			return original.call(renderer, text, x, y, color, false, matrix,
+				vertexConsumers, layerType, backgroundColor, light,
+				rightToLeft);
 		}
 		
-		return original.call(renderer, text, x, y, color, shadow, matrix, vertexConsumers, layerType, backgroundColor, light, rightToLeft);
+		return original.call(renderer, text, x, y, color, shadow, matrix,
+			vertexConsumers, layerType, backgroundColor, light, rightToLeft);
 	}
 }

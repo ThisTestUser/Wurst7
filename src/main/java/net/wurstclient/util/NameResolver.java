@@ -27,10 +27,12 @@ public enum NameResolver
 	;
 	
 	private static final Map<UUID, String> cache = new ConcurrentHashMap<>();
-	private static final Set<UUID> failedLookups = ConcurrentHashMap.newKeySet();
+	private static final Set<UUID> failedLookups =
+		ConcurrentHashMap.newKeySet();
 	private static final Set<UUID> pending = ConcurrentHashMap.newKeySet();
 	private static AtomicLong lastFailedTime = new AtomicLong(-1L);
-	private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
+	private static final ExecutorService EXECUTOR_SERVICE =
+		Executors.newCachedThreadPool();
 	
 	public static void addOfflineName(UUID uuid, String name)
 	{
@@ -56,9 +58,12 @@ public enum NameResolver
 				{
 					try
 					{
-						String url = "https://sessionserver.mojang.com/session/minecraft/profile/";
-						BufferedReader reader = new BufferedReader(new InputStreamReader(new URI(
-							url + uuid.toString().replace("-", "")).toURL().openStream()));
+						String url =
+							"https://sessionserver.mojang.com/session/minecraft/profile/";
+						BufferedReader reader =
+							new BufferedReader(new InputStreamReader(
+								new URI(url + uuid.toString().replace("-", ""))
+									.toURL().openStream()));
 						
 						StringBuilder response = new StringBuilder();
 						String line;
@@ -66,13 +71,16 @@ public enum NameResolver
 							response.append(line);
 						reader.close();
 						
-						JsonElement elem = JsonUtils.GSON.fromJson(response.toString(), JsonElement.class);
+						JsonElement elem = JsonUtils.GSON
+							.fromJson(response.toString(), JsonElement.class);
 						
 						if(elem == null || !elem.isJsonObject())
-							// player not found (offline mode or deleted account)
+							// player not found (offline mode or deleted
+							// account)
 							failedLookups.add(uuid);
 						else
-							cache.put(uuid, elem.getAsJsonObject().get("name").getAsString());
+							cache.put(uuid, elem.getAsJsonObject().get("name")
+								.getAsString());
 					}catch(Exception e)
 					{
 						lastFailedTime.set(System.currentTimeMillis());

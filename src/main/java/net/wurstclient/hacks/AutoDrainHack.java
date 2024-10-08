@@ -34,21 +34,24 @@ import net.wurstclient.util.BlockUtils;
 import net.wurstclient.util.Rotation;
 import net.wurstclient.util.RotationUtils;
 
-public class AutoDrainHack extends Hack implements UpdateListener, PostMotionListener, PacketOutputListener
+public class AutoDrainHack extends Hack
+	implements UpdateListener, PostMotionListener, PacketOutputListener
 {
 	private SliderSetting delay = new SliderSetting("Delay",
-		"Delay between right click actions in milliseconds.",
-		100, 0, 2000, 50, ValueDisplay.INTEGER);
-	private final SliderSetting range =
-		new SliderSetting("Placement Range", "The range to attempt to right click surfaces.\n"
+		"Delay between right click actions in milliseconds.", 100, 0, 2000, 50,
+		ValueDisplay.INTEGER);
+	private final SliderSetting range = new SliderSetting("Placement Range",
+		"The range to attempt to right click surfaces.\n"
 			+ "Ranges above 4.5 will most likely fail.",
-			4, 1, 6, 0.25, ValueDisplay.DECIMAL);
+		4, 1, 6, 0.25, ValueDisplay.DECIMAL);
 	
-	private final CheckboxSetting lava =
-		new CheckboxSetting("Drain Lava", "Seeks out lava source blocks to be drained", true);
+	private final CheckboxSetting lava = new CheckboxSetting("Drain Lava",
+		"Seeks out lava source blocks to be drained", true);
 	private final CheckboxSetting water =
-		new CheckboxSetting("Drain Water", "Seeks out water source blocks to be drained.\n"
-			+ "This will not work if the source is able to regenerate!", false);
+		new CheckboxSetting("Drain Water",
+			"Seeks out water source blocks to be drained.\n"
+				+ "This will not work if the source is able to regenerate!",
+			false);
 	
 	private boolean rightClick;
 	private boolean useServerRot;
@@ -116,11 +119,14 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 		while(reverse ? layer >= 0 : layer <= range.getValueI())
 		{
 			for(int x = start.getX() - layer; x <= start.getX() + layer; x++)
-				for(int y = start.getY() - layer; y <= start.getY() + layer; y++)
-					for(int z = start.getZ() - layer; z <= start.getZ() + layer; z++)
+				for(int y = start.getY() - layer; y <= start.getY()
+					+ layer; y++)
+					for(int z = start.getZ() - layer; z <= start.getZ()
+						+ layer; z++)
 					{
 						if(Math.abs(x - start.getX()) != layer
-							&& Math.abs(y - start.getY()) != layer && Math.abs(z - start.getZ()) != layer)
+							&& Math.abs(y - start.getY()) != layer
+							&& Math.abs(z - start.getZ()) != layer)
 							continue;
 						
 						BlockPos pos = new BlockPos(x, y, z);
@@ -129,7 +135,8 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 						if(state.isEmpty() || !state.isStill())
 							continue;
 						boolean isWater = state.isOf(Fluids.WATER);
-						if((isWater && !water.isChecked()) || (!isWater && !lava.isChecked()))
+						if((isWater && !water.isChecked())
+							|| (!isWater && !lava.isChecked()))
 							continue;
 						
 						if((item == Items.WATER_BUCKET && !isWater)
@@ -138,7 +145,8 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 						
 						double rangeSq = Math.pow(range.getValue(), 2);
 						
-						if(item == Items.BUCKET && prepareToCollect(pos, rangeSq, prioFloating))
+						if(item == Items.BUCKET
+							&& prepareToCollect(pos, rangeSq, prioFloating))
 						{
 							rightClick = true;
 							return true;
@@ -158,7 +166,8 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 		return false;
 	}
 	
-	private boolean prepareToCollect(BlockPos pos, double rangeSq, boolean prioFloating)
+	private boolean prepareToCollect(BlockPos pos, double rangeSq,
+		boolean prioFloating)
 	{
 		Vec3d eyesPos = RotationUtils.getEyesPos();
 		Vec3d posVec = Vec3d.ofCenter(pos);
@@ -190,9 +199,11 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 			
 			// check line of sight
 			Rotation rotation = RotationUtils.getNeededRotations(hitVec);
-			BlockHitResult result = rayTrace(rotation.pitch(), rotation.yaw(), RaycastContext.FluidHandling.SOURCE_ONLY);
+			BlockHitResult result = rayTrace(rotation.pitch(), rotation.yaw(),
+				RaycastContext.FluidHandling.SOURCE_ONLY);
 			if(result.getType() == HitResult.Type.MISS
-				|| !result.getBlockPos().equals(pos) || result.getSide() != side)
+				|| !result.getBlockPos().equals(pos)
+				|| result.getSide() != side)
 				continue;
 			
 			serverRot = rotation;
@@ -213,7 +224,8 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 			BlockPos neighbor = pos.offset(side);
 			
 			// check if neighbor can be right clicked
-			if(!BlockUtils.canBeClicked(neighbor) && (!(BlockUtils.getState(neighbor).getBlock() instanceof FluidBlock)
+			if(!BlockUtils.canBeClicked(neighbor) && (!(BlockUtils
+				.getState(neighbor).getBlock() instanceof FluidBlock)
 				|| !WURST.getHax().liquidsHack.isEnabled()))
 				continue;
 			
@@ -230,9 +242,11 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 			
 			// check line of sight
 			Rotation rotation = RotationUtils.getNeededRotations(hitVec);
-			BlockHitResult result = rayTrace(rotation.pitch(), rotation.yaw(), RaycastContext.FluidHandling.NONE);
+			BlockHitResult result = rayTrace(rotation.pitch(), rotation.yaw(),
+				RaycastContext.FluidHandling.NONE);
 			if(result.getType() == HitResult.Type.MISS
-				|| !result.getBlockPos().equals(neighbor) || result.getSide() != side.getOpposite())
+				|| !result.getBlockPos().equals(neighbor)
+				|| result.getSide() != side.getOpposite())
 				continue;
 			
 			serverRot = rotation;
@@ -243,13 +257,15 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 		return false;
 	}
 	
-	private BlockHitResult rayTrace(float pitch, float yaw, RaycastContext.FluidHandling fluidHandling)
+	private BlockHitResult rayTrace(float pitch, float yaw,
+		RaycastContext.FluidHandling fluidHandling)
 	{
 		ClientPlayerEntity player = MC.player;
 		Vec3d eyes = player.getEyePos();
-		Vec3d hitVec = eyes.add(MC.player.getRotationVector(pitch, yaw).multiply(range.getValue()));
-		return MC.world.raycast(new RaycastContext(eyes, hitVec, RaycastContext.ShapeType.OUTLINE,
-			fluidHandling, player));
+		Vec3d hitVec = eyes.add(
+			MC.player.getRotationVector(pitch, yaw).multiply(range.getValue()));
+		return MC.world.raycast(new RaycastContext(eyes, hitVec,
+			RaycastContext.ShapeType.OUTLINE, fluidHandling, player));
 	}
 	
 	@Override
@@ -267,9 +283,11 @@ public class AutoDrainHack extends Hack implements UpdateListener, PostMotionLis
 	@Override
 	public void onSentPacket(PacketOutputEvent event)
 	{
-		if(event.getPacket() instanceof PlayerMoveC2SPacket.Full packet && useServerRot)
-			event.setPacket(new PlayerMoveC2SPacket.Full(packet.getX(0), packet.getY(0), packet.getZ(0),
-				serverRot.yaw(), serverRot.pitch(), packet.isOnGround()));
+		if(event.getPacket() instanceof PlayerMoveC2SPacket.Full packet
+			&& useServerRot)
+			event.setPacket(new PlayerMoveC2SPacket.Full(packet.getX(0),
+				packet.getY(0), packet.getZ(0), serverRot.yaw(),
+				serverRot.pitch(), packet.isOnGround()));
 	}
 	
 	public boolean useServerRot()

@@ -48,13 +48,15 @@ public abstract class ClientConnectionMixin
 	{
 		if(packet instanceof BundleS2CPacket bundle)
 		{
-			List<Packet<? super ClientPlayPacketListener>> packets = new ArrayList<>();
+			List<Packet<? super ClientPlayPacketListener>> packets =
+				new ArrayList<>();
 			bundle.getPackets().forEach(p -> {
 				PacketInputEvent event = new PacketInputEvent(p);
 				EventManager.fire(event);
 				
 				if(!event.isCancelled())
-					packets.add((Packet<? super ClientPlayPacketListener>)event.getPacket());
+					packets.add((Packet<? super ClientPlayPacketListener>)event
+						.getPacket());
 			});
 			original.call(new BundleS2CPacket(packets), listener);
 			return;

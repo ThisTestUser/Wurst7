@@ -99,7 +99,8 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		ordinal = 0), method = "tickMovement()V")
 	private void onTickMovementItemUse(CallbackInfo ci)
 	{
-		boolean shield = ((ClientPlayerEntity)(Object)this).getActiveItem().getUseAction() == UseAction.BLOCK;
+		boolean shield = ((ClientPlayerEntity)(Object)this).getActiveItem()
+			.getUseAction() == UseAction.BLOCK;
 		if(WurstClient.INSTANCE.getHax().noSlowdownHack.noItemSlowness(shield))
 			hideNextItemUse = true;
 	}
@@ -158,7 +159,8 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		opcode = Opcodes.INVOKESPECIAL,
 		ordinal = 0),
 		method = "move(Lnet/minecraft/entity/MovementType;Lnet/minecraft/util/math/Vec3d;)V")
-	private void onMove(ClientPlayerEntity entity, MovementType type, Vec3d offset, Operation<Void> original)
+	private void onMove(ClientPlayerEntity entity, MovementType type,
+		Vec3d offset, Operation<Void> original)
 	{
 		PlayerMoveEvent event = new PlayerMoveEvent(type, offset);
 		EventManager.fire(event);

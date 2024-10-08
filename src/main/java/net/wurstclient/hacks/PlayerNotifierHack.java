@@ -22,9 +22,9 @@ import net.wurstclient.util.ChatUtils;
 @SearchTags({"player notifier", "auto disconnect"})
 public final class PlayerNotifierHack extends Hack implements UpdateListener
 {
-	private final CheckboxSetting disconnect = new CheckboxSetting(
-		"Disconnect", "If a player shows up in multiplayer,"
-			+ "disconnect from the server.", false);
+	private final CheckboxSetting disconnect = new CheckboxSetting("Disconnect",
+		"If a player shows up in multiplayer," + "disconnect from the server.",
+		false);
 	
 	private String disconnectMessage;
 	private static final DecimalFormat DF = new DecimalFormat("0.#");
@@ -41,10 +41,12 @@ public final class PlayerNotifierHack extends Hack implements UpdateListener
 		if(!isEnabled())
 			return;
 		
-		String displayMsg = player.getName().getString() + " has entered into your render distance at "
-			+ DF.format(x) + " " + DF.format(y) + " " + DF.format(z);
+		String displayMsg = player.getName().getString()
+			+ " has entered into your render distance at " + DF.format(x) + " "
+			+ DF.format(y) + " " + DF.format(z);
 		ChatUtils.message(displayMsg);
-		if(disconnectMessage == null && !MC.isInSingleplayer() && disconnect.isChecked())
+		if(disconnectMessage == null && !MC.isInSingleplayer()
+			&& disconnect.isChecked())
 		{
 			disconnectMessage = displayMsg;
 			EVENTS.add(UpdateListener.class, this);
@@ -56,16 +58,19 @@ public final class PlayerNotifierHack extends Hack implements UpdateListener
 		if(!isEnabled())
 			return;
 		
-		ChatUtils.message(player.getName().getString() + " has left your render distance at "
-			+ DF.format(player.getX()) + " " + DF.format(player.getY()) + " " + DF.format(player.getZ()));
+		ChatUtils.message(player.getName().getString()
+			+ " has left your render distance at " + DF.format(player.getX())
+			+ " " + DF.format(player.getY()) + " " + DF.format(player.getZ()));
 	}
 	
 	@Override
 	public void onUpdate()
 	{
 		ClientPlayerEntity player = MC.player;
-		MC.getNetworkHandler().getConnection().disconnect(Text.literal(disconnectMessage + "\nYour Position: "
-			+ DF.format(player.getX()) + " " + DF.format(player.getY()) + " " + DF.format(player.getZ())));
+		MC.getNetworkHandler().getConnection()
+			.disconnect(Text.literal(disconnectMessage + "\nYour Position: "
+				+ DF.format(player.getX()) + " " + DF.format(player.getY())
+				+ " " + DF.format(player.getZ())));
 		disconnectMessage = null;
 		EVENTS.remove(UpdateListener.class, this);
 	}

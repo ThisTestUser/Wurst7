@@ -14,7 +14,8 @@ import net.wurstclient.events.PacketOutputListener;
 import net.wurstclient.hack.Hack;
 
 @SearchTags({"more inventory", "xcarry"})
-public final class MoreInventoryHack extends Hack implements PacketOutputListener
+public final class MoreInventoryHack extends Hack
+	implements PacketOutputListener
 {
 	public MoreInventoryHack()
 	{
@@ -37,7 +38,7 @@ public final class MoreInventoryHack extends Hack implements PacketOutputListene
 	@Override
 	public void onSentPacket(PacketOutputEvent event)
 	{
-		 if(event.getPacket() instanceof CloseHandledScreenC2SPacket)
-			 event.cancel();
+		if(event.getPacket() instanceof CloseHandledScreenC2SPacket)
+			event.cancel();
 	}
 }

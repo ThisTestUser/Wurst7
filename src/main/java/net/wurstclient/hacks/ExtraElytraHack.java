@@ -26,7 +26,8 @@ import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 
 @SearchTags({"EasyElytra", "extra elytra", "easy elytra"})
-public final class ExtraElytraHack extends Hack implements PlayerMoveListener, UpdateListener
+public final class ExtraElytraHack extends Hack
+	implements PlayerMoveListener, UpdateListener
 {
 	private final CheckboxSetting instantFly = new CheckboxSetting(
 		"Instant fly", "Jump to fly, no weird double-jump needed!", true);
@@ -36,22 +37,22 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 			+ "No fireworks needed!",
 		true);
 	
-	public final SliderSetting base =
-		new SliderSetting("Base speed", "Speed to move using WASD with motion control.",
-			4, 0, 15, 0.05, ValueDisplay.DECIMAL);
+	public final SliderSetting base = new SliderSetting("Base speed",
+		"Speed to move using WASD with motion control.", 4, 0, 15, 0.05,
+		ValueDisplay.DECIMAL);
 	
 	private final SliderSetting up =
 		new SliderSetting("Up speed", "Speed to move up with motion control.",
 			1, 0, 3, 0.02, ValueDisplay.DECIMAL);
 	
-	private final SliderSetting down =
-		new SliderSetting("Down speed", "Speed to move down with motion control.",
-			1, 0, 3, 0.02, ValueDisplay.DECIMAL);
+	private final SliderSetting down = new SliderSetting("Down speed",
+		"Speed to move down with motion control.", 1, 0, 3, 0.02,
+		ValueDisplay.DECIMAL);
 	
-	private final CheckboxSetting ignorePitch =
-		new CheckboxSetting("Ignore Pitch",
-			"You will not be able to dive down or up\n"
-			+ "by changing your pitch.", false);
+	private final CheckboxSetting ignorePitch = new CheckboxSetting(
+		"Ignore Pitch",
+		"You will not be able to dive down or up\n" + "by changing your pitch.",
+		false);
 	
 	private final CheckboxSetting idleLock = new CheckboxSetting("Idle lock",
 		"Freezes your position at idle when flying.", false);
@@ -59,14 +60,14 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 	private final CheckboxSetting stopInWater =
 		new CheckboxSetting("Stop flying in water", true);
 	
-	private final CheckboxSetting hover =
-		new CheckboxSetting("Hover mode",
-			"The player will not be allowed to touch the ground unless the sneak key is long pressed.\n"
-			+ "You must not be looking down for this to work, unless you have fake pitch enabled.", false);
+	private final CheckboxSetting hover = new CheckboxSetting("Hover mode",
+		"The player will not be allowed to touch the ground unless the sneak key is long pressed.\n"
+			+ "You must not be looking down for this to work, unless you have fake pitch enabled.",
+		false);
 	
-	private final CheckboxSetting fakePitch =
-		new CheckboxSetting("Fake Pitch",
-			"Prevents the player from touching the ground with hover mode enabled by faking your pitch.", false);
+	private final CheckboxSetting fakePitch = new CheckboxSetting("Fake Pitch",
+		"Prevents the player from touching the ground with hover mode enabled by faking your pitch.",
+		false);
 	
 	private int jumpTimer;
 	private int waterTimer;
@@ -160,8 +161,10 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 			
 			controlMotion();
 			
-			if(fakePitch.isChecked() && !WURST.getRotationFaker().isFakeRotation())
-				WURST.getRotationFaker().setServerRotation(MC.player.getYaw(), -10);
+			if(fakePitch.isChecked()
+				&& !WURST.getRotationFaker().isFakeRotation())
+				WURST.getRotationFaker().setServerRotation(MC.player.getYaw(),
+					-10);
 			return;
 		}
 		
@@ -207,7 +210,8 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 			double forwardX = -Math.sin(yawRad) * Math.cos(pitchRad);
 			double forwardZ = Math.cos(yawRad) * Math.cos(pitchRad);
 			double vertical = -Math.sin(pitchRad);
-			MC.player.setVelocity(forward * baseSpeed * forwardX + strafe * baseSpeed * strafeX,
+			MC.player.setVelocity(
+				forward * baseSpeed * forwardX + strafe * baseSpeed * strafeX,
 				forward * baseSpeed * vertical,
 				forward * baseSpeed * forwardZ - strafe * baseSpeed * strafeZ);
 		}
@@ -251,15 +255,14 @@ public final class ExtraElytraHack extends Hack implements PlayerMoveListener, U
 		Vec3d move = event.getOffset();
 		
 		double offset = -3;
-		Iterable<VoxelShape> boxes =
-			MC.world.getBlockCollisions(MC.player,
-				MC.player.getBoundingBox().expand(v.x,
-					offset, v.z));
+		Iterable<VoxelShape> boxes = MC.world.getBlockCollisions(MC.player,
+			MC.player.getBoundingBox().expand(v.x, offset, v.z));
 		double closest = VoxelShapes.calculateMaxOffset(Direction.Axis.Y,
 			MC.player.getBoundingBox(), boxes, offset);
 		
 		// force player to hover 0.3 blocks above
 		if(Math.abs(closest) < Math.abs(offset))
-			event.setOffset(new Vec3d(move.x, Math.max(move.y, closest - offset / 10), move.z));
+			event.setOffset(new Vec3d(move.x,
+				Math.max(move.y, closest - offset / 10), move.z));
 	}
 }

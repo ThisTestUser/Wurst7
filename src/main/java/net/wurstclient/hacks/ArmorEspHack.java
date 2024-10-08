@@ -27,8 +27,8 @@ import net.wurstclient.util.RenderUtils;
 @SearchTags({"armor esp"})
 public final class ArmorEspHack extends Hack
 {
-	private final CheckboxSetting mobs = new CheckboxSetting(
-		"Mobs", "Show armor of mobs also.", false);
+	private final CheckboxSetting mobs =
+		new CheckboxSetting("Mobs", "Show armor of mobs also.", false);
 	
 	private final CheckboxSetting enchants = new CheckboxSetting(
 		"Show enchantments",
@@ -36,13 +36,15 @@ public final class ArmorEspHack extends Hack
 	
 	private final CheckboxSetting impossible = new CheckboxSetting(
 		"Ignore impossible enchants",
-		"Ignore enchantments that are not compatible with the item rendered.", false);
+		"Ignore enchantments that are not compatible with the item rendered.",
+		false);
 	
-	private final SliderSetting scale = new SliderSetting("Scale",
-		1, 0.25, 4, 0.05, ValueDisplay.PERCENTAGE);
+	private final SliderSetting scale =
+		new SliderSetting("Scale", 1, 0.25, 4, 0.05, ValueDisplay.PERCENTAGE);
 	
-	private static final EquipmentSlot[] SLOTS = {EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
-		EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
+	private static final EquipmentSlot[] SLOTS =
+		{EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD,
+			EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 	
 	private boolean rendering;
 	
@@ -62,10 +64,12 @@ public final class ArmorEspHack extends Hack
 			return;
 		
 		// render armor through walls
-		RenderSystem.clear(GlConst.GL_DEPTH_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+		RenderSystem.clear(GlConst.GL_DEPTH_BUFFER_BIT,
+			MinecraftClient.IS_SYSTEM_MAC);
 		
 		rendering = true;
-		for(Entity entity : mobs.isChecked() ? MC.world.getEntities() : MC.world.getPlayers())
+		for(Entity entity : mobs.isChecked() ? MC.world.getEntities()
+			: MC.world.getPlayers())
 			if(entity instanceof LivingEntity living && entity != MC.player)
 			{
 				int i = 0;
@@ -74,8 +78,8 @@ public final class ArmorEspHack extends Hack
 					ItemStack stack = living.getEquippedStack(slot);
 					if(!stack.isEmpty())
 						RenderUtils.renderArmor(matrixStack, stack, entity, i,
-							enchants.isChecked(), impossible.isChecked(), scale.getValueF(),
-							0.75, partialTicks);
+							enchants.isChecked(), impossible.isChecked(),
+							scale.getValueF(), 0.75, partialTicks);
 					i++;
 				}
 			}

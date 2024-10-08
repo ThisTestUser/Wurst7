@@ -18,8 +18,8 @@ public final class NoSlowdownHack extends Hack
 {
 	private final CheckboxSetting blocks =
 		new CheckboxSetting("Block honey + soul sand slowness", true);
-	private final EnumSetting<ItemSlowness> items =
-		new EnumSetting<>("Block item slowness", ItemSlowness.values(), ItemSlowness.ALL);
+	private final EnumSetting<ItemSlowness> items = new EnumSetting<>(
+		"Block item slowness", ItemSlowness.values(), ItemSlowness.ALL);
 	
 	public NoSlowdownHack()
 	{

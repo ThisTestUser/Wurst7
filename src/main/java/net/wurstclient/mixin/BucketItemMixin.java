@@ -27,10 +27,13 @@ public class BucketItemMixin
 		target = "Lnet/minecraft/item/BucketItem;raycast(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/RaycastContext$FluidHandling;)Lnet/minecraft/util/hit/BlockHitResult;"),
 		method = "use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;")
 	private BlockHitResult onUse(World world, PlayerEntity player,
-		RaycastContext.FluidHandling fluidHandling, Operation<BlockHitResult> original)
+		RaycastContext.FluidHandling fluidHandling,
+		Operation<BlockHitResult> original)
 	{
-		if(world.isClient && WurstClient.INSTANCE.getHax().autoDrainHack.useServerRot())
-			return WurstClient.INSTANCE.getHax().autoDrainHack.rayTrace(fluidHandling);
+		if(world.isClient
+			&& WurstClient.INSTANCE.getHax().autoDrainHack.useServerRot())
+			return WurstClient.INSTANCE.getHax().autoDrainHack
+				.rayTrace(fluidHandling);
 		return original.call(world, player, fluidHandling);
 	}
 }

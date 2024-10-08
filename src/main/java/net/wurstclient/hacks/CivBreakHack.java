@@ -33,7 +33,8 @@ import net.wurstclient.util.RenderUtils;
 import net.wurstclient.util.BlockBreaker.BlockBreakingParams;
 
 @SearchTags({"civ break", "insta mine"})
-public final class CivBreakHack extends Hack implements UpdateListener, PostMotionListener, RenderListener
+public final class CivBreakHack extends Hack
+	implements UpdateListener, PostMotionListener, RenderListener
 {
 	private final SliderSetting range =
 		new SliderSetting("Range", 5, 1, 6, 0.05, ValueDisplay.DECIMAL);
@@ -82,7 +83,8 @@ public final class CivBreakHack extends Hack implements UpdateListener, PostMoti
 		if(state.isAir())
 			return;
 		
-		BlockBreakingParams params = BlockBreaker.getBlockBreakingParams(currentBlock);
+		BlockBreakingParams params =
+			BlockBreaker.getBlockBreakingParams(currentBlock);
 		if(params.distanceSq() > range.getValueSq())
 			return;
 		
@@ -99,7 +101,8 @@ public final class CivBreakHack extends Hack implements UpdateListener, PostMoti
 		
 		MC.player.swingHand(Hand.MAIN_HAND);
 		IMC.getInteractionManager().sendPlayerActionC2SPacket(
-			PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, currentBlock, facing);
+			PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, currentBlock,
+			facing);
 		facing = null;
 	}
 	
@@ -120,8 +123,8 @@ public final class CivBreakHack extends Hack implements UpdateListener, PostMoti
 		RegionPos region = RenderUtils.getCameraRegion();
 		RenderUtils.applyRegionalRenderOffset(matrixStack, region);
 		
-		matrixStack.translate(currentBlock.getX() - region.x(), currentBlock.getY(),
-			currentBlock.getZ() - region.z());
+		matrixStack.translate(currentBlock.getX() - region.x(),
+			currentBlock.getY(), currentBlock.getZ() - region.z());
 		
 		// draw box
 		RenderSystem.setShader(GameRenderer::getPositionProgram);

@@ -17,15 +17,16 @@ import net.wurstclient.settings.RoundingPrecisionSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 
-public final class LagIndicatorHack extends Hack implements GUIRenderListener, PacketInputListener
+public final class LagIndicatorHack extends Hack
+	implements GUIRenderListener, PacketInputListener
 {
-	private final SliderSetting lagOffset = new SliderSetting("Show lag after (s)", 2, 0.1, 10,
-		0.1, ValueDisplay.DECIMAL);
+	private final SliderSetting lagOffset = new SliderSetting(
+		"Show lag after (s)", 2, 0.1, 10, 0.1, ValueDisplay.DECIMAL);
 	
 	private final RoundingPrecisionSetting precision =
 		new RoundingPrecisionSetting("Precision",
-			"Rounds the seconds value to the given number of decimal places.", 1,
-			0, 2, false);
+			"Rounds the seconds value to the given number of decimal places.",
+			1, 0, 2, false);
 	
 	private long lastPacketMS;
 	
@@ -64,8 +65,9 @@ public final class LagIndicatorHack extends Hack implements GUIRenderListener, P
 		Window window = MC.getWindow();
 		long delta = System.currentTimeMillis() - lastPacketMS;
 		if(delta >= lagOffset.getValue() * 1000)
-			context.drawTextWithShadow(MC.textRenderer, "Time since last packet: " +
-				precision.format((double)delta / 1000) + " S", window.getScaledWidth() / 2 - 130 / 2,
-				16, 0xffffff);
+			context.drawTextWithShadow(MC.textRenderer,
+				"Time since last packet: "
+					+ precision.format((double)delta / 1000) + " S",
+				window.getScaledWidth() / 2 - 130 / 2, 16, 0xffffff);
 	}
 }

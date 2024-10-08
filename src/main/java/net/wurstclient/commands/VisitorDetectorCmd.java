@@ -37,10 +37,11 @@ import net.wurstclient.events.UpdateListener;
 import net.wurstclient.util.ChatUtils;
 import net.wurstclient.util.json.JsonUtils;
 
-public final class VisitorDetectorCmd extends Command implements UpdateListener, PacketInputListener
+public final class VisitorDetectorCmd extends Command
+	implements UpdateListener, PacketInputListener
 {
-	private final File folder = 
-		WurstClient.INSTANCE.getWurstFolder().resolve("visitordetector").toFile();
+	private final File folder = WurstClient.INSTANCE.getWurstFolder()
+		.resolve("visitordetector").toFile();
 	private LogoutData serverData;
 	private String address;
 	private boolean waitingForEntity;
@@ -52,8 +53,8 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 	{
 		super("visitordetector", "Determines if your region was loaded "
 			+ "while you were offline. Include the checkpos option if the server "
-			+ "has a queue.",
-			".visitordetector [list]", ".visitordetector checkpos");
+			+ "has a queue.", ".visitordetector [list]",
+			".visitordetector checkpos");
 	}
 	
 	@Override
@@ -69,10 +70,13 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 			for(File file : folder.listFiles())
 				if(file.getName().endsWith(".json"))
 				{
-					servers.add(file.getName().replace('_', '.').replace(":", "_").substring(0, file.getName().length() - 5));
+					servers
+						.add(file.getName().replace('_', '.').replace(":", "_")
+							.substring(0, file.getName().length() - 5));
 					count++;
 				}
-			ChatUtils.message("Servers where VisitorDetector is active: " + count);
+			ChatUtils
+				.message("Servers where VisitorDetector is active: " + count);
 			servers.forEach(s -> ChatUtils.message(s));
 			return;
 		}else if(args.length == 1 && args[0].equalsIgnoreCase("checkpos"))
@@ -87,8 +91,8 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 		List<Entity> entities = new ArrayList<>();
 		
 		Entity[] entitiesPerAxis = new Entity[4];
-		double[] distances = new double[] {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE,
-			Double.MAX_VALUE};
+		double[] distances = new double[]{Double.MAX_VALUE, Double.MAX_VALUE,
+			Double.MAX_VALUE, Double.MAX_VALUE};
 		// find entities in diagonals
 		for(Entity en : MC.world.getEntities())
 			if(en instanceof LivingEntity && !(en instanceof PlayerEntity))
@@ -106,21 +110,24 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 		for(Entity en : entitiesPerAxis)
 			if(en != null)
 				entities.add(en);
-		
+			
 		entitiesPerAxis = new Entity[4];
-		distances = new double[] {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE,
-			Double.MAX_VALUE};
+		distances = new double[]{Double.MAX_VALUE, Double.MAX_VALUE,
+			Double.MAX_VALUE, Double.MAX_VALUE};
 		// find entities in cardinals
 		for(Entity en : MC.world.getEntities())
-			if(!entities.contains(en) && en instanceof LivingEntity && !(en instanceof PlayerEntity))
+			if(!entities.contains(en) && en instanceof LivingEntity
+				&& !(en instanceof PlayerEntity))
 			{
 				int index = -1;
-				if(Math.abs(en.getX() - playerPos.x) < 5 && Math.abs(en.getZ() - playerPos.z) > 5)
+				if(Math.abs(en.getX() - playerPos.x) < 5
+					&& Math.abs(en.getZ() - playerPos.z) > 5)
 					if(en.getZ() > playerPos.z)
 						index = 0;
 					else
 						index = 1;
-				if(Math.abs(en.getX() - playerPos.x) > 5 && Math.abs(en.getZ() - playerPos.z) < 5)
+				if(Math.abs(en.getX() - playerPos.x) > 5
+					&& Math.abs(en.getZ() - playerPos.z) < 5)
 					if(en.getX() > playerPos.x)
 						index = 2;
 					else
@@ -135,12 +142,13 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 		for(Entity en : entitiesPerAxis)
 			if(en != null)
 				entities.add(en);
-		
+			
 		if(entities.isEmpty())
 			throw new CmdError("No mobs were detected in render distance!");
 		
 		// save entity data
-		File serverFile = new File(folder, MC.getCurrentServerEntry().address.replace(".", "_").replace(":", "_") + ".json");
+		File serverFile = new File(folder, MC.getCurrentServerEntry().address
+			.replace(".", "_").replace(":", "_") + ".json");
 		folder.mkdirs();
 		boolean exists = serverFile.exists();
 		try
@@ -154,8 +162,8 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 		
 		List<EntityEntry> entityInfo = new ArrayList<>();
 		for(Entity en : entities)
-			entityInfo.add(new EntityEntry(en.getType().getUntranslatedName(), en.getX(), en.getY(), en.getZ(),
-				en.getYaw(), en.getPitch()));
+			entityInfo.add(new EntityEntry(en.getType().getUntranslatedName(),
+				en.getX(), en.getY(), en.getZ(), en.getYaw(), en.getPitch()));
 		LogoutData data = new LogoutData(MC.player.getUuid().toString(),
 			playerPos.x, playerPos.y, playerPos.z, checkPos, entityInfo);
 		try
@@ -169,8 +177,9 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 			e.printStackTrace();
 			throw new CmdError("Error while writing to VisitorDetector file!");
 		}
-		MC.getNetworkHandler().getConnection().disconnect(Text.literal(
-			"VisitorDetector successfully activated." + (exists ? " Note: A previous instance was overwritten." : "")));
+		MC.getNetworkHandler().getConnection().disconnect(
+			Text.literal("VisitorDetector successfully activated." + (exists
+				? " Note: A previous instance was overwritten." : "")));
 	}
 	
 	public void onJoin(ClientPlayNetworkHandler networkHandler)
@@ -186,18 +195,22 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 			return;
 		}
 		
-		File serverFile = new File(folder, info.address.replace(".", "_").replace(":", "_") + ".json");
+		File serverFile = new File(folder,
+			info.address.replace(".", "_").replace(":", "_") + ".json");
 		if(!serverFile.exists())
 			return;
 		try
 		{
-			try(BufferedReader load = new BufferedReader(new FileReader(serverFile)))
+			try(BufferedReader load =
+				new BufferedReader(new FileReader(serverFile)))
 			{
-				LogoutData data = JsonUtils.GSON.fromJson(load, LogoutData.class);
+				LogoutData data =
+					JsonUtils.GSON.fromJson(load, LogoutData.class);
 				if(serverData != null)
 				{
-					ChatUtils.warning("An unfinished instance of VisitorDetector was terminated! "
-						+ "IP: " + address);
+					ChatUtils.warning(
+						"An unfinished instance of VisitorDetector was terminated! "
+							+ "IP: " + address);
 					EVENTS.remove(UpdateListener.class, this);
 					EVENTS.remove(PacketInputListener.class, this);
 				}
@@ -212,7 +225,8 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 			}
 		}catch(Exception e)
 		{
-			ChatUtils.warning("Failed to load VisitorDetector data, instance was not run!");
+			ChatUtils.warning(
+				"Failed to load VisitorDetector data, instance was not run!");
 			e.printStackTrace();
 			serverData = null;
 			address = null;
@@ -226,23 +240,26 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 	{
 		if(MC.isInSingleplayer())
 		{
-			ChatUtils.warning(address + " was left before VisitorDetector finished running!");
+			ChatUtils.warning(
+				address + " was left before VisitorDetector finished running!");
 			removeListeners();
 			return;
 		}
 		if(!MC.player.getUuid().toString().equals(serverData.uuid))
 		{
-			ChatUtils.warning("VisitorDetector is active for this server, but will not run"
-				+ " because the UUID saved does not match with the current UUID!");
+			ChatUtils.warning(
+				"VisitorDetector is active for this server, but will not run"
+					+ " because the UUID saved does not match with the current UUID!");
 			removeListeners();
 			return;
 		}
 		
 		if(MC.player == null || MC.world == null)
 			return;
-		if(serverData.checkPos && (Math.abs(MC.player.getX() - serverData.playerX) > 1
-			|| Math.abs(MC.player.getY() - serverData.playerY) > 1
-			|| Math.abs(MC.player.getZ() - serverData.playerZ) > 1))
+		if(serverData.checkPos
+			&& (Math.abs(MC.player.getX() - serverData.playerX) > 1
+				|| Math.abs(MC.player.getY() - serverData.playerY) > 1
+				|| Math.abs(MC.player.getZ() - serverData.playerZ) > 1))
 		{
 			if(!warnPos)
 			{
@@ -286,32 +303,39 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 					}
 				}
 			if(closestMatch == null)
-				ChatUtils.message(Formatting.RED + "Entity #" + index + " was not found!");
+				ChatUtils.message(
+					Formatting.RED + "Entity #" + index + " was not found!");
 			else
 			{
 				ChatUtils.message("Entity #" + index + " discrepancies:");
 				boolean anyFail = false;
 				if(Math.abs(closestMatch.x - entry.x) > 0.1)
 				{
-					ChatUtils.message("X Position off by " + Math.abs(closestMatch.x - entry.x));
+					ChatUtils.message("X Position off by "
+						+ Math.abs(closestMatch.x - entry.x));
 					anyFail = true;
 				}
 				if(Math.abs(closestMatch.y - entry.y) > 0.1)
 				{
-					ChatUtils.message("Y Position off by " + Math.abs(closestMatch.y - entry.y));
+					ChatUtils.message("Y Position off by "
+						+ Math.abs(closestMatch.y - entry.y));
 					anyFail = true;
 				}
 				if(Math.abs(closestMatch.z - entry.z) > 0.1)
 				{
-					ChatUtils.message("Z Position off by " + Math.abs(closestMatch.z - entry.z));
+					ChatUtils.message("Z Position off by "
+						+ Math.abs(closestMatch.z - entry.z));
 					anyFail = true;
 				}
 				if(Math.abs(closestMatch.pitch - entry.pitch) > 1.5)
 				{
-					ChatUtils.message("Pitch rotation off by " + Math.abs(closestMatch.pitch - entry.pitch));
+					ChatUtils.message("Pitch rotation off by "
+						+ Math.abs(closestMatch.pitch - entry.pitch));
 					anyFail = true;
 				}
-				float yawDiff = Math.abs(MathHelper.wrapDegrees(closestMatch.yaw) - MathHelper.wrapDegrees(entry.yaw));
+				float yawDiff =
+					Math.abs(MathHelper.wrapDegrees(closestMatch.yaw)
+						- MathHelper.wrapDegrees(entry.yaw));
 				if(yawDiff > 1)
 				{
 					ChatUtils.message("Yaw Position off by " + yawDiff);
@@ -323,9 +347,11 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 			}
 			index++;
 		}
-		ChatUtils.message("VisitorDetector completed. Note that only large changes in position or rotation "
-			+ "indicate possible visitors.");
-		new File(folder, MC.getCurrentServerEntry().address.replace(".", "_").replace(":", "_") + ".json").delete();
+		ChatUtils.message(
+			"VisitorDetector completed. Note that only large changes in position or rotation "
+				+ "indicate possible visitors.");
+		new File(folder, MC.getCurrentServerEntry().address.replace(".", "_")
+			.replace(":", "_") + ".json").delete();
 		removeListeners();
 	}
 	
@@ -337,7 +363,8 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 	@Override
 	public void onReceivedPacket(PacketInputEvent event)
 	{
-		if(!(event.getPacket() instanceof EntitySpawnS2CPacket spawn) || spawn.getEntityType() == EntityType.PLAYER)
+		if(!(event.getPacket() instanceof EntitySpawnS2CPacket spawn)
+			|| spawn.getEntityType() == EntityType.PLAYER)
 			return;
 		
 		if(waitingForEntity)
@@ -348,8 +375,9 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 		}
 		
 		// store entity data
-		foundEntities.add(new EntityEntry(spawn.getEntityType().getUntranslatedName(), spawn.getX(), spawn.getY(), spawn.getZ(),
-			spawn.getYaw(), spawn.getPitch()));
+		foundEntities.add(new EntityEntry(
+			spawn.getEntityType().getUntranslatedName(), spawn.getX(),
+			spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch()));
 	}
 	
 	private void removeListeners()
@@ -370,8 +398,8 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 		public final boolean checkPos;
 		public final List<EntityEntry> entityData;
 		
-		public LogoutData(String uuid, double playerX, double playerY, double playerZ,
-			boolean checkPos, List<EntityEntry> entityData)
+		public LogoutData(String uuid, double playerX, double playerY,
+			double playerZ, boolean checkPos, List<EntityEntry> entityData)
 		{
 			this.uuid = uuid;
 			this.playerX = playerX;
@@ -391,7 +419,8 @@ public final class VisitorDetectorCmd extends Command implements UpdateListener,
 		public final float yaw;
 		public final float pitch;
 		
-		public EntityEntry(String type, double x, double y, double z, float yaw, float pitch)
+		public EntityEntry(String type, double x, double y, double z, float yaw,
+			float pitch)
 		{
 			this.type = type;
 			this.x = x;

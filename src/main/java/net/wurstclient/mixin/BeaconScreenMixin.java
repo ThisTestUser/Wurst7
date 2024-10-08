@@ -31,7 +31,8 @@ import net.minecraft.text.Text;
 import net.wurstclient.WurstClient;
 
 @Mixin(BeaconScreen.class)
-public abstract class BeaconScreenMixin extends HandledScreen<BeaconScreenHandler>
+public abstract class BeaconScreenMixin
+	extends HandledScreen<BeaconScreenHandler>
 {
 	private BeaconScreenMixin(WurstClient wurst, BeaconScreenHandler handler,
 		PlayerInventory inventory, Text title)
@@ -41,30 +42,32 @@ public abstract class BeaconScreenMixin extends HandledScreen<BeaconScreenHandle
 	
 	@Inject(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/gui/screen/ingame/BeaconScreen;addButton(Lnet/minecraft/client/gui/widget/ClickableWidget;)V",
-		ordinal = 1, shift = Shift.AFTER),
-		method = "init()V",
-		cancellable = true)
+		ordinal = 1,
+		shift = Shift.AFTER), method = "init()V", cancellable = true)
 	private void addButtons(CallbackInfo ci)
 	{
 		if(!WurstClient.INSTANCE.getHax().beaconHack.isEnabled())
 			return;
 		
-		List<RegistryEntry<StatusEffect>> effects = BeaconBlockEntity.EFFECTS_BY_LEVEL
-			.stream().flatMap(Collection::stream).toList();
+		List<RegistryEntry<StatusEffect>> effects =
+			BeaconBlockEntity.EFFECTS_BY_LEVEL.stream()
+				.flatMap(Collection::stream).toList();
 		
 		for(int i = 0; i < effects.size(); i++)
 		{
 			addButton(((BeaconScreen)(Object)this).new EffectButtonWidget(
-				x + (i / 2) * 25 + 25, y + i % 2 * 25 + 32,
-				effects.get(i), true, 0));
+				x + (i / 2) * 25 + 25, y + i % 2 * 25 + 32, effects.get(i),
+				true, 0));
 			addButton(((BeaconScreen)(Object)this).new EffectButtonWidget(
-				x + (i / 2) * 25 + 133, y + i % 2 * 25 + 32,
-				effects.get(i), false, 0)
+				x + (i / 2) * 25 + 133, y + i % 2 * 25 + 32, effects.get(i),
+				false, 0)
 			{
 				@Override
-				protected MutableText getEffectName(RegistryEntry<StatusEffect> effect)
+				protected MutableText getEffectName(
+					RegistryEntry<StatusEffect> effect)
 				{
-					return Text.translatable(effect.value().getTranslationKey()).append(" II");
+					return Text.translatable(effect.value().getTranslationKey())
+						.append(" II");
 				}
 			});
 		}

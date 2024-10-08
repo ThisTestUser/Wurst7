@@ -35,7 +35,8 @@ import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.NameResolver;
 import net.wurstclient.util.RenderUtils;
 
-@SearchTags({"mob info", "mob owner", "mobowner", "pet owner", "petowner", "llama strength"})
+@SearchTags({"mob info", "mob owner", "mobowner", "pet owner", "petowner",
+	"llama strength"})
 public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 {
 	private final SliderSetting llamaThres =
@@ -72,7 +73,8 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 	{
 		entities.clear();
 		for(Entity entity : MC.world.getEntities())
-			if(entity instanceof TameableEntity || entity instanceof AbstractHorseEntity)
+			if(entity instanceof TameableEntity
+				|| entity instanceof AbstractHorseEntity)
 				entities.add((LivingEntity)entity);
 	}
 	
@@ -81,22 +83,30 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 	{
 		Set<String> onlineCache = new HashSet<>();
 		Set<String> offlineCache = new HashSet<>();
-		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
+		VertexConsumerProvider.Immediate immediate = VertexConsumerProvider
+			.immediate(Tessellator.getInstance().getBuffer());
 		for(LivingEntity entity : entities)
 		{
-			if((entity instanceof TameableEntity && ((TameableEntity)entity).isTamed())
-				|| (entity instanceof AbstractHorseEntity && ((AbstractHorseEntity)entity).isTame()))
+			if((entity instanceof TameableEntity
+				&& ((TameableEntity)entity).isTamed())
+				|| (entity instanceof AbstractHorseEntity
+					&& ((AbstractHorseEntity)entity).isTame()))
 			{
-				UUID uuid = entity instanceof TameableEntity ? ((TameableEntity)entity).getOwnerUuid()
+				UUID uuid = entity instanceof TameableEntity
+					? ((TameableEntity)entity).getOwnerUuid()
 					: ((AbstractHorseEntity)entity).getOwnerUuid();
 				MutableText text = Text.literal("Owner: ");
 				if(uuid == null)
 					// entity is tamed but owner cannot be resolved
-					text.append(Text.literal("Null").formatted(Formatting.DARK_RED));
+					text.append(
+						Text.literal("Null").formatted(Formatting.DARK_RED));
 				else
 				{
-					NameResolver.Response response = NameResolver.resolveName(uuid);
-					String name = response.getStatus() == NameResolver.Status.SUCCESS ? response.getName() : null;
+					NameResolver.Response response =
+						NameResolver.resolveName(uuid);
+					String name =
+						response.getStatus() == NameResolver.Status.SUCCESS
+							? response.getName() : null;
 					boolean online = false;
 					
 					if(name != null && onlineCache.contains(name))
@@ -106,12 +116,14 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 					else
 					{
 						// check online status
-						for(PlayerListEntry entry : MC.player.networkHandler.getPlayerList())
+						for(PlayerListEntry entry : MC.player.networkHandler
+							.getPlayerList())
 							if(entry.getProfile().getId().equals(uuid))
 							{
 								if(name == null)
 								{
-									// offline UUIDs can only be resolved when the player is online
+									// offline UUIDs can only be resolved when
+									// the player is online
 									name = entry.getProfile().getName();
 									name = StringHelper.stripTextFormat(name);
 									NameResolver.addOfflineName(uuid, name);
@@ -125,21 +137,27 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 					}
 					
 					if(name != null)
-						text.append(Text.literal(name).formatted(online ? Formatting.GREEN : Formatting.RED));
+						text.append(Text.literal(name).formatted(
+							online ? Formatting.GREEN : Formatting.RED));
 					else
-						text.append(Text.literal(uuid.toString()).formatted(Formatting.RED));
+						text.append(Text.literal(uuid.toString())
+							.formatted(Formatting.RED));
 				}
-				double offset = WURST.getHax().healthTagsHack.hasMobHealthTags() ? 0.5 : 0;
+				double offset =
+					WURST.getHax().healthTagsHack.hasMobHealthTags() ? 0.5 : 0;
 				if(!entity.hasCustomName())
 					offset += 0.5;
 				else
 					offset += 1;
-				RenderUtils.renderTag(matrixStack, text, entity, immediate, 0xffffff, offset, partialTicks);
+				RenderUtils.renderTag(matrixStack, text, entity, immediate,
+					0xffffff, offset, partialTicks);
 			}
-			if(entity instanceof LlamaEntity llama && llama.getStrength() >= llamaThres.getValueI())
+			if(entity instanceof LlamaEntity llama
+				&& llama.getStrength() >= llamaThres.getValueI())
 			{
 				int strength = llama.getStrength();
-				double offset = WURST.getHax().healthTagsHack.hasMobHealthTags() ? 1 : 0.5;
+				double offset =
+					WURST.getHax().healthTagsHack.hasMobHealthTags() ? 1 : 0.5;
 				if(!llama.isTame())
 					offset -= 0.5;
 				if(!llama.hasCustomName())
@@ -150,22 +168,28 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 				switch(strength)
 				{
 					case 1:
-						text.append(Text.literal(Integer.toString(strength)).formatted(Formatting.DARK_RED));
-						break;
+					text.append(Text.literal(Integer.toString(strength))
+						.formatted(Formatting.DARK_RED));
+					break;
 					case 2:
-						text.append(Text.literal(Integer.toString(strength)).formatted(Formatting.RED));
-						break;
+					text.append(Text.literal(Integer.toString(strength))
+						.formatted(Formatting.RED));
+					break;
 					case 3:
-						text.append(Text.literal(Integer.toString(strength)).formatted(Formatting.YELLOW));
-						break;
+					text.append(Text.literal(Integer.toString(strength))
+						.formatted(Formatting.YELLOW));
+					break;
 					case 4:
-						text.append(Text.literal(Integer.toString(strength)).formatted(Formatting.GREEN));
-						break;
+					text.append(Text.literal(Integer.toString(strength))
+						.formatted(Formatting.GREEN));
+					break;
 					case 5:
-						text.append(Text.literal(Integer.toString(strength)).formatted(Formatting.DARK_GREEN));
-						break;
+					text.append(Text.literal(Integer.toString(strength))
+						.formatted(Formatting.DARK_GREEN));
+					break;
 				}
-				RenderUtils.renderTag(matrixStack, text, llama, immediate, 0xffffff, offset, partialTicks);
+				RenderUtils.renderTag(matrixStack, text, llama, immediate,
+					0xffffff, offset, partialTicks);
 			}
 		}
 		immediate.draw();

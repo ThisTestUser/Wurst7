@@ -23,20 +23,19 @@ import net.wurstclient.settings.SliderSetting;
 	"entity speed", "horse jump"})
 public final class VehicleHack extends Hack implements UpdateListener
 {
-	private final CheckboxSetting jump =
-		new CheckboxSetting("Horse Jump",
-			"Force horses to always make the highest jump.", true);
+	private final CheckboxSetting jump = new CheckboxSetting("Horse Jump",
+		"Force horses to always make the highest jump.", true);
 	
-	private final CheckboxSetting boatControl =
-		new CheckboxSetting("Boat Control",
-			"Allows you to steer the boat in the direction you are facing.", true);
+	private final CheckboxSetting boatControl = new CheckboxSetting(
+		"Boat Control",
+		"Allows you to steer the boat in the direction you are facing.", true);
 	
-	private final CheckboxSetting swim =
-		new CheckboxSetting("Auto Swim",
-			"Prevents your vehicle from sinking into the water by forcing it to float.", true);
+	private final CheckboxSetting swim = new CheckboxSetting("Auto Swim",
+		"Prevents your vehicle from sinking into the water by forcing it to float.",
+		true);
 	
-	private final SliderSetting swimSpeed = new SliderSetting(
-		"Swim Speed", "Speed to automatically swim up when in water, if \u00a7eAuto Swim\u00a7r is enabled.",
+	private final SliderSetting swimSpeed = new SliderSetting("Swim Speed",
+		"Speed to automatically swim up when in water, if \u00a7eAuto Swim\u00a7r is enabled.",
 		0.04, 0.04, 0.2, 0.01, SliderSetting.ValueDisplay.DECIMAL);
 	
 	private final CheckboxSetting allowGlide = new CheckboxSetting(
@@ -109,7 +108,8 @@ public final class VehicleHack extends Hack implements UpdateListener
 			motionY = velocity.y;
 		
 		// prevent vehicle from sinking in water
-		if(swim.isChecked() && vehicle.isTouchingWater() && vehicle instanceof LivingEntity)
+		if(swim.isChecked() && vehicle.isTouchingWater()
+			&& vehicle instanceof LivingEntity)
 			motionY += swimSpeed.getValue();
 		
 		if(boatControl.isChecked() && vehicle instanceof BoatEntity)
