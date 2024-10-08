@@ -8,6 +8,7 @@
 package net.wurstclient.util;
 
 import org.joml.Matrix4f;
+import org.joml.Matrix4fStack;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
@@ -962,35 +963,50 @@ public enum RenderUtils
 		if(dist > 4096 && !nameTags.isUnlimitedRange())
 			return;
 		
-		matrixStack.push();
-		
 		Vec3d camPos = RenderUtils.getCameraPos();
 		Vec3d tagPos = EntityUtils.getLerpedPos(entity, partialTicks)
 			.subtract(camPos).add(0, entity.getHeight() + vOffset, 0);
-		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
-		
-		matrixStack.multiply(dispatcher.getRotation());
 		
 		float scale = 0.025F * multiplier;
 		double distance = WurstClient.MC.player.distanceTo(entity);
 		if(distance > 10)
 			scale *= distance / 10;
-		matrixStack.scale(-scale, -scale, scale);
 		
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
 		TextRenderer tr = WurstClient.MC.textRenderer;
 		
+		// offset model view stack for armor
+		Matrix4fStack viewMatrix = RenderSystem.getModelViewStack();
+		viewMatrix.pushMatrix();
+		
+		// camera rotation
+		Camera camera = WurstClient.MC.getBlockEntityRenderDispatcher().camera;
+		viewMatrix.rotationXYZ((float)Math.toRadians(camera.getPitch()),
+			(float)Math.toRadians(camera.getYaw() + 180), 0F);
+		
+		viewMatrix.translate((float)tagPos.x, (float)tagPos.y, (float)tagPos.z);
+		viewMatrix.rotate(dispatcher.getRotation());
+		viewMatrix.scale(-scale, -scale, scale);
+		RenderSystem.applyModelViewMatrix();
+		
 		// render item icon
 		DrawContext context = new DrawContext(WurstClient.MC,
 			WurstClient.MC.getBufferBuilders().getEntityVertexConsumers());
-		context.getMatrices()
-			.multiplyPositionMatrix(matrixStack.peek().getPositionMatrix());
 		context.getMatrices().translate(0, 0, -149);
 		context.drawItem(stack, -50 + armorId * 20, -20);
 		context.getMatrices().translate(0, 0, 149);
 		context.drawItemInSlot(tr, stack, -50 + armorId * 20, -20);
 		context.draw();
+		
+		viewMatrix.popMatrix();
+		RenderSystem.applyModelViewMatrix();
+		
+		// offset matrixStack for rendering text
+		matrixStack.push();
+		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
+		matrixStack.multiply(dispatcher.getRotation());
+		matrixStack.scale(-scale, -scale, scale);
 		
 		// render enchants
 		if(showEnchants && stack.hasEnchantments())
