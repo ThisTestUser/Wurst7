@@ -972,12 +972,9 @@ public enum RenderUtils
 		matrixStack.multiply(dispatcher.getRotation());
 		
 		float scale = 0.025F * multiplier;
-		if(nameTags.isEnabled())
-		{
-			double distance = WurstClient.MC.player.distanceTo(entity);
-			if(distance > 10)
-				scale *= distance / 10;
-		}
+		double distance = WurstClient.MC.player.distanceTo(entity);
+		if(distance > 10)
+			scale *= distance / 10;
 		matrixStack.scale(-scale, -scale, scale);
 		
 		RenderSystem.enableBlend();

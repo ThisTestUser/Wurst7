@@ -39,7 +39,7 @@ public final class ArmorEspHack extends Hack
 		"Ignore enchantments that are not compatible with the item rendered.", false);
 	
 	private final SliderSetting scale = new SliderSetting("Scale",
-		1, 0.5, 2, 0.05, ValueDisplay.PERCENTAGE);
+		1, 0.25, 4, 0.05, ValueDisplay.PERCENTAGE);
 	
 	private static final EquipmentSlot[] SLOTS = {EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
 		EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
