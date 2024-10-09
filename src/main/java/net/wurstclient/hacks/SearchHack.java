@@ -69,7 +69,7 @@ public final class SearchHack extends Hack implements UpdateListener,
 	private final CheckboxSetting tracers = new CheckboxSetting("Tracers",
 		"Draw tracer lines to blocks found.", false);
 	
-	public final CheckboxSetting alert = new CheckboxSetting("Alert", false);
+	private final CheckboxSetting alert = new CheckboxSetting("Alert", false);
 	
 	private boolean alertState;
 	private int foundBlocks;
