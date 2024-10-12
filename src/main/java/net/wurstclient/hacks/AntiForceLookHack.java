@@ -37,6 +37,9 @@ public final class AntiForceLookHack extends Hack implements PacketInputListener
 	@Override
 	public void onReceivedPacket(PacketInputEvent event)
 	{
+		if(MC.player == null || MC.world == null)
+			return;
+		
 		if(event.getPacket() instanceof PlayerPositionLookS2CPacket packet)
 			event.setPacket(
 				new PlayerPositionLookS2CPacket(packet.getX(), packet.getY(),
