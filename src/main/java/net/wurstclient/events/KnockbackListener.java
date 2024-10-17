@@ -16,7 +16,8 @@ public interface KnockbackListener extends Listener
 {
 	public void onKnockback(KnockbackEvent event);
 	
-	public static class KnockbackEvent extends CancellableEvent<KnockbackListener>
+	public static class KnockbackEvent
+		extends CancellableEvent<KnockbackListener>
 	{
 		private double x;
 		private double y;
