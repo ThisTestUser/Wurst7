@@ -242,7 +242,8 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	{
 		KnockbackEvent event = new KnockbackEvent(x, y, z);
 		EventManager.fire(event);
-		super.setVelocityClient(event.getX(), event.getY(), event.getZ());
+		if(!event.isCancelled())
+			super.setVelocityClient(event.getX(), event.getY(), event.getZ());
 	}
 	
 	@Override

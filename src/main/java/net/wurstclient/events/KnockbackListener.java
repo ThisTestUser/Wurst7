@@ -9,14 +9,14 @@ package net.wurstclient.events;
 
 import java.util.ArrayList;
 
-import net.wurstclient.event.Event;
+import net.wurstclient.event.CancellableEvent;
 import net.wurstclient.event.Listener;
 
 public interface KnockbackListener extends Listener
 {
 	public void onKnockback(KnockbackEvent event);
 	
-	public static class KnockbackEvent extends Event<KnockbackListener>
+	public static class KnockbackEvent extends CancellableEvent<KnockbackListener>
 	{
 		private double x;
 		private double y;
