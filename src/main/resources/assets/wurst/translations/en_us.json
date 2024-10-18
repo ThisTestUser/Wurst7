@@ -96,6 +96,7 @@
   "description.wurst.setting.crystalaura.swing_hand": "How CrystalAura should swing your hand when placing and detonating end crystals.",
   "description.wurst.hack.derp": "Randomly moves your head around.\nOnly visible to other players.",
   "description.wurst.hack.dolphin": "Makes you bob up in water automatically.\n(just like a dolphin)",
+  "description.wurst.hack.elytraboost": "Gives you a speed boost when you are facing downwards with an elytra.\nOnce you have enough speed, face upwards to fly.",
   "description.wurst.hack.excavator": "Automatically breaks all blocks in the selected area.",
   "description.wurst.hack.extraelytra": "Makes the Elytra easier to use.",
   "description.wurst.hack.fancychat": "Replaces ASCII characters in sent chat messages with fancier unicode characters. Can be used to bypass curse word filters on some servers.\nDoes not work on servers that block unicode characters.",
