@@ -9,22 +9,47 @@ package net.wurstclient.events;
 
 import java.util.ArrayList;
 
-import net.wurstclient.event.Event;
+import net.minecraft.entity.MovementType;
+import net.minecraft.util.math.Vec3d;
+import net.wurstclient.event.CancellableEvent;
 import net.wurstclient.event.Listener;
 
 public interface PlayerMoveListener extends Listener
 {
-	public void onPlayerMove();
+	public void onPlayerMove(PlayerMoveEvent event);
 	
-	public static class PlayerMoveEvent extends Event<PlayerMoveListener>
+	public static class PlayerMoveEvent
+		extends CancellableEvent<PlayerMoveListener>
 	{
-		public static final PlayerMoveEvent INSTANCE = new PlayerMoveEvent();
+		private final MovementType type;
+		private Vec3d offset;
+		
+		public PlayerMoveEvent(MovementType type, Vec3d offset)
+		{
+			this.type = type;
+			this.offset = offset;
+		}
+		
+		public MovementType getType()
+		{
+			return type;
+		}
+		
+		public Vec3d getOffset()
+		{
+			return offset;
+		}
+		
+		public void setOffset(Vec3d offset)
+		{
+			this.offset = offset;
+		}
 		
 		@Override
 		public void fire(ArrayList<PlayerMoveListener> listeners)
 		{
 			for(PlayerMoveListener listener : listeners)
-				listener.onPlayerMove();
+				listener.onPlayerMove(this);
 		}
 		
 		@Override
