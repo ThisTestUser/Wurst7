@@ -11,19 +11,19 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientCommonNetworkHandler;
 import net.minecraft.client.network.ClientConnectionState;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.toast.SystemToast;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.listener.TickablePacketListener;
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ChunkData;
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.wurstclient.WurstClient;
@@ -99,5 +99,30 @@ public abstract class ClientPlayNetworkHandlerMixin
 	{
 		WurstClient.INSTANCE.getCmds().visitorDetectorCmd
 			.onJoin((ClientPlayNetworkHandler)(Object)this);
+	}
+	
+	@Inject(at = @At("RETURN"),
+		method = "createEntity(Lnet/minecraft/network/packet/s2c/play/EntitySpawnS2CPacket;)Lnet/minecraft/entity/Entity;")
+	private void onCreateEntity(EntitySpawnS2CPacket packet,
+		CallbackInfoReturnable<Entity> cir)
+	{
+		if(cir.getReturnValue() instanceof PlayerEntity player)
+			WurstClient.INSTANCE.getHax().playerNotifierHack.onAppear(player,
+				packet.getX(), packet.getY(), packet.getZ());
+	}
+	
+	@Inject(at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/network/packet/s2c/play/EntitiesDestroyS2CPacket;getEntityIds()Lit/unimi/dsi/fastutil/ints/IntList;",
+		ordinal = 0),
+		method = "onEntitiesDestroy(Lnet/minecraft/network/packet/s2c/play/EntitiesDestroyS2CPacket;)V")
+	private void onEntitiesDestroy(EntitiesDestroyS2CPacket packet,
+		CallbackInfo ci)
+	{
+		packet.getEntityIds().forEach(id -> {
+			Entity entity = WurstClient.MC.world.getEntityById(id);
+			if(entity != null && entity instanceof PlayerEntity player)
+				WurstClient.INSTANCE.getHax().playerNotifierHack
+					.onDisappear(player);
+		});
 	}
 }

@@ -146,6 +146,8 @@ public final class HackList implements UpdateListener
 	public final NoHurtcamHack noHurtcamHack = new NoHurtcamHack();
 	public final NoLevitationHack noLevitationHack = new NoLevitationHack();
 	public final NoOverlayHack noOverlayHack = new NoOverlayHack();
+	public final NoPortalOverlayHack noPortalOverlayHack =
+		new NoPortalOverlayHack();
 	public final NoPumpkinHack noPumpkinHack = new NoPumpkinHack();
 	public final NoShieldOverlayHack noShieldOverlayHack =
 		new NoShieldOverlayHack();
@@ -159,6 +161,8 @@ public final class HackList implements UpdateListener
 	public final PanicHack panicHack = new PanicHack();
 	public final ParkourHack parkourHack = new ParkourHack();
 	public final PlayerEspHack playerEspHack = new PlayerEspHack();
+	public final PlayerNotifierHack playerNotifierHack =
+		new PlayerNotifierHack();
 	public final PortalEspHack portalEspHack = new PortalEspHack();
 	public final PortalGuiHack portalGuiHack = new PortalGuiHack();
 	public final PotionSaverHack potionSaverHack = new PotionSaverHack();
