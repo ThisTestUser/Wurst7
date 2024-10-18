@@ -92,4 +92,12 @@ public abstract class ClientPlayNetworkHandlerMixin
 			(pos, state) -> WurstClient.INSTANCE.getHax().newChunksHack
 				.afterUpdateBlock(pos));
 	}
+	
+	@Inject(at = @At("HEAD"),
+		method = "onGameJoin(Lnet/minecraft/network/packet/s2c/play/GameJoinS2CPacket;)V")
+	private void onGameJoin(GameJoinS2CPacket packet, CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd
+			.onJoin((ClientPlayNetworkHandler)(Object)this);
+	}
 }
