@@ -30,6 +30,7 @@ import net.minecraft.entity.MovementType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.UseAction;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.WurstClient;
 import net.wurstclient.event.EventManager;
@@ -98,7 +99,9 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		ordinal = 0), method = "tickMovement()V")
 	private void onTickMovementItemUse(CallbackInfo ci)
 	{
-		if(WurstClient.INSTANCE.getHax().noSlowdownHack.isEnabled())
+		boolean shield = ((ClientPlayerEntity)(Object)this).getActiveItem()
+			.getUseAction() == UseAction.BLOCK;
+		if(WurstClient.INSTANCE.getHax().noSlowdownHack.noItemSlowness(shield))
 			hideNextItemUse = true;
 	}
 	
