@@ -51,6 +51,8 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	@Shadow
 	@Final
 	protected MinecraftClient client;
+	@Shadow
+	private float mountJumpStrength;
 	
 	private Screen tempCurrentScreen;
 	private boolean hideNextItemUse;
