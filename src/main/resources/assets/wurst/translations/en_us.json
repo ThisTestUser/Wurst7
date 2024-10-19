@@ -156,6 +156,7 @@
   "description.wurst.hack.masstpa": "Sends a TPA request to all players.",
   "description.wurst.hack.mileycyrus": "Makes you twerk.",
   "description.wurst.hack.mobesp": "Highlights nearby mobs.",
+  "description.wurst.hack.mobinfo": "Displays the mob owner above eligible mobs, along with some other attributes.",
   "description.wurst.hack.mobspawnesp": "Highlights areas where mobs can spawn.",
   "description.wurst.setting.mobspawnesp.night_color": "Color of the X at positions where mobs can spawn at night.",
   "description.wurst.setting.mobspawnesp.day_color": "Color of the X at positions where mobs can always spawn.",
