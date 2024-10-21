@@ -35,10 +35,18 @@ public enum BlockBreaker
 	
 	public static boolean breakOneBlock(BlockPos pos)
 	{
+		return breakOneBlock(pos, false, null);
+	}
+	
+	public static boolean breakOneBlock(BlockPos pos, boolean checkLOS,
+		Function<BlockBreakingParams, Boolean> autoTool)
+	{
 		BlockBreakingParams params = getBlockBreakingParams(pos);
-		if(params == null)
+		if(params == null || (checkLOS && !params.lineOfSight))
 			return false;
 		
+		if(autoTool != null)
+			autoTool.apply(params);
 		return breakOneBlock(params);
 	}
 	
