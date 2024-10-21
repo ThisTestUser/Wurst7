@@ -46,7 +46,7 @@ public final class VisitorDetectorCmd extends Command
 	private String address;
 	private boolean waitingForEntity;
 	private long firstMobTime;
-	private boolean warnPos;
+	private int positionCheck;
 	private List<EntityEntry> foundEntities = new ArrayList<>();
 	
 	public VisitorDetectorCmd()
@@ -225,7 +225,7 @@ public final class VisitorDetectorCmd extends Command
 				// start new instance (wait for entity spawns)
 				serverData = data;
 				address = info.address;
-				warnPos = false;
+				positionCheck = 0;
 				waitingForEntity = true;
 				EVENTS.add(UpdateListener.class, this);
 				EVENTS.add(PacketInputListener.class, this);
@@ -249,19 +249,20 @@ public final class VisitorDetectorCmd extends Command
 		if(MC.player == null || MC.world == null || serverData == null)
 			return;
 		
-		if(serverData.checkPos
+		if(serverData.checkPos && positionCheck != 2
 			&& (Math.abs(MC.player.getX() - serverData.playerX) > 1
 				|| Math.abs(MC.player.getY() - serverData.playerY) > 1
 				|| Math.abs(MC.player.getZ() - serverData.playerZ) > 1))
 		{
-			if(!warnPos)
+			if(positionCheck != 1)
 			{
 				ChatUtils.warning("VisitorDetector is running but will wait "
 					+ "until you are at your logout coordinates.");
-				warnPos = true;
+				positionCheck = 1;
 			}
 			return;
-		}
+		}else
+			positionCheck = 2;
 		
 		// wait 3 seconds after first entity spawns
 		if(waitingForEntity)
