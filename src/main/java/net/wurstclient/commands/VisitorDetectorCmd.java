@@ -85,7 +85,7 @@ public final class VisitorDetectorCmd extends Command
 			throw new CmdSyntaxError();
 		
 		if(MC.isInSingleplayer())
-			throw new CmdError("VisitorDetector is intended for servers!");
+			throw new CmdError("VisitorDetector is intended for servers.");
 		
 		Vec3d playerPos = MC.player.getPos();
 		List<Entity> entities = new ArrayList<>();
@@ -144,7 +144,8 @@ public final class VisitorDetectorCmd extends Command
 				entities.add(en);
 			
 		if(entities.isEmpty())
-			throw new CmdError("No mobs were detected in render distance!");
+			throw new CmdError(
+				"At least one nearby mob is needed for VisitorDetector to work.");
 		
 		// save entity data
 		File serverFile = new File(folder, MC.getCurrentServerEntry().address
@@ -157,7 +158,7 @@ public final class VisitorDetectorCmd extends Command
 		}catch(IOException e)
 		{
 			e.printStackTrace();
-			throw new CmdError("Failed to create VisitorDetector file!");
+			throw new CmdError("Failed to create VisitorDetector file.");
 		}
 		
 		List<EntityEntry> entityInfo = new ArrayList<>();
@@ -175,7 +176,7 @@ public final class VisitorDetectorCmd extends Command
 		}catch(Exception e)
 		{
 			e.printStackTrace();
-			throw new CmdError("Error while writing to VisitorDetector file!");
+			throw new CmdError("Error while writing to VisitorDetector file.");
 		}
 		MC.getNetworkHandler().getConnection().disconnect(
 			Text.literal("VisitorDetector successfully activated." + (exists
@@ -184,21 +185,18 @@ public final class VisitorDetectorCmd extends Command
 	
 	public void onJoin(ClientPlayNetworkHandler networkHandler)
 	{
+		if(Thread.currentThread().getName().equals("Render thread"))
+			return;
+		
 		if(MC.isInSingleplayer() || !folder.exists())
 			return;
 		
-		// force single instance
 		ServerInfo info = networkHandler.getServerInfo();
-		if(address != null && info.address.equals(address))
-		{
-			waitingForEntity = true;
-			return;
-		}
-		
 		File serverFile = new File(folder,
 			info.address.replace(".", "_").replace(":", "_") + ".json");
 		if(!serverFile.exists())
 			return;
+		
 		try
 		{
 			try(BufferedReader load =
@@ -206,13 +204,22 @@ public final class VisitorDetectorCmd extends Command
 			{
 				LogoutData data =
 					JsonUtils.GSON.fromJson(load, LogoutData.class);
-				if(serverData != null)
+				
+				if(address != null)
+				{
+					ChatUtils
+						.warning("A previous instance of VisitorDetector for "
+							+ address + " was terminated.");
+					removeListeners();
+				}
+				
+				if(!networkHandler.getProfile().getId().toString()
+					.equals(data.uuid))
 				{
 					ChatUtils.warning(
-						"An unfinished instance of VisitorDetector was terminated! "
-							+ "IP: " + address);
-					EVENTS.remove(UpdateListener.class, this);
-					EVENTS.remove(PacketInputListener.class, this);
+						"VisitorDetector will not run for this server as your player"
+							+ " UUID does not match the stored UUID.");
+					return;
 				}
 				
 				// start new instance (wait for entity spawns)
@@ -226,10 +233,11 @@ public final class VisitorDetectorCmd extends Command
 		}catch(Exception e)
 		{
 			ChatUtils.warning(
-				"Failed to load VisitorDetector data, instance was not run!");
+				"Failed to load VisitorDetector data, instance was not started.");
 			e.printStackTrace();
 			serverData = null;
 			address = null;
+			foundEntities.clear();
 			EVENTS.remove(UpdateListener.class, this);
 			EVENTS.remove(PacketInputListener.class, this);
 		}
@@ -238,24 +246,9 @@ public final class VisitorDetectorCmd extends Command
 	@Override
 	public void onUpdate()
 	{
-		if(MC.isInSingleplayer())
-		{
-			ChatUtils.warning(
-				address + " was left before VisitorDetector finished running!");
-			removeListeners();
+		if(MC.player == null || MC.world == null || serverData == null)
 			return;
-		}
-		if(!MC.player.getUuid().toString().equals(serverData.uuid))
-		{
-			ChatUtils.warning(
-				"VisitorDetector is active for this server, but will not run"
-					+ " because the UUID saved does not match with the current UUID!");
-			removeListeners();
-			return;
-		}
 		
-		if(MC.player == null || MC.world == null)
-			return;
 		if(serverData.checkPos
 			&& (Math.abs(MC.player.getX() - serverData.playerX) > 1
 				|| Math.abs(MC.player.getY() - serverData.playerY) > 1
@@ -304,7 +297,7 @@ public final class VisitorDetectorCmd extends Command
 				}
 			if(closestMatch == null)
 				ChatUtils.message(
-					Formatting.RED + "Entity #" + index + " was not found!");
+					Formatting.RED + "Entity #" + index + " was not found.");
 			else
 			{
 				ChatUtils.message("Entity #" + index + " discrepancies:");
@@ -355,11 +348,6 @@ public final class VisitorDetectorCmd extends Command
 		removeListeners();
 	}
 	
-	private double squaredDiff(double one, double two)
-	{
-		return Math.pow(one - two, 2);
-	}
-	
 	@Override
 	public void onReceivedPacket(PacketInputEvent event)
 	{
@@ -380,13 +368,21 @@ public final class VisitorDetectorCmd extends Command
 			spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch()));
 	}
 	
-	private void removeListeners()
+	public void removeListeners()
 	{
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(PacketInputListener.class, this);
+		if(serverData == null)
+			return;
+		
 		serverData = null;
 		address = null;
 		foundEntities.clear();
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(PacketInputListener.class, this);
+	}
+	
+	private double squaredDiff(double one, double two)
+	{
+		return Math.pow(one - two, 2);
 	}
 	
 	public class LogoutData
