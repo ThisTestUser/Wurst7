@@ -36,6 +36,7 @@ import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.BlockBreaker;
+import net.wurstclient.util.BlockBreaker.BlockBreakingParams;
 import net.wurstclient.util.BlockPlacer;
 import net.wurstclient.util.BlockPlacer.BlockPlacingParams;
 import net.wurstclient.util.BlockUtils;
@@ -109,9 +110,9 @@ public final class AutoFarmHack extends Hack
 		addSetting(range);
 		addSetting(replant);
 		addSetting(checkLOS);
+		addSetting(excluded);
 		addSetting(fortune);
 		addSetting(silkTouch);
-		addSetting(excluded);
 	}
 	
 	@Override
@@ -396,61 +397,12 @@ public final class AutoFarmHack extends Hack
 		}
 		
 		for(BlockPos pos : blocksToHarvest)
-		{
-			boolean findSilkTouch = silkTouch.isChecked()
-				&& BlockUtils.getBlock(pos) == Blocks.MELON;
-			boolean findFortune = fortune.isChecked()
-				&& fortuneBlocks.contains(BlockUtils.getBlock(pos));
-			ItemStack held = MC.player.getMainHandStack();
-			if(findSilkTouch)
-			{
-				if(EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH,
-					held) == 0 || !(held.getItem() instanceof AxeItem))
-				{
-					int slot = InventoryUtils
-						.indexOf(stack -> stack.getItem() instanceof AxeItem
-							&& EnchantmentHelper
-								.getLevel(Enchantments.SILK_TOUCH, stack) > 0);
-					if(slot == -1)
-						slot = InventoryUtils.indexOf(stack -> EnchantmentHelper
-							.getLevel(Enchantments.SILK_TOUCH, stack) > 0);
-					InventoryUtils.selectItem(slot);
-				}
-			}else if(findFortune)
-			{
-				int[] slots =
-					InventoryUtils
-						.indicesOf(
-							stack -> EnchantmentHelper
-								.getLevel(Enchantments.SILK_TOUCH, stack) == 0
-								&& EnchantmentHelper
-									.getLevel(Enchantments.FORTUNE, stack) > 0,
-							36, false);
-				
-				int selected = -1;
-				int level = EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH,
-					held) > 0 ? 0
-						: EnchantmentHelper.getLevel(Enchantments.FORTUNE,
-							held);
-				for(int slot : slots)
-				{
-					int curLevel =
-						EnchantmentHelper.getLevel(Enchantments.FORTUNE,
-							MC.player.getInventory().getStack(slot));
-					if(curLevel > level)
-					{
-						selected = slot;
-						level = curLevel;
-					}
-				}
-				InventoryUtils.selectItem(selected);
-			}
-			if(BlockBreaker.breakOneBlock(pos, checkLOS.isChecked()))
+			if(BlockBreaker.breakOneBlock(pos, checkLOS.isChecked(),
+				p -> selectTool(p)))
 			{
 				currentlyHarvesting = pos;
 				break;
 			}
-		}
 		
 		if(currentlyHarvesting == null)
 			MC.interactionManager.cancelBlockBreaking();
@@ -460,5 +412,56 @@ public final class AutoFarmHack extends Hack
 			overlay.updateProgress();
 		else
 			overlay.resetProgress();
+	}
+	
+	private boolean selectTool(BlockBreakingParams params)
+	{
+		BlockPos pos = params.pos();
+		boolean findSilkTouch =
+			silkTouch.isChecked() && BlockUtils.getBlock(pos) == Blocks.MELON;
+		boolean findFortune = fortune.isChecked()
+			&& fortuneBlocks.contains(BlockUtils.getBlock(pos));
+		
+		ItemStack held = MC.player.getMainHandStack();
+		if(findSilkTouch)
+		{
+			if(EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, held) == 0
+				|| !(held.getItem() instanceof AxeItem))
+			{
+				int slot = InventoryUtils
+					.indexOf(stack -> stack.getItem() instanceof AxeItem
+						&& EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH,
+							stack) > 0);
+				if(slot == -1)
+					slot = InventoryUtils.indexOf(stack -> EnchantmentHelper
+						.getLevel(Enchantments.SILK_TOUCH, stack) > 0);
+				return InventoryUtils.selectItem(slot);
+			}
+		}else if(findFortune)
+		{
+			int[] slots = InventoryUtils.indicesOf(stack -> EnchantmentHelper
+				.getLevel(Enchantments.SILK_TOUCH, stack) == 0
+				&& EnchantmentHelper.getLevel(Enchantments.FORTUNE, stack) > 0,
+				36, false);
+			
+			int selected = -1;
+			int level =
+				EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, held) > 0
+					? 0
+					: EnchantmentHelper.getLevel(Enchantments.FORTUNE, held);
+			for(int slot : slots)
+			{
+				int curLevel = EnchantmentHelper.getLevel(Enchantments.FORTUNE,
+					MC.player.getInventory().getStack(slot));
+				if(curLevel > level)
+				{
+					selected = slot;
+					level = curLevel;
+				}
+			}
+			return InventoryUtils.selectItem(selected);
+		}
+		
+		return false;
 	}
 }

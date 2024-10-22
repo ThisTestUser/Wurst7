@@ -7,6 +7,8 @@
  */
 package net.wurstclient.util;
 
+import java.util.function.Function;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -32,14 +34,18 @@ public enum BlockBreaker
 	
 	public static boolean breakOneBlock(BlockPos pos)
 	{
-		return breakOneBlock(pos, false);
+		return breakOneBlock(pos, false, null);
 	}
 	
-	public static boolean breakOneBlock(BlockPos pos, boolean checkLOS)
+	public static boolean breakOneBlock(BlockPos pos, boolean checkLOS,
+		Function<BlockBreakingParams, Boolean> autoTool)
 	{
 		BlockBreakingParams params = getBlockBreakingParams(pos);
 		if(params == null || (checkLOS && !params.lineOfSight))
 			return false;
+		
+		if(autoTool != null)
+			autoTool.apply(params);
 		
 		// face block
 		WURST.getRotationFaker().faceVectorPacket(params.hitVec);
