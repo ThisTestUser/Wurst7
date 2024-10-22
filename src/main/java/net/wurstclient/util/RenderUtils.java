@@ -981,9 +981,7 @@ public enum RenderUtils
 		viewMatrix.pushMatrix();
 		
 		// camera rotation
-		Camera camera = WurstClient.MC.getBlockEntityRenderDispatcher().camera;
-		viewMatrix.rotationXYZ((float)Math.toRadians(camera.getPitch()),
-			(float)Math.toRadians(camera.getYaw() + 180), 0F);
+		viewMatrix.mul(matrixStack.peek().getPositionMatrix());
 		
 		viewMatrix.translate((float)tagPos.x, (float)tagPos.y, (float)tagPos.z);
 		viewMatrix.rotate(dispatcher.getRotation());
