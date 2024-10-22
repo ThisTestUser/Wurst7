@@ -28,6 +28,8 @@ import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.BundleS2CPacket;
+import net.minecraft.text.Text;
+import net.wurstclient.WurstClient;
 import net.wurstclient.event.EventManager;
 import net.wurstclient.events.ConnectionPacketOutputListener.ConnectionPacketOutputEvent;
 import net.wurstclient.events.PacketInputListener.PacketInputEvent;
@@ -103,5 +105,11 @@ public abstract class ClientConnectionMixin
 				return event;
 			
 		return null;
+	}
+	
+	@Inject(at = @At("HEAD"), method = "disconnect(Lnet/minecraft/text/Text;)V")
+	private void onDisconnect(Text disconnectReason, CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.removeListeners();
 	}
 }
