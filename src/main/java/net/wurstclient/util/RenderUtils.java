@@ -9,6 +9,7 @@ package net.wurstclient.util;
 
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
@@ -788,7 +789,8 @@ public enum RenderUtils
 			.subtract(camPos).add(0, entity.getHeight() + vOffset, 0);
 		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
 		
-		matrixStack.multiply(dispatcher.getRotation());
+		matrixStack.multiply(dispatcher.getRotation().rotateY((float)Math.PI,
+			new Quaternionf()));
 		
 		float scale = 0.025F;
 		if(nameTags.isEnabled())
@@ -846,12 +848,11 @@ public enum RenderUtils
 		viewMatrix.pushMatrix();
 		
 		// camera rotation
-		Camera camera = WurstClient.MC.getBlockEntityRenderDispatcher().camera;
-		viewMatrix.rotationXYZ((float)Math.toRadians(camera.getPitch()),
-			(float)Math.toRadians(camera.getYaw() + 180), 0F);
+		viewMatrix.mul(matrixStack.peek().getPositionMatrix());
 		
 		viewMatrix.translate((float)tagPos.x, (float)tagPos.y, (float)tagPos.z);
-		viewMatrix.rotate(dispatcher.getRotation());
+		viewMatrix.rotate(dispatcher.getRotation().rotateY((float)Math.PI,
+			new Quaternionf()));
 		viewMatrix.scale(-scale, -scale, scale);
 		RenderSystem.applyModelViewMatrix();
 		
@@ -870,7 +871,8 @@ public enum RenderUtils
 		// offset matrixStack for rendering text
 		matrixStack.push();
 		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
-		matrixStack.multiply(dispatcher.getRotation());
+		matrixStack.multiply(dispatcher.getRotation().rotateY((float)Math.PI,
+			new Quaternionf()));
 		matrixStack.scale(-scale, -scale, scale);
 		
 		// render enchants
