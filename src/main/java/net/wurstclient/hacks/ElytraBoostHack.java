@@ -13,7 +13,6 @@ import net.minecraft.client.option.GameOptions;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
-import net.wurstclient.events.KnockbackListener;
 import net.wurstclient.events.PlayerMoveListener;
 import net.wurstclient.events.PreMotionListener;
 import net.wurstclient.hack.Hack;
@@ -23,7 +22,7 @@ import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 
 public class ElytraBoostHack extends Hack
-	implements PlayerMoveListener, PreMotionListener, KnockbackListener
+	implements PlayerMoveListener, PreMotionListener
 {
 	private final EnumSetting<BoostMode> mode = new EnumSetting<>("Boost Mode",
 		BoostMode.values(), BoostMode.FORWARD_KEY);
@@ -74,7 +73,6 @@ public class ElytraBoostHack extends Hack
 	{
 		EVENTS.add(PlayerMoveListener.class, this);
 		EVENTS.add(PreMotionListener.class, this);
-		EVENTS.add(KnockbackListener.class, this);
 	}
 	
 	@Override
@@ -82,7 +80,6 @@ public class ElytraBoostHack extends Hack
 	{
 		EVENTS.remove(PlayerMoveListener.class, this);
 		EVENTS.remove(PreMotionListener.class, this);
-		EVENTS.remove(KnockbackListener.class, this);
 	}
 	
 	@Override
@@ -119,13 +116,6 @@ public class ElytraBoostHack extends Hack
 			MC.player.addVelocity(
 				MathHelper.sin(-yawRad) * acceleration.getValueF(), 0,
 				MathHelper.cos(yawRad) * acceleration.getValueF());
-	}
-	
-	@Override
-	public void onKnockback(KnockbackEvent event)
-	{
-		if(MC.player.isFallFlying())
-			event.cancel();
 	}
 	
 	private enum BoostMode
