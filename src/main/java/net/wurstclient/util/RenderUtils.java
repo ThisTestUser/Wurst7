@@ -30,6 +30,7 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -892,7 +893,8 @@ public enum RenderUtils
 					continue;
 				index++;
 				Text text = EnchantmentUtils
-					.getShortName(entry.getKey().getIdAsString())
+					.getShortName(entry.getKey().getIdAsString(),
+						entry.getKey().isIn(EnchantmentTags.CURSE))
 					.append(Integer.toString(entry.getIntValue()));
 				
 				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
