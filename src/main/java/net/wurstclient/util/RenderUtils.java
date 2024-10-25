@@ -1022,7 +1022,9 @@ public enum RenderUtils
 				if(impossible && !enchantment.isAcceptableItem(stack))
 					continue;
 				index++;
-				Text text = EnchantmentUtils.getShortName(enchantment)
+				Text text = EnchantmentUtils
+					.getShortName(entry.getKey().getIdAsString(),
+						enchantment.isCursed())
 					.append(Integer.toString(entry.getIntValue()));
 				
 				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
