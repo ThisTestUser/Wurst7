@@ -36,8 +36,8 @@ public final class NoSlowdownHack extends Hack
 	
 	public boolean noItemSlowness(boolean shield)
 	{
-		return isEnabled() && shield ? items.getSelected() == ItemSlowness.ALL
-			: items.getSelected() != ItemSlowness.NONE;
+		return isEnabled() && (shield ? items.getSelected() == ItemSlowness.ALL
+			: items.getSelected() != ItemSlowness.NONE);
 	}
 	
 	private enum ItemSlowness
