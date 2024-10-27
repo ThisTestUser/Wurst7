@@ -7,33 +7,38 @@
  */
 package net.wurstclient.mixin;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen;
+import net.minecraft.client.gui.screen.ingame.HorseScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.screen.ShulkerBoxScreenHandler;
+import net.minecraft.screen.HorseScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
 import net.wurstclient.WurstClient;
 import net.wurstclient.hacks.AutoStealHack;
 
-@Mixin(ShulkerBoxScreen.class)
-public abstract class ShulkerBoxScreenMixin
-	extends HandledScreen<ShulkerBoxScreenHandler>
+@Mixin(HorseScreen.class)
+public abstract class HorseScreenMixin extends HandledScreen<HorseScreenHandler>
 {
-	private final int rows = 3;
+	@Shadow
+	@Final
+	private int slotColumnCount;
 	
 	private final AutoStealHack autoSteal =
 		WurstClient.INSTANCE.getHax().autoStealHack;
 	private int mode;
 	
-	private ShulkerBoxScreenMixin(WurstClient wurst,
-		ShulkerBoxScreenHandler handler, PlayerInventory inventory, Text title)
+	public HorseScreenMixin(WurstClient wurst, HorseScreenHandler handler,
+		PlayerInventory inventory, AbstractHorseEntity entity,
+		int slotColumnCount)
 	{
-		super(handler, inventory, title);
+		super(handler, inventory, entity.getDisplayName());
 	}
 	
 	@Override
@@ -41,7 +46,7 @@ public abstract class ShulkerBoxScreenMixin
 	{
 		super.init();
 		
-		if(!WurstClient.INSTANCE.isEnabled())
+		if(!WurstClient.INSTANCE.isEnabled() || slotColumnCount == 0)
 			return;
 		
 		if(autoSteal.areButtonsVisible())
@@ -61,12 +66,13 @@ public abstract class ShulkerBoxScreenMixin
 	
 	private void steal()
 	{
-		runInThread(() -> shiftClickSlots(0, rows * 9, 1));
+		runInThread(() -> shiftClickSlots(2, slotColumnCount * 3 + 2, 1));
 	}
 	
 	private void store()
 	{
-		runInThread(() -> shiftClickSlots(rows * 9, rows * 9 + 36, 2));
+		runInThread(() -> shiftClickSlots(slotColumnCount * 3 + 2,
+			slotColumnCount * 3 + 2 + 36, 2));
 	}
 	
 	private void runInThread(Runnable r)

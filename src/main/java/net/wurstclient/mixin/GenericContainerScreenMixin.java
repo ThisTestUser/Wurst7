@@ -73,7 +73,7 @@ public abstract class GenericContainerScreenMixin
 	
 	private void store()
 	{
-		runInThread(() -> shiftClickSlots(rows * 9, rows * 9 + 44, 2));
+		runInThread(() -> shiftClickSlots(rows * 9, rows * 9 + 36, 2));
 	}
 	
 	private void runInThread(Runnable r)
