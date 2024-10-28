@@ -11,36 +11,35 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.screen.ingame.ScreenHandlerProvider;
+import net.minecraft.client.gui.screen.ingame.HorseScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.entity.passive.AbstractDonkeyEntity;
+import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.screen.GenericContainerScreenHandler;
+import net.minecraft.screen.HorseScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
 import net.wurstclient.WurstClient;
 import net.wurstclient.hacks.AutoStealHack;
 
-@Mixin(GenericContainerScreen.class)
-public abstract class GenericContainerScreenMixin
-	extends HandledScreen<GenericContainerScreenHandler>
-	implements ScreenHandlerProvider<GenericContainerScreenHandler>
+@Mixin(HorseScreen.class)
+public abstract class HorseScreenMixin extends HandledScreen<HorseScreenHandler>
 {
 	@Shadow
 	@Final
-	private int rows;
+	private AbstractHorseEntity entity;
 	
 	private final AutoStealHack autoSteal =
 		WurstClient.INSTANCE.getHax().autoStealHack;
 	private int mode;
+	private int slotColumnCount;
 	
-	public GenericContainerScreenMixin(WurstClient wurst,
-		GenericContainerScreenHandler handler, PlayerInventory inventory,
-		Text title)
+	public HorseScreenMixin(WurstClient wurst, HorseScreenHandler handler,
+		PlayerInventory inventory, AbstractHorseEntity entity)
 	{
-		super(handler, inventory, title);
+		super(handler, inventory, entity.getDisplayName());
 	}
 	
 	@Override
@@ -48,7 +47,10 @@ public abstract class GenericContainerScreenMixin
 	{
 		super.init();
 		
-		if(!WurstClient.INSTANCE.isEnabled())
+		slotColumnCount =
+			entity instanceof AbstractDonkeyEntity donkey && donkey.hasChest()
+				? donkey.getInventoryColumns() : 0;
+		if(!WurstClient.INSTANCE.isEnabled() || slotColumnCount == 0)
 			return;
 		
 		if(autoSteal.areButtonsVisible())
@@ -69,7 +71,7 @@ public abstract class GenericContainerScreenMixin
 				.dimensions(x + backgroundWidth - 56, y + 4, 50, 12).build());
 		}
 		
-		if(autoSteal.isEnabled())
+		if(autoSteal.isEnabled() && autoSteal.stealFromHorses())
 			if(autoSteal.shouldDrop())
 				drop(true);
 			else
@@ -78,18 +80,20 @@ public abstract class GenericContainerScreenMixin
 	
 	private void steal(boolean startingDelay)
 	{
-		runInThread(() -> shiftClickSlots(0, rows * 9, 1), startingDelay);
+		runInThread(() -> shiftClickSlots(2, slotColumnCount * 3 + 2, 1),
+			startingDelay);
 	}
 	
 	private void store(boolean startingDelay)
 	{
-		runInThread(() -> shiftClickSlots(rows * 9, rows * 9 + 36, 2),
-			startingDelay);
+		runInThread(() -> shiftClickSlots(slotColumnCount * 3 + 2,
+			slotColumnCount * 3 + 2 + 36, 2), startingDelay);
 	}
 	
 	private void drop(boolean startingDelay)
 	{
-		runInThread(() -> shiftClickSlots(0, rows * 9, 3), startingDelay);
+		runInThread(() -> shiftClickSlots(2, slotColumnCount * 3 + 2, 3),
+			startingDelay);
 	}
 	
 	private void runInThread(Runnable r, boolean startingDelay)

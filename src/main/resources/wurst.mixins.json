@@ -40,6 +40,7 @@
     "GameRendererMixin",
     "GenericContainerScreenMixin",
     "HeldItemRendererMixin",
+    "HorseScreenMixin",
     "IngameHudMixin",
     "InGameOverlayRendererMixin",
     "KeyBindingMixin",
