@@ -46,34 +46,52 @@ public abstract class ShulkerBoxScreenMixin
 		
 		if(autoSteal.areButtonsVisible())
 		{
-			addDrawableChild(ButtonWidget
-				.builder(Text.literal("Steal"), b -> steal())
-				.dimensions(x + backgroundWidth - 108, y + 4, 50, 12).build());
+			if(autoSteal.hasDropButton())
+				addDrawableChild(
+					ButtonWidget.builder(Text.literal("Drop"), b -> drop(false))
+						.dimensions(x + backgroundWidth - 108, y + 4, 50, 12)
+						.build());
+			else
+				addDrawableChild(ButtonWidget
+					.builder(Text.literal("Steal"), b -> steal(false))
+					.dimensions(x + backgroundWidth - 108, y + 4, 50, 12)
+					.build());
 			
 			addDrawableChild(ButtonWidget
-				.builder(Text.literal("Store"), b -> store())
+				.builder(Text.literal("Store"), b -> store(false))
 				.dimensions(x + backgroundWidth - 56, y + 4, 50, 12).build());
 		}
 		
 		if(autoSteal.isEnabled())
-			steal();
+			if(autoSteal.shouldDrop())
+				drop(true);
+			else
+				steal(true);
 	}
 	
-	private void steal()
+	private void steal(boolean startingDelay)
 	{
-		runInThread(() -> shiftClickSlots(0, rows * 9, 1));
+		runInThread(() -> shiftClickSlots(0, rows * 9, 1), startingDelay);
 	}
 	
-	private void store()
+	private void store(boolean startingDelay)
 	{
-		runInThread(() -> shiftClickSlots(rows * 9, rows * 9 + 36, 2));
+		runInThread(() -> shiftClickSlots(rows * 9, rows * 9 + 36, 2),
+			startingDelay);
 	}
 	
-	private void runInThread(Runnable r)
+	private void drop(boolean startingDelay)
+	{
+		runInThread(() -> shiftClickSlots(0, rows * 9, 3), startingDelay);
+	}
+	
+	private void runInThread(Runnable r, boolean startingDelay)
 	{
 		new Thread(() -> {
 			try
 			{
+				if(startingDelay)
+					Thread.sleep(autoSteal.getStartingDelay());
 				r.run();
 				
 			}catch(Exception e)
@@ -97,7 +115,12 @@ public abstract class ShulkerBoxScreenMixin
 			if(this.mode != mode || client.currentScreen == null)
 				break;
 			
-			onMouseClick(slot, slot.id, 0, SlotActionType.QUICK_MOVE);
+			if(mode == 3)
+			{
+				onMouseClick(slot, slot.id, 0, SlotActionType.PICKUP);
+				onMouseClick(null, -999, 0, SlotActionType.PICKUP);
+			}else
+				onMouseClick(slot, slot.id, 0, SlotActionType.QUICK_MOVE);
 		}
 	}
 	
