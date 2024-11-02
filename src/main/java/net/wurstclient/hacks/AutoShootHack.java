@@ -77,7 +77,7 @@ public final class AutoShootHack extends Hack implements UpdateListener
 		"Fully Charged Wait Time",
 		"Time in ticks to wait after a bow or trident is ready to fire before firing.\n"
 			+ "This is needed on laggy servers.",
-		0, 0, 100, 1, ValueDisplay.DECIMAL);
+		0, 0, 50, 1, ValueDisplay.DECIMAL);
 	
 	private final SliderSetting pressTime = new SliderSetting("Press Time",
 		"The number of ticks to wait after a click or release.\n"
