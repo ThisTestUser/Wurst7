@@ -120,8 +120,6 @@ public final class TrajectoriesHack extends Hack implements RenderListener
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDepthMask(false);
 		
-		RenderUtils.applyCameraRotationOnly();
-		
 		List<AbstractClientPlayerEntity> players = otherPlayer.isChecked()
 			? MC.world.getPlayers() : Collections.singletonList(MC.player);
 		boolean accurate = displayMode.getSelected() == Display.ACCURATE;
