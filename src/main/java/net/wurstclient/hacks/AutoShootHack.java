@@ -77,17 +77,17 @@ public final class AutoShootHack extends Hack implements UpdateListener
 		"Fully Charged Wait Time",
 		"Time in ticks to wait after a bow or trident is ready to fire before firing.\n"
 			+ "This is needed on laggy servers.",
-		0, 0, 50, 1, ValueDisplay.DECIMAL);
+		0, 0, 50, 1, ValueDisplay.INTEGER);
 	
 	private final SliderSetting pressTime = new SliderSetting("Press Time",
 		"The number of ticks to wait after a click or release.\n"
 			+ "If this number is too low, the shot may not be fired.",
-		3, 1, 20, 1, ValueDisplay.DECIMAL);
+		3, 1, 20, 1, ValueDisplay.INTEGER);
 	
 	private final SliderSetting cooldown = new SliderSetting("Cooldown",
 		"Minimum delay between consecutive shots (MS).\n"
 			+ "There will still be a delay from the release/click mechanism.",
-		400, 0, 3000, 50, ValueDisplay.DECIMAL);
+		400, 0, 3000, 50, ValueDisplay.INTEGER);
 	
 	private final EnumSetting<MultiTargetOption> multiTargetOption =
 		new EnumSetting<>("Multi-Target Mode",
@@ -147,7 +147,7 @@ public final class AutoShootHack extends Hack implements UpdateListener
 	{
 		if(releaser != null)
 		{
-			releaser.tick(null, -1);
+			releaser.tick(null, -999);
 			releaser = null;
 		}
 		EVENTS.remove(UpdateListener.class, this);
@@ -159,34 +159,35 @@ public final class AutoShootHack extends Hack implements UpdateListener
 		if(MC.player == null || MC.world == null)
 			return;
 		
+		// find the hand with a throwable item
+		ItemStack stack = MC.player.getMainHandStack();
+		int slot = MC.player.getInventory().selectedSlot;
+		if(!isThrowable(stack))
+		{
+			stack = MC.player.getOffHandStack();
+			slot = -1;
+		}
+		
 		if(releaser != null)
 		{
-			if(releaser.tick(MC.player.getMainHandStack(),
-				MC.player.getInventory().selectedSlot))
+			if(releaser.tick(stack, slot))
 				releaser = null;
 			else
 				return;
 		}
 		
-		if(System.currentTimeMillis() < shootTime + cooldown.getValueI())
+		if(!isThrowable(stack))
 			return;
 		
-		DynamicRegistryManager drm = MC.world.getRegistryManager();
-		Registry<Enchantment> registry = drm.get(RegistryKeys.ENCHANTMENT);
-		
-		// find the hand with a throwable item
-		ItemStack stack = MC.player.getMainHandStack();
-		if(!isThrowable(stack))
-		{
-			stack = MC.player.getOffHandStack();
-			
-			if(!isThrowable(stack))
-				return;
-		}
+		if(System.currentTimeMillis() < shootTime + cooldown.getValueI())
+			return;
 		
 		// check if item is valid
 		if(!isValid(stack))
 			return;
+		
+		DynamicRegistryManager drm = MC.world.getRegistryManager();
+		Registry<Enchantment> registry = drm.get(RegistryKeys.ENCHANTMENT);
 		
 		// get entities hit by the item
 		Set<Entity> entities = getEntitiesHit(stack, registry);
@@ -199,12 +200,11 @@ public final class AutoShootHack extends Hack implements UpdateListener
 			return;
 		
 		if(multiTargetOption.getSelected() == MultiTargetOption.ONLY_FILTERED
-			&& entities.size() != filtered.size())
+			&& (filtered.isEmpty() || filtered.size() < entities.size()))
 			return;
 		
 		shootTime = System.currentTimeMillis();
-		releaser = new ProjectileReleaser(stack,
-			MC.player.getInventory().selectedSlot, pressTime.getValueI());
+		releaser = new ProjectileReleaser(stack, slot, pressTime.getValueI());
 	}
 	
 	private Set<Entity> getEntitiesHit(ItemStack stack,
@@ -232,6 +232,8 @@ public final class AutoShootHack extends Hack implements UpdateListener
 	{
 		if(bows.isChecked() && stack.getItem() instanceof BowItem)
 		{
+			if(MC.player.getItemUseTimeLeft() == 0)
+				return false;
 			float bowPower =
 				(72000 - MC.player.getItemUseTimeLeft() - waitTime.getValueI())
 					/ 20F;
