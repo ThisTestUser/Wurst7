@@ -153,6 +153,11 @@ public final class AltManagerScreen extends Screen
 		addDrawableChild(exportButton =
 			ButtonWidget.builder(Text.literal("Export"), b -> pressExportAlts())
 				.dimensions(58, 8, 50, 20).build());
+		
+		addDrawableChild(ButtonWidget
+			.builder(Text.literal("Altening"),
+				b -> client.setScreen(new AlteningScreen(this)))
+			.dimensions(8, 32, 50, 20).build());
 	}
 	
 	@Override

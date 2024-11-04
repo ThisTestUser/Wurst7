@@ -22,6 +22,7 @@
     "ChunkOcclusionGraphBuilderMixin",
     "ClientCommonNetworkHandlerMixin",
     "ClientConnectionMixin",
+    "ClientLoginNetworkHandlerMixin",
     "ClientPlayerEntityMixin",
     "ClientPlayerInteractionManagerMixin",
     "ClientPlayNetworkHandlerMixin",
