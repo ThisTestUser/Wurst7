@@ -11,6 +11,7 @@
     "AllowedAddressResolverMixin",
     "BackgroundRendererMixin",
     "BasicBakedModelMixin",
+    "BeaconBlockEntityRendererMixin",
     "BeaconScreenMixin",
     "BlockEntityRenderDispatcherMixin",
     "BlockMixin",
