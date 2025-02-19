@@ -158,6 +158,7 @@
   "description.wurst.hack.masstpa": "Sends a TPA request to all players.",
   "description.wurst.hack.mileycyrus": "Makes you twerk.",
   "description.wurst.hack.mobesp": "Highlights nearby mobs.",
+  "description.wurst.hack.mobinfo": "Displays the mob owner above eligible mobs, along with some other attributes.",
   "description.wurst.hack.mobspawnesp": "Highlights areas where mobs can spawn.",
   "description.wurst.setting.mobspawnesp.hitbox_check": "Makes MobSpawnESP more accurate by ignoring dark spots that are too small for any mobs to spawn, but can also negatively affect performance and/or stability.",
   "description.wurst.setting.mobspawnesp.hitbox_check.off": "No hitbox check.",
