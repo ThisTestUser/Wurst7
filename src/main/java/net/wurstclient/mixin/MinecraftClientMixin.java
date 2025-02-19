@@ -17,6 +17,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.UserApiService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
@@ -25,8 +27,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.WindowEventHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.session.ProfileKeys;
 import net.minecraft.client.session.Session;
+import net.minecraft.item.ShieldItem;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
@@ -194,6 +198,30 @@ public abstract class MinecraftClientMixin
 			!WurstClient.INSTANCE.getOtfs().noTelemetryOtf.isEnabled());
 	}
 	
+	@WrapOperation(
+		at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z",
+			ordinal = 2),
+		method = "handleInputEvents()V")
+	private boolean allowBlockHits(KeyBinding useKey,
+		Operation<Boolean> original)
+	{
+		boolean isBlocking = player.getActiveItem() != null
+			&& player.getActiveItem().getItem() instanceof ShieldItem
+			&& WurstClient.INSTANCE.getHax().blockHitHack.isBlocking();
+		if(isBlocking)
+		{
+			// allow attacks while using shield
+			while(((MinecraftClient)(Object)this).options.attackKey
+				.wasPressed())
+				doAttack();
+			
+			// prevent stopUsingItem() from being called
+			return true;
+		}
+		return original.call(useKey);
+	}
+	
 	@Override
 	public IClientPlayerEntity getPlayer()
 	{
@@ -219,4 +247,7 @@ public abstract class MinecraftClientMixin
 		wurstProfileKeys =
 			ProfileKeys.create(userApiService, session, runDirectory.toPath());
 	}
+	
+	@Shadow
+	protected abstract boolean doAttack();
 }
