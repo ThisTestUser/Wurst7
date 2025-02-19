@@ -43,7 +43,6 @@
   "description.wurst.hack.autowalk": "Ti fa camminare automaticamente.",
   "description.wurst.hack.basefinder": "Trova le basi dei giocatori cercando i blocchi creati dall'uomo.\nI blocchi che trova verranno evidenziati nel colore selezionato.\nBuono per trovare le basi delle fazioni.",
   "description.wurst.hack.blink": "Sospende tutti i motion update mentre è abilitato.",
-  "description.wurst.hack.boatfly": "Ti permette di volare con barche e altri veicoli.\nPremi il tasto sprint per scendere più velocemente.",
   "description.wurst.hack.bonemealaura": "Usa automaticamente la farina d'ossa su tipi specifici di piante.\nUtilizza le caselle di controllo per specificare i tipi di piante.",
   "description.wurst.hack.bowaimbot": "Mira automaticamente con l'arco o la balestra.",
   "description.wurst.hack.buildrandom": "Piazza blocchi intorno a te in modo casuale.",

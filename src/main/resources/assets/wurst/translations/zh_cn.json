@@ -48,7 +48,6 @@
   "description.wurst.hack.barrieresp": "允许你看到附近的屏障方块。",
   "description.wurst.hack.basefinder": "通过寻找人为建造的方块来寻找玩家的基地。\n假如方块被找到将以所选的颜色高亮。\n建议用于寻找帮派基地。",
   "description.wurst.hack.blink": "暂停所有动作更新，并在关闭时继续。",
-  "description.wurst.hack.boatfly": "允许你使用船只和其他载具飞行。\n按冲刺键可以更快地下降。",
   "description.wurst.hack.bonemealaura": "往指定的作物上自动使用骨粉。\n使用复选框来指定作物。",
   "description.wurst.hack.bowaimbot": "当你使用弓或弩时自动瞄准所设定的实体。",
   "description.wurst.hack.buildrandom": "在你的附近随机放置方块。",
