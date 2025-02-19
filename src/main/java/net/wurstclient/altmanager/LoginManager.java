@@ -19,6 +19,7 @@ public enum LoginManager
 	
 	public static void changeCrackedName(String newName)
 	{
+		SessionManager.setSessionType(SessionManager.Type.CRACKED_ALT);
 		Session session =
 			new Session(newName, Uuids.getOfflinePlayerUuid(newName), "",
 				Optional.empty(), Optional.empty(), Session.AccountType.MOJANG);
