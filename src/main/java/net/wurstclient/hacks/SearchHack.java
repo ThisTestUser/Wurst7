@@ -8,8 +8,10 @@
 package net.wurstclient.hacks;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.stream.Collectors;
@@ -19,28 +21,32 @@ import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.gl.GlUsage;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
+import net.wurstclient.events.CameraTransformViewBobbingListener;
 import net.wurstclient.events.PacketInputListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
-import net.wurstclient.settings.BlockSetting;
+import net.wurstclient.settings.BlockListSetting;
+import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.ChunkAreaSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
+import net.wurstclient.util.BlockUtils;
 import net.wurstclient.util.BlockVertexCompiler;
 import net.wurstclient.util.ChatUtils;
 import net.wurstclient.util.RegionPos;
@@ -50,12 +56,12 @@ import net.wurstclient.util.chunk.ChunkSearcher;
 import net.wurstclient.util.chunk.ChunkSearcherCoordinator;
 
 @SearchTags({"BlockESP", "block esp"})
-public final class SearchHack extends Hack
-	implements UpdateListener, RenderListener
+public final class SearchHack extends Hack implements UpdateListener,
+	RenderListener, CameraTransformViewBobbingListener
 {
-	private final BlockSetting block = new BlockSetting("Block",
-		"The type of block to search for.", "minecraft:diamond_ore", false);
-	private Block lastBlock;
+	private final BlockListSetting blocks = new BlockListSetting("Blocks",
+		"The types of blocks to search for.", "minecraft:diamond_ore");
+	private List<String> lastBlocks;
 	
 	private final ChunkAreaSetting area = new ChunkAreaSetting("Area",
 		"The area around the player to search in.\n"
@@ -65,6 +71,17 @@ public final class SearchHack extends Hack
 		"The maximum number of blocks to display.\n"
 			+ "Higher values require a faster computer.",
 		4, 3, 6, 1, ValueDisplay.LOGARITHMIC);
+	
+	private final CheckboxSetting counter = new CheckboxSetting("Counter",
+		"Displays the number of blocks found.", false);
+	
+	private final CheckboxSetting tracers = new CheckboxSetting("Tracers",
+		"Draw tracer lines to blocks found.", false);
+	
+	private final CheckboxSetting alert = new CheckboxSetting("Alert", false);
+	
+	private boolean alertState;
+	private int foundBlocks;
 	private int prevLimit;
 	private boolean notify;
 	
@@ -79,27 +96,50 @@ public final class SearchHack extends Hack
 	private RegionPos bufferRegion;
 	private boolean bufferUpToDate;
 	
+	private HashSet<BlockPos> matchingBlocks;
+	
 	public SearchHack()
 	{
 		super("Search");
 		setCategory(Category.RENDER);
-		addSetting(block);
+		addSetting(blocks);
 		addSetting(area);
 		addSetting(limit);
+		
+		addSetting(counter);
+		addSetting(tracers);
+		addSetting(alert);
 	}
 	
 	@Override
 	public String getRenderName()
 	{
-		return getName() + " [" + block.getBlockName().replace("minecraft:", "")
-			+ "]";
+		String name;
+		if(blocks.getBlockNames().size() == 0)
+			name = getName() + " [None]";
+		else if(blocks.getBlockNames().size() == 1)
+			name = getName() + " ["
+				+ blocks.getBlockNames().get(0).replace("minecraft:", "") + "]";
+		else
+			name = getName() + " [Multi]";
+		if(counter.isChecked())
+		{
+			boolean exceed =
+				foundBlocks >= (int)Math.pow(10, limit.getValueI());
+			name += " (" + (exceed ? ">" : "") + foundBlocks + " found)";
+		}
+		return name;
 	}
 	
 	@Override
 	protected void onEnable()
 	{
-		lastBlock = block.getBlock();
-		coordinator.setTargetBlock(lastBlock);
+		alertState = false;
+		foundBlocks = 0;
+		lastBlocks = new ArrayList<>(blocks.getBlockNames());
+		coordinator
+			.setQuery((pos, state) -> Collections.binarySearch(lastBlocks,
+				BlockUtils.getName(state.getBlock())) >= 0);
 		prevLimit = limit.getValueI();
 		notify = true;
 		
@@ -127,6 +167,15 @@ public final class SearchHack extends Hack
 			vertexBuffer.close();
 		vertexBuffer = null;
 		bufferRegion = null;
+		matchingBlocks = null;
+	}
+	
+	@Override
+	public void onCameraTransformViewBobbing(
+		CameraTransformViewBobbingEvent event)
+	{
+		if(tracers.isChecked())
+			event.cancel();
 	}
 	
 	@Override
@@ -134,12 +183,14 @@ public final class SearchHack extends Hack
 	{
 		boolean searchersChanged = false;
 		
-		// clear ChunkSearchers if block has changed
-		Block currentBlock = block.getBlock();
-		if(currentBlock != lastBlock)
+		// clear ChunkSearchers if blocks have changed
+		List<String> currentBlocks = new ArrayList<>(blocks.getBlockNames());
+		if(!currentBlocks.equals(lastBlocks))
 		{
-			lastBlock = currentBlock;
-			coordinator.setTargetBlock(lastBlock);
+			lastBlocks = currentBlocks;
+			coordinator
+				.setQuery((pos, state) -> Collections.binarySearch(lastBlocks,
+					BlockUtils.getName(state.getBlock())) >= 0);
 			searchersChanged = true;
 		}
 		
@@ -176,6 +227,17 @@ public final class SearchHack extends Hack
 		
 		if(!bufferUpToDate)
 			setBufferFromTask();
+		
+		if(alert.isChecked() && foundBlocks > 0 && !alertState)
+		{
+			ChatUtils
+				.message("Alert: Search has found blocks near your location of "
+					+ MC.player.getPos());
+			alertState = true;
+		}
+		
+		if(alert.isChecked() && foundBlocks == 0 && alertState)
+			alertState = false;
 	}
 	
 	@Override
@@ -204,6 +266,39 @@ public final class SearchHack extends Hack
 		vertexBuffer.bind();
 		vertexBuffer.draw(viewMatrix, projMatrix, shader);
 		VertexBuffer.unbind();
+		
+		if(tracers.isChecked() && matchingBlocks != null
+			&& !matchingBlocks.isEmpty())
+		{
+			BlockPos camPos = RenderUtils.getCameraBlockPos();
+			int regionX = (camPos.getX() >> 9) * 512;
+			int regionZ = (camPos.getZ() >> 9) * 512;
+			
+			Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+			Tessellator tessellator = RenderSystem.renderThreadTesselator();
+			BufferBuilder bufferBuilder = tessellator.begin(
+				VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION);
+			
+			Vec3d start = RotationUtils.getClientLookVec(partialTicks)
+				.add(RenderUtils.getCameraPos()).subtract(regionX, 0, regionZ);
+			
+			for(BlockPos pos : matchingBlocks)
+			{
+				Vec3d center = BlockUtils.canBeClicked(pos)
+					? BlockUtils.getBoundingBox(pos).getCenter() : new Vec3d(
+						pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+				
+				Vec3d end = center.subtract(regionX, 0, regionZ);
+				
+				bufferBuilder.vertex(matrix, (float)start.x, (float)start.y,
+					(float)start.z);
+				
+				bufferBuilder.vertex(matrix, (float)end.x, (float)end.y,
+					(float)end.z);
+			}
+			
+			BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+		}
 		
 		matrixStack.pop();
 		
@@ -240,9 +335,10 @@ public final class SearchHack extends Hack
 	
 	private void startCompileVerticesTask()
 	{
-		HashSet<BlockPos> matchingBlocks = getMatchingBlocksTask.join();
+		matchingBlocks = getMatchingBlocksTask.join();
 		
-		if(matchingBlocks.size() < limit.getValueLog())
+		foundBlocks = matchingBlocks.size();
+		if(foundBlocks < limit.getValueLog())
 			notify = true;
 		else if(notify)
 		{
