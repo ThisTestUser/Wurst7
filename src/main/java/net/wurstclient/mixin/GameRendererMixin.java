@@ -102,6 +102,8 @@ public abstract class GameRendererMixin implements AutoCloseable
 		matrixStack.multiplyPositionMatrix(matrix4f3);
 		RenderEvent event = new RenderEvent(matrixStack, tickDelta);
 		EventManager.fire(event);
+		WurstClient.INSTANCE.getHax().armorEspHack.renderArmor(matrixStack,
+			tickDelta);
 	}
 	
 	@Inject(at = @At(value = "RETURN", ordinal = 1),
