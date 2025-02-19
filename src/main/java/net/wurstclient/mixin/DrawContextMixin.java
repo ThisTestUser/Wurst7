@@ -10,6 +10,8 @@ package net.wurstclient.mixin;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -24,6 +26,16 @@ import net.wurstclient.WurstClient;
 @Mixin(DrawContext.class)
 public class DrawContextMixin
 {
+	@ModifyConstant(method = "drawItemBar(Lnet/minecraft/item/ItemStack;II)V",
+		constant = @Constant(intValue = 200))
+	private int removeItemBarOffset(int original)
+	{
+		if(WurstClient.INSTANCE.getHax().armorEspHack.isRendering())
+			return 0;
+		
+		return original;
+	}
+	
 	@WrapOperation(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V",
 		ordinal = 0),

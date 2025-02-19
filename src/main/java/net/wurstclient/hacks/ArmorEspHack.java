@@ -10,13 +10,17 @@ package net.wurstclient.hacks;
 import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
+import net.wurstclient.WurstRenderLayers;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
@@ -64,6 +68,14 @@ public final class ArmorEspHack extends Hack
 		
 		// render armor through walls
 		RenderSystem.clear(GlConst.GL_DEPTH_BUFFER_BIT);
+		
+		// hack to force armor to render brightly
+		VertexConsumerProvider.Immediate vcp =
+			MC.getBufferBuilders().getEntityVertexConsumers();
+		VertexConsumer buffer = vcp.getBuffer(WurstRenderLayers.ESP_LINES);
+		RenderUtils.drawLine(matrixStack, buffer, new Vec3d(0, 0, 0),
+			new Vec3d(0, 0, 0), 16777215);
+		vcp.draw(WurstRenderLayers.ESP_LINES);
 		
 		rendering = true;
 		for(Entity entity : mobs.isChecked() ? MC.world.getEntities()
