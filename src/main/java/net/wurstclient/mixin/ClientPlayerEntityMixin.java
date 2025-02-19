@@ -29,6 +29,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.consume.UseAction;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.WurstClient;
@@ -95,7 +96,9 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	private boolean wrapTickMovementItemUse(ClientPlayerEntity instance,
 		Operation<Boolean> original)
 	{
-		if(WurstClient.INSTANCE.getHax().noSlowdownHack.isEnabled())
+		boolean shield = ((ClientPlayerEntity)(Object)this).getActiveItem()
+			.getUseAction() == UseAction.BLOCK;
+		if(WurstClient.INSTANCE.getHax().noSlowdownHack.noItemSlowness(shield))
 			return false;
 		
 		return original.call(instance);
