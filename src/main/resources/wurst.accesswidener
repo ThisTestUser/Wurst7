@@ -1,5 +1,6 @@
 accessWidener	v1	named
 accessible	class	net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
+accessible	class	net/minecraft/client/gui/screen/ingame/BeaconScreen$EffectButtonWidget
 accessible	method	net/minecraft/client/MinecraftClient	doItemUse	()V
 accessible	method	net/minecraft/client/Mouse	onMouseButton	(JIII)V
 accessible	method	net/minecraft/client/render/BackgroundRenderer	getFogModifier	(Lnet/minecraft/entity/Entity;F)Lnet/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier;
