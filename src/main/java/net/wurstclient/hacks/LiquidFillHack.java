@@ -7,6 +7,10 @@
  */
 package net.wurstclient.hacks;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.IntStream;
 
 import net.minecraft.block.*;
@@ -28,13 +32,17 @@ import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.mixinterface.IClientPlayerInteractionManager;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.ItemListSetting;
 import net.wurstclient.settings.SliderSetting;
+import net.wurstclient.settings.SwingHandSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
+import net.wurstclient.settings.SwingHandSetting.SwingHand;
 import net.wurstclient.util.BlockUtils;
 import net.wurstclient.util.InventoryUtils;
 import net.wurstclient.util.RotationUtils;
+import net.wurstclient.util.text.WText;
 
 @SearchTags({"LavaFill", "WaterFill"})
 public class LiquidFillHack extends Hack implements UpdateListener
@@ -54,6 +62,16 @@ public class LiquidFillHack extends Hack implements UpdateListener
 	private final CheckboxSetting liquids =
 		new CheckboxSetting("Place on liquids",
 			"Allow placement against liquids, not just solid blocks.", true);
+	
+	private final SliderSetting times = new SliderSetting(
+		"Placements Per Interval", "Amount of times to place per interval.", 1,
+		1, 20, 1, ValueDisplay.INTEGER);
+	
+	private final SliderSetting minPlaceDelay =
+		new SliderSetting("Minimum Placement Delay",
+			"After placing a block in a location, how long in MS to wait"
+				+ " before using that location to place another block.",
+			0, 0, 2000, 10, ValueDisplay.INTEGER);
 	
 	private final SliderSetting delay = new SliderSetting("Placement Delay",
 		"Delay in MS between block placements.", 300, 0, 2000, 50,
@@ -78,15 +96,16 @@ public class LiquidFillHack extends Hack implements UpdateListener
 		"Delay in ticks before replenishing your held block.", 4, 1, 20, 1,
 		ValueDisplay.INTEGER);
 	
-	private final SliderSetting refillSwitchDelay =
-		new SliderSetting("Refill Switch Delay",
-			"Additional delay when moving blocks from inventory to hotbar.", 2,
-			1, 20, 1, ValueDisplay.INTEGER);
+	private final SwingHandSetting swingHand = new SwingHandSetting(
+		WText.literal(
+			"How LiquidFill should swing your hand when placing blocks."),
+		SwingHand.CLIENT);
 	
 	private Item refillItem;
 	private int refillTimer;
 	private boolean unsneak;
 	
+	private Map<BlockPos, Long> placements = new HashMap<>();
 	private long lastPlacement;
 	
 	public LiquidFillHack()
@@ -99,6 +118,8 @@ public class LiquidFillHack extends Hack implements UpdateListener
 		
 		addSetting(range);
 		addSetting(liquids);
+		addSetting(times);
+		addSetting(minPlaceDelay);
 		addSetting(delay);
 		addSetting(topCheck);
 		
@@ -107,7 +128,7 @@ public class LiquidFillHack extends Hack implements UpdateListener
 		
 		addSetting(refill);
 		addSetting(refillDelay);
-		addSetting(refillSwitchDelay);
+		addSetting(swingHand);
 	}
 	
 	@Override
@@ -116,6 +137,7 @@ public class LiquidFillHack extends Hack implements UpdateListener
 		refillItem = null;
 		refillTimer = 0;
 		unsneak = false;
+		placements.clear();
 		EVENTS.add(UpdateListener.class, this);
 	}
 	
@@ -140,17 +162,38 @@ public class LiquidFillHack extends Hack implements UpdateListener
 			|| !isCorrectItem(MC.player.getMainHandStack()))
 			return;
 		
-		if(checkSurroundingLiquids(true))
+		Iterator<Entry<BlockPos, Long>> iterator =
+			placements.entrySet().iterator();
+		long removeThres =
+			System.currentTimeMillis() - (long)minPlaceDelay.getValue();
+		while(iterator.hasNext())
 		{
-			lastPlacement = System.currentTimeMillis();
-			return;
+			Entry<BlockPos, Long> entry = iterator.next();
+			if(entry.getValue() > removeThres)
+				continue;
+			iterator.remove();
 		}
 		
-		if(!sourceOnly.isChecked() && checkSurroundingLiquids(false))
+		int placements = 0;
+		while(placements < times.getValueI()
+			&& !MC.player.getMainHandStack().isEmpty())
 		{
-			lastPlacement = System.currentTimeMillis();
-			return;
+			if(checkSurroundingLiquids(true))
+			{
+				placements++;
+				continue;
+			}
+			
+			if(!sourceOnly.isChecked() && checkSurroundingLiquids(false))
+			{
+				placements++;
+				continue;
+			}
+			break;
 		}
+		
+		if(placements > 0)
+			lastPlacement = System.currentTimeMillis();
 	}
 	
 	private void refillStack()
@@ -165,7 +208,16 @@ public class LiquidFillHack extends Hack implements UpdateListener
 			if(stack.isEmpty() || stack.getItem() != refillItem)
 				continue;
 			
-			InventoryUtils.selectItem(slot);
+			if(slot < 9)
+				inventory.selectedSlot = slot;
+			else
+			{
+				IClientPlayerInteractionManager im =
+					IMC.getInteractionManager();
+				im.windowClick_SWAP(InventoryUtils.toNetworkSlot(slot),
+					inventory.selectedSlot);
+			}
+			
 			break;
 		}
 	}
@@ -225,9 +277,14 @@ public class LiquidFillHack extends Hack implements UpdateListener
 		{
 			BlockPos neighbor = pos.offset(side);
 			
+			if(minPlaceDelay.getValue() > 0 && placements.containsKey(neighbor))
+				continue;
+			
 			// check if neighbor can be right clicked
-			boolean allowLiquidPlace = liquids.isChecked() && BlockUtils
-				.getState(neighbor).getBlock() instanceof FluidBlock;
+			boolean allowLiquidPlace = liquids.isChecked() && (BlockUtils
+				.getState(neighbor).getBlock() instanceof FluidBlock
+				|| BlockUtils.getState(neighbor)
+					.getBlock() instanceof AirBlock);
 			if(!allowLiquidPlace && (!BlockUtils.canBeClicked(neighbor)
 				|| BlockUtils.getState(neighbor).isReplaceable()))
 				continue;
@@ -257,7 +314,7 @@ public class LiquidFillHack extends Hack implements UpdateListener
 			// place block
 			IMC.getInteractionManager().rightClickBlock(neighbor,
 				side.getOpposite(), hitVec);
-			MC.player.swingHand(Hand.MAIN_HAND);
+			swingHand.swing(Hand.MAIN_HAND);
 			
 			// unsneak
 			if(unsneak)
@@ -270,6 +327,8 @@ public class LiquidFillHack extends Hack implements UpdateListener
 			if(MC.player.getMainHandStack().isEmpty() && refill.isChecked())
 				refillTimer = refillDelay.getValueI();
 			
+			if(minPlaceDelay.getValue() > 0)
+				placements.put(pos, System.currentTimeMillis());
 			return true;
 		}
 		return false;
