@@ -1158,7 +1158,7 @@ public enum RenderUtils
 	
 	public static void renderTag(MatrixStack matrixStack, Text text,
 		Entity entity, VertexConsumerProvider provider, int color,
-		double vOffset, float partialTicks)
+		float multiplier, double vOffset, float partialTicks)
 	{
 		NameTagsHack nameTags = WurstClient.INSTANCE.getHax().nameTagsHack;
 		
@@ -1178,7 +1178,7 @@ public enum RenderUtils
 		matrixStack.multiply(dispatcher.getRotation().rotateY((float)Math.PI,
 			new Quaternionf()));
 		
-		float scale = 0.025F;
+		float scale = 0.025F * multiplier;
 		if(nameTags.isEnabled())
 		{
 			double distance = WurstClient.MC.player.distanceTo(entity);

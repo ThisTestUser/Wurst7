@@ -149,7 +149,7 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 				else
 					offset += 1;
 				RenderUtils.renderTag(matrixStack, text, entity, immediate,
-					0xffffff, offset, partialTicks);
+					0xffffff, 1, offset, partialTicks);
 			}
 			if(entity instanceof LlamaEntity llama
 				&& llama.getStrength() >= llamaThres.getValueI())
@@ -188,7 +188,7 @@ public class MobInfoHack extends Hack implements UpdateListener, RenderListener
 					break;
 				}
 				RenderUtils.renderTag(matrixStack, text, llama, immediate,
-					0xffffff, offset, partialTicks);
+					0xffffff, 1, offset, partialTicks);
 			}
 		}
 		immediate.draw();

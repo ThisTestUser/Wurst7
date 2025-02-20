@@ -75,7 +75,7 @@ public final class HealthTagsHack extends Hack implements RenderListener
 			
 			Text text = addHealth(entity, Text.literal(""));
 			RenderUtils.renderTag(matrixStack, text, entity, immediate,
-				0xffffff, !entity.hasCustomName() ? 0.5 : 1, partialTicks);
+				0xffffff, 1, !entity.hasCustomName() ? 0.5 : 1, partialTicks);
 		}
 		
 		immediate.draw();

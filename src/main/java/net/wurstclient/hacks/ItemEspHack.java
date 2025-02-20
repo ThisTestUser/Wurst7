@@ -18,6 +18,8 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
@@ -27,9 +29,12 @@ import net.wurstclient.events.CameraTransformViewBobbingListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.ColorSetting;
 import net.wurstclient.settings.EspBoxSizeSetting;
 import net.wurstclient.settings.EspStyleSetting;
+import net.wurstclient.settings.SliderSetting;
+import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.EntityUtils;
 import net.wurstclient.util.RegionPos;
 import net.wurstclient.util.RenderUtils;
@@ -39,6 +44,14 @@ import net.wurstclient.util.RotationUtils;
 public final class ItemEspHack extends Hack implements UpdateListener,
 	CameraTransformViewBobbingListener, RenderListener
 {
+	private final CheckboxSetting names =
+		new CheckboxSetting("Show item names", true);
+	
+	private final SliderSetting range = new SliderSetting("Item name range",
+		"Items names will be shown if less than this distance.\n"
+			+ "200 = always display item names",
+		30, 5, 200, 1, ValueDisplay.DECIMAL.withLabel(200, "always show"));
+	
 	private final EspStyleSetting style = new EspStyleSetting();
 	
 	private final EspBoxSizeSetting boxSize = new EspBoxSizeSetting(
@@ -54,6 +67,8 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 	{
 		super("ItemESP");
 		setCategory(Category.RENDER);
+		addSetting(names);
+		addSetting(range);
 		addSetting(style);
 		addSetting(boxSize);
 		addSetting(color);
@@ -113,6 +128,9 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 		
 		matrixStack.pop();
 		
+		if(names.isChecked())
+			renderItemNames(matrixStack, vcp, partialTicks);
+		
 		vcp.draw(WurstRenderLayers.ESP_LINES);
 	}
 	
@@ -150,5 +168,22 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 			RenderUtils.drawLine(matrixStack, buffer, start, end,
 				color.getColorI(0x80));
 		}
+	}
+	
+	private void renderItemNames(MatrixStack matrixStack,
+		VertexConsumerProvider vcp, float partialTicks)
+	{
+		for(ItemEntity e : items)
+			if(range.getValue() >= 200
+				|| e.squaredDistanceTo(MC.player) < range.getValueSq())
+			{
+				ItemStack stack = e.getStack();
+				Text name = Text.empty().append(stack.getName())
+					.formatted(stack.getRarity().getFormatting());
+				Text text = Text.literal(stack.getCount() + "x ").append(name);
+				matrixStack.scale(0.5F, 0.5F, 0.5F);
+				RenderUtils.renderTag(matrixStack, text, e, vcp, 0xffffff, 0.6F,
+					0.3, partialTicks);
+			}
 	}
 }
