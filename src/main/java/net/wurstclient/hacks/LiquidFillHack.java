@@ -246,6 +246,10 @@ public class LiquidFillHack extends Hack implements UpdateListener
 					if((isWater && !water.isChecked())
 						|| (!isWater && !lava.isChecked()))
 						continue;
+					if(sources && !state.isStill())
+						continue;
+					if(!sources && state.isStill())
+						continue;
 					
 					if(topCheck.isChecked() && !sources)
 					{
