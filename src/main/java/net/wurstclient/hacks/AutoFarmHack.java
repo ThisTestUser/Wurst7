@@ -8,8 +8,10 @@
 package net.wurstclient.hacks;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,8 +19,17 @@ import java.util.stream.Stream;
 
 import net.minecraft.block.*;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.item.AxeItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry.Reference;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -26,15 +37,18 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
+import net.wurstclient.WurstClient;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.hacks.autofarm.AutoFarmRenderer;
+import net.wurstclient.settings.BlockListSetting;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.settings.SwingHandSetting.SwingHand;
 import net.wurstclient.util.BlockBreaker;
+import net.wurstclient.util.BlockBreaker.BlockBreakingParams;
 import net.wurstclient.util.BlockBreakingCache;
 import net.wurstclient.util.BlockPlacer;
 import net.wurstclient.util.BlockPlacer.BlockPlacingParams;
@@ -53,6 +67,23 @@ public final class AutoFarmHack extends Hack
 	private final CheckboxSetting replant =
 		new CheckboxSetting("Replant", true);
 	
+	private final CheckboxSetting checkLOS = new CheckboxSetting(
+		"Check line of sight",
+		"Makes sure that you don't reach through walls when breaking or replanting.",
+		false);
+	
+	private final CheckboxSetting fortune =
+		new CheckboxSetting("Choose fortune tool",
+			"Chooses a fortune tool to harvest crops.", false);
+	
+	private final CheckboxSetting silkTouch = new CheckboxSetting(
+		"Choose silk touch tool",
+		"Chooses a silk touch tool to harvest melons. Axes will be prioritized.",
+		false);
+	
+	private final BlockListSetting excluded = new BlockListSetting(
+		"Excluded Crops", "List of crops that will not be harvested.");
+	
 	private final HashMap<Block, Item> seeds = new HashMap<>();
 	{
 		seeds.put(Blocks.WHEAT, Items.WHEAT_SEEDS);
@@ -63,6 +94,16 @@ public final class AutoFarmHack extends Hack
 		seeds.put(Blocks.MELON_STEM, Items.MELON_SEEDS);
 		seeds.put(Blocks.NETHER_WART, Items.NETHER_WART);
 		seeds.put(Blocks.COCOA, Items.COCOA_BEANS);
+	}
+	
+	private final HashSet<Block> fortuneBlocks = new HashSet<>();
+	{
+		fortuneBlocks.add(Blocks.WHEAT);
+		fortuneBlocks.add(Blocks.CARROTS);
+		fortuneBlocks.add(Blocks.POTATOES);
+		fortuneBlocks.add(Blocks.BEETROOTS);
+		fortuneBlocks.add(Blocks.NETHER_WART);
+		fortuneBlocks.add(Blocks.MELON);
 	}
 	
 	private final HashMap<BlockPos, Item> plants = new HashMap<>();
@@ -81,6 +122,10 @@ public final class AutoFarmHack extends Hack
 		setCategory(Category.BLOCKS);
 		addSetting(range);
 		addSetting(replant);
+		addSetting(checkLOS);
+		addSetting(excluded);
+		addSetting(fortune);
+		addSetting(silkTouch);
 	}
 	
 	@Override
@@ -202,6 +247,10 @@ public final class AutoFarmHack extends Hack
 		Block block = BlockUtils.getBlock(pos);
 		BlockState state = BlockUtils.getState(pos);
 		
+		if(Collections.binarySearch(excluded.getBlockNames(),
+			BlockUtils.getName(pos)) >= 0)
+			return false;
+		
 		if(block instanceof CropBlock)
 			return ((CropBlock)block).isMature(state);
 		
@@ -299,6 +348,9 @@ public final class AutoFarmHack extends Hack
 				if(params == null || params.distanceSq() > range.getValueSq())
 					continue;
 				
+				if(checkLOS.isChecked() && !params.lineOfSight())
+					continue;
+				
 				// face block
 				WURST.getRotationFaker().faceVectorPacket(params.hitVec());
 				
@@ -355,7 +407,10 @@ public final class AutoFarmHack extends Hack
 		
 		// Break the first valid block in survival mode
 		currentlyHarvesting =
-			stream.filter(BlockBreaker::breakOneBlock).findFirst().orElse(null);
+			stream
+				.filter(pos -> BlockBreaker.breakOneBlock(pos,
+					checkLOS.isChecked(), p -> selectTool(p)))
+				.findFirst().orElse(null);
 		
 		if(currentlyHarvesting == null)
 		{
@@ -365,5 +420,72 @@ public final class AutoFarmHack extends Hack
 		}
 		
 		overlay.updateProgress();
+	}
+	
+	private boolean selectTool(BlockBreakingParams params)
+	{
+		BlockPos pos = params.pos();
+		boolean findSilkTouch =
+			silkTouch.isChecked() && BlockUtils.getBlock(pos) == Blocks.MELON;
+		boolean findFortune = fortune.isChecked()
+			&& fortuneBlocks.contains(BlockUtils.getBlock(pos));
+		
+		DynamicRegistryManager drm = WurstClient.MC.world.getRegistryManager();
+		Registry<Enchantment> registry =
+			drm.getOrThrow(RegistryKeys.ENCHANTMENT);
+		Optional<Reference<Enchantment>> silkTouch =
+			registry.getOptional(Enchantments.SILK_TOUCH);
+		Optional<Reference<Enchantment>> fortune =
+			registry.getOptional(Enchantments.FORTUNE);
+		
+		ItemStack held = MC.player.getMainHandStack();
+		if(findSilkTouch)
+		{
+			if(silkTouch.map(entry -> EnchantmentHelper.getLevel(entry, held))
+				.orElse(0) == 0 || !(held.getItem() instanceof AxeItem))
+			{
+				int slot = InventoryUtils.indexOf(
+					stack -> stack.getItem() instanceof AxeItem && silkTouch
+						.map(entry -> EnchantmentHelper.getLevel(entry, stack))
+						.orElse(0) > 0);
+				if(slot == -1)
+					slot = InventoryUtils.indexOf(stack -> silkTouch
+						.map(entry -> EnchantmentHelper.getLevel(entry, stack))
+						.orElse(0) > 0);
+				return InventoryUtils.selectItem(slot);
+			}
+		}else if(findFortune)
+		{
+			int[] slots = InventoryUtils.indicesOf(stack -> silkTouch
+				.map(entry -> EnchantmentHelper.getLevel(entry, stack))
+				.orElse(0) == 0
+				&& fortune
+					.map(entry -> EnchantmentHelper.getLevel(entry, stack))
+					.orElse(0) > 0,
+				36, false);
+			
+			int selected = -1;
+			int level =
+				silkTouch.map(entry -> EnchantmentHelper.getLevel(entry, held))
+					.orElse(0) > 0
+						? 0
+						: fortune.map(
+							entry -> EnchantmentHelper.getLevel(entry, held))
+							.orElse(0);
+			for(int slot : slots)
+			{
+				int curLevel =
+					fortune.map(entry -> EnchantmentHelper.getLevel(entry,
+						MC.player.getInventory().getStack(slot))).orElse(0);
+				if(curLevel > level)
+				{
+					selected = slot;
+					level = curLevel;
+				}
+			}
+			return InventoryUtils.selectItem(selected);
+		}
+		
+		return false;
 	}
 }
