@@ -106,6 +106,24 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		return original.call(instance);
 	}
 	
+	/**
+	 * Allows NoSlowdown to intercept the isUsingItem() call in
+	 * shouldStopSprinting().
+	 */
+	@WrapOperation(at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z",
+		ordinal = 0), method = "shouldStopSprinting()Z")
+	private boolean wrapSprintingItemUse(ClientPlayerEntity instance,
+		Operation<Boolean> original)
+	{
+		boolean shield = ((ClientPlayerEntity)(Object)this).getActiveItem()
+			.getUseAction() == UseAction.BLOCK;
+		if(WurstClient.INSTANCE.getHax().noSlowdownHack.noItemSlowness(shield))
+			return false;
+		
+		return original.call(instance);
+	}
+	
 	@Inject(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/network/ClientPlayerEntity;getMountJumpStrength()F"),
 		method = "tickMovement()V")
