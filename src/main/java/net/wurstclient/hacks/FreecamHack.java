@@ -57,7 +57,12 @@ public final class FreecamHack extends Hack implements UpdateListener,
 	private final ColorSetting color =
 		new ColorSetting("Tracer color", Color.WHITE);
 	
+	private final CheckboxSetting motionPackets = new CheckboxSetting(
+		"Continue motion updates",
+		"Continue sending motion packets using your actual position.", true);
+	
 	private FakePlayerEntity fakePlayer;
+	private int lastPositionTicks;
 	
 	public FreecamHack()
 	{
@@ -66,6 +71,7 @@ public final class FreecamHack extends Hack implements UpdateListener,
 		addSetting(speed);
 		addSetting(tracer);
 		addSetting(color);
+		addSetting(motionPackets);
 	}
 	
 	@Override
@@ -82,6 +88,7 @@ public final class FreecamHack extends Hack implements UpdateListener,
 		EVENTS.add(RenderListener.class, this);
 		
 		fakePlayer = new FakePlayerEntity();
+		fakePlayer.setOnGround(MC.player.isOnGround());
 		
 		GameOptions opt = MC.options;
 		KeyBinding[] bindings = {opt.forwardKey, opt.backKey, opt.leftKey,
@@ -89,6 +96,8 @@ public final class FreecamHack extends Hack implements UpdateListener,
 		
 		for(KeyBinding binding : bindings)
 			IKeyBinding.get(binding).resetPressedState();
+		
+		lastPositionTicks = 0;
 	}
 	
 	@Override
@@ -140,7 +149,19 @@ public final class FreecamHack extends Hack implements UpdateListener,
 	public void onSentPacket(PacketOutputEvent event)
 	{
 		if(event.getPacket() instanceof PlayerMoveC2SPacket)
-			event.cancel();
+		{
+			if(motionPackets.isChecked())
+				lastPositionTicks++;
+			
+			if(lastPositionTicks >= 20)
+			{
+				event.setPacket(new PlayerMoveC2SPacket.PositionAndOnGround(
+					fakePlayer.getX(), fakePlayer.getY(), fakePlayer.getZ(),
+					fakePlayer.isOnGround()));
+				lastPositionTicks = 0;
+			}else
+				event.cancel();
+		}
 	}
 	
 	@Override
