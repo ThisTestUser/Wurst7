@@ -71,6 +71,8 @@ public final class CmdList
 	public final VClipCmd vClipCmd = new VClipCmd();
 	public final ViewCompCmd viewCompCmd = new ViewCompCmd();
 	public final ViewNbtCmd viewNbtCmd = new ViewNbtCmd();
+	public final VisitorDetectorCmd visitorDetectorCmd =
+		new VisitorDetectorCmd();
 	public final XrayCmd xrayCmd = new XrayCmd();
 	
 	private final TreeMap<String, Command> cmds =
