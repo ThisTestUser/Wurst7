@@ -1,4 +1,5 @@
 accessWidener	v1	named
+accessible	class	net/minecraft/client/gui/screen/ingame/BeaconScreen$EffectButtonWidget
 accessible	class	net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
 accessible	method	net/minecraft/client/gl/RenderPipelines	register	(Lcom/mojang/blaze3d/pipeline/RenderPipeline;)Lcom/mojang/blaze3d/pipeline/RenderPipeline;
 accessible	method	net/minecraft/client/gui/screen/ingame/HandledScreen onMouseClick	(Lnet/minecraft/screen/slot/Slot;IILnet/minecraft/screen/slot/SlotActionType;)V

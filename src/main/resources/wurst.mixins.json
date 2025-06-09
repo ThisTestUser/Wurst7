@@ -10,6 +10,7 @@
     "AbstractTerrainRenderContextMixin",
     "AllowedAddressResolverMixin",
     "BackgroundRendererMixin",
+    "BeaconScreenMixin",
     "BlockEntityRenderDispatcherMixin",
     "BlockMixin",
     "BlockModelRendererMixin",
