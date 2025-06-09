@@ -7,6 +7,8 @@
  */
 package net.wurstclient.mixin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.jetbrains.annotations.Nullable;
@@ -16,12 +18,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import io.netty.channel.ChannelHandlerContext;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+
 import io.netty.channel.SimpleChannelInboundHandler;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.DisconnectionInfo;
 import net.minecraft.network.PacketCallbacks;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.BundleS2CPacket;
 import net.wurstclient.WurstClient;
 import net.wurstclient.event.EventManager;
 import net.wurstclient.events.ConnectionPacketOutputListener.ConnectionPacketOutputEvent;
@@ -34,19 +41,34 @@ public abstract class ClientConnectionMixin
 	private ConcurrentLinkedQueue<ConnectionPacketOutputEvent> events =
 		new ConcurrentLinkedQueue<>();
 	
-	@Inject(at = @At(value = "INVOKE",
+	@WrapOperation(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/network/ClientConnection;handlePacket(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/listener/PacketListener;)V",
 		ordinal = 0),
-		method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;)V",
-		cancellable = true)
-	private void onChannelRead0(ChannelHandlerContext context, Packet<?> packet,
-		CallbackInfo ci)
+		method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;)V")
+	private void onPacketReceived(Packet<?> packet, PacketListener listener,
+		Operation<Void> original)
 	{
+		if(packet instanceof BundleS2CPacket bundle)
+		{
+			List<Packet<? super ClientPlayPacketListener>> packets =
+				new ArrayList<>();
+			bundle.getPackets().forEach(p -> {
+				PacketInputEvent event = new PacketInputEvent(p);
+				EventManager.fire(event);
+				
+				if(!event.isCancelled())
+					packets.add((Packet<? super ClientPlayPacketListener>)event
+						.getPacket());
+			});
+			original.call(new BundleS2CPacket(packets), listener);
+			return;
+		}
+		
 		PacketInputEvent event = new PacketInputEvent(packet);
 		EventManager.fire(event);
 		
-		if(event.isCancelled())
-			ci.cancel();
+		if(!event.isCancelled())
+			original.call(event.getPacket(), listener);
 	}
 	
 	@ModifyVariable(at = @At("HEAD"),
