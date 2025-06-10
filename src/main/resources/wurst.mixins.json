@@ -16,6 +16,7 @@
     "BlockMixin",
     "BlockModelRendererMixin",
     "BlockRenderInfoMixin",
+    "BucketItemMixin",
     "CactusBlockMixin",
     "CameraMixin",
     "ChatHudMixin",
