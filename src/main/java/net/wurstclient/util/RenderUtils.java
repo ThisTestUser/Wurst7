@@ -10,12 +10,16 @@ package net.wurstclient.util;
 import java.util.List;
 
 import org.joml.Matrix4f;
+import org.joml.Matrix4fStack;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.font.TextRenderer.TextLayerType;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.Camera;
@@ -23,9 +27,16 @@ import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.MatrixStack.Entry;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.tag.EnchantmentTags;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
@@ -33,6 +44,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.chunk.Chunk;
 import net.wurstclient.WurstClient;
 import net.wurstclient.WurstRenderLayers;
+import net.wurstclient.hacks.NameTagsHack;
 
 public enum RenderUtils
 {
@@ -839,6 +851,146 @@ public enum RenderUtils
 			buffer.vertex(matrix, xs1, ys2, 0).color(shadowColor2);
 			buffer.vertex(matrix, xs2, ys2, 0).color(shadowColor2);
 		});
+	}
+	
+	public static void renderTag(MatrixStack matrixStack, Text text,
+		Entity entity, VertexConsumerProvider provider, int color,
+		double vOffset, float partialTicks)
+	{
+		NameTagsHack nameTags = WurstClient.INSTANCE.getHax().nameTagsHack;
+		
+		EntityRenderDispatcher dispatcher =
+			WurstClient.MC.getEntityRenderDispatcher();
+		double dist = dispatcher.getSquaredDistanceToCamera(entity);
+		if(dist > 4096 && !nameTags.isUnlimitedRange())
+			return;
+		
+		matrixStack.push();
+		
+		Vec3d camPos = RenderUtils.getCameraPos();
+		Vec3d tagPos = EntityUtils.getLerpedPos(entity, partialTicks)
+			.subtract(camPos).add(0, entity.getHeight() + vOffset, 0);
+		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
+		
+		matrixStack.multiply(dispatcher.getRotation().rotateY((float)Math.PI,
+			new Quaternionf()));
+		
+		float scale = 0.025F;
+		if(nameTags.isEnabled())
+		{
+			double distance = WurstClient.MC.player.distanceTo(entity);
+			if(distance > 10)
+				scale *= distance / 10;
+		}
+		matrixStack.scale(-scale, -scale, scale);
+		
+		float bgOpacity =
+			WurstClient.MC.options.getTextBackgroundOpacity(0.25f);
+		int bgColor = (int)(bgOpacity * 255F) << 24;
+		
+		Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+		TextRenderer tr = WurstClient.MC.textRenderer;
+		int labelX = -tr.getWidth(text) / 2;
+		
+		tr.draw(text, labelX, 0, color, false, matrix, provider,
+			TextLayerType.NORMAL, bgColor, 15728880);
+		
+		tr.draw(text, labelX, 0, -1, false, matrix, provider,
+			TextLayerType.SEE_THROUGH, 0, 15728880);
+		
+		matrixStack.pop();
+	}
+	
+	public static void renderArmor(MatrixStack matrixStack, ItemStack stack,
+		Entity entity, int armorId, boolean showEnchants, boolean impossible,
+		float multiplier, double vOffset, float partialTicks)
+	{
+		NameTagsHack nameTags = WurstClient.INSTANCE.getHax().nameTagsHack;
+		
+		EntityRenderDispatcher dispatcher =
+			WurstClient.MC.getEntityRenderDispatcher();
+		double dist = dispatcher.getSquaredDistanceToCamera(entity);
+		if(dist > 4096 && !nameTags.isUnlimitedRange())
+			return;
+		
+		Vec3d camPos = RenderUtils.getCameraPos();
+		Vec3d tagPos = EntityUtils.getLerpedPos(entity, partialTicks)
+			.subtract(camPos).add(0, entity.getHeight() + vOffset, 0);
+		
+		float scale = 0.025F * multiplier;
+		double distance = WurstClient.MC.player.distanceTo(entity);
+		if(distance > 10)
+			scale *= distance / 10;
+		
+		TextRenderer tr = WurstClient.MC.textRenderer;
+		
+		// offset model view stack for armor
+		Matrix4fStack viewMatrix = RenderSystem.getModelViewStack();
+		viewMatrix.pushMatrix();
+		
+		// camera rotation
+		viewMatrix.mul(matrixStack.peek().getPositionMatrix());
+		
+		viewMatrix.translate((float)tagPos.x, (float)tagPos.y, (float)tagPos.z);
+		viewMatrix.rotate(dispatcher.getRotation().rotateY((float)Math.PI,
+			new Quaternionf()));
+		viewMatrix.scale(-scale, -scale, scale);
+		
+		// render item icon
+		DrawContext context = new DrawContext(WurstClient.MC,
+			WurstClient.MC.getBufferBuilders().getEntityVertexConsumers());
+		context.getMatrices().translate(0, 0, -149);
+		context.drawItem(stack, -50 + armorId * 20, -20);
+		context.getMatrices().translate(0, 0, 149);
+		context.drawStackOverlay(tr, stack, -50 + armorId * 20, -20);
+		context.draw();
+		
+		viewMatrix.popMatrix();
+		
+		// offset matrixStack for rendering text
+		matrixStack.push();
+		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
+		matrixStack.multiply(dispatcher.getRotation().rotateY((float)Math.PI,
+			new Quaternionf()));
+		matrixStack.scale(-scale, -scale, scale);
+		
+		// render enchants
+		if(showEnchants && stack.hasEnchantments())
+		{
+			matrixStack.scale(0.5F, 0.5F, 0.5F);
+			int index = 0;
+			VertexConsumerProvider.Immediate immediate =
+				WurstClient.MC.getBufferBuilders().getEntityVertexConsumers();
+			Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+			for(Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : EnchantmentHelper
+				.getEnchantments(stack).getEnchantmentEntries())
+			{
+				Enchantment enchantment = entry.getKey().value();
+				if(impossible && !enchantment.isAcceptableItem(stack))
+					continue;
+				index++;
+				Text text = EnchantmentUtils
+					.getShortName(entry.getKey().getIdAsString(),
+						entry.getKey().isIn(EnchantmentTags.CURSE))
+					.append(Integer.toString(entry.getIntValue()));
+				
+				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
+					-60 + tr.fontHeight * index, 0xffffff, false, matrix,
+					immediate, TextLayerType.NORMAL, 0, 15728880);
+				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
+					-60 + tr.fontHeight * index, -1, false, matrix, immediate,
+					TextLayerType.SEE_THROUGH, 0, 15728880);
+			}
+			immediate.draw();
+		}
+		
+		matrixStack.pop();
+		
+		// reset lighting
+		if(WurstClient.MC.world.getDimensionEffects().isDarkened())
+			DiffuseLighting.enableForLevel();
+		else
+			DiffuseLighting.disableForLevel();
 	}
 	
 	public record ColoredPoint(Vec3d point, int color)

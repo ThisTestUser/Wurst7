@@ -36,6 +36,7 @@
     "DirectConnectScreenMixin",
     "DisconnectedRealmsScreenMixin",
     "DisconnectedScreenMixin",
+    "DrawContextMixin",
     "EntityMixin",
     "EntityRenderDispatcherMixin",
     "EntityRendererMixin",
