@@ -76,7 +76,7 @@ public final class NoClipHack extends Hack
 	}
 	
 	@Override
-	public void onPlayerMove()
+	public void onPlayerMove(PlayerMoveEvent event)
 	{
 		MC.player.noClip = true;
 	}
