@@ -48,7 +48,6 @@
   "description.wurst.hack.barrieresp": "近くのバリアブロックを表示します。",
   "description.wurst.hack.basefinder": "人工的なブロックを検知し、プレイヤーの拠点を捜索する。\n検知したブロックは選択された色でハイライト表示する。\nグループの拠点などの発見に有用。",
   "description.wurst.hack.blink": "有効化されている間、モーションの更新をすべて停止する。",
-  "description.wurst.hack.boatfly": "ボートや他の車両で飛行することができます。\nスプリントキー（走る）を押すと、より速く降下することができます。",
   "description.wurst.hack.bonemealaura": "特定の種類の植物に対して自動で骨粉を使用する。\nチェックボックスから植物の種類の指定が可能。",
   "description.wurst.hack.bowaimbot": "弓やクロスボウの使用時に自動で照準を合わせる。",
   "description.wurst.hack.buildrandom": "周囲にランダムにブロックを設置する。",

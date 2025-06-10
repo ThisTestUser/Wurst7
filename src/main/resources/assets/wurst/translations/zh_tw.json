@@ -43,7 +43,6 @@
   "description.wurst.hack.autowalk": "讓你自動走路，不需要自己按著W鍵。",
   "description.wurst.hack.basefinder": "通過尋找人為建造的方塊以找到玩家的基地\n假如方塊被找到將會高亮以你所選的顏色。\n建議用於尋找幫派的基地。",
   "description.wurst.hack.blink": "暫停所有動作更新，並在關閉時繼續。",
-  "description.wurst.hack.boatfly": "允許您乘船和其他車輛飛行。\n按跑步鍵可以更快地下降。",
   "description.wurst.hack.bonemealaura": "在指定的作物上自動使用骨粉。\n使用核取方塊來指定作物。",
   "description.wurst.hack.bowaimbot": "當你用弓或者弩時自動瞄準所設定的實體。",
   "description.wurst.hack.buildrandom": "在你的附近隨機放置方塊。",
