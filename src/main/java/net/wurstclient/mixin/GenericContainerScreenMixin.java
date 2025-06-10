@@ -34,10 +34,10 @@ public abstract class GenericContainerScreenMixin
 		WurstClient.INSTANCE.getHax().autoStealHack;
 	
 	public GenericContainerScreenMixin(WurstClient wurst,
-		GenericContainerScreenHandler container,
-		PlayerInventory playerInventory, Text name)
+		GenericContainerScreenHandler handler, PlayerInventory inventory,
+		Text title)
 	{
-		super(container, playerInventory, name);
+		super(handler, inventory, title);
 	}
 	
 	@Override
@@ -50,18 +50,29 @@ public abstract class GenericContainerScreenMixin
 		
 		if(autoSteal.areButtonsVisible())
 		{
-			addDrawableChild(ButtonWidget
-				.builder(Text.literal("Steal"),
-					b -> autoSteal.steal(this, rows))
-				.dimensions(x + backgroundWidth - 108, y + 4, 50, 12).build());
+			if(autoSteal.hasDropButton())
+				addDrawableChild(ButtonWidget
+					.builder(Text.literal("Drop"),
+						b -> autoSteal.drop(this, rows, false))
+					.dimensions(x + backgroundWidth - 108, y + 4, 50, 12)
+					.build());
+			else
+				addDrawableChild(ButtonWidget
+					.builder(Text.literal("Steal"),
+						b -> autoSteal.steal(this, rows, false))
+					.dimensions(x + backgroundWidth - 108, y + 4, 50, 12)
+					.build());
 			
 			addDrawableChild(ButtonWidget
 				.builder(Text.literal("Store"),
-					b -> autoSteal.store(this, rows))
+					b -> autoSteal.store(this, rows, false))
 				.dimensions(x + backgroundWidth - 56, y + 4, 50, 12).build());
 		}
 		
 		if(autoSteal.isEnabled())
-			autoSteal.steal(this, rows);
+			if(autoSteal.shouldDrop())
+				autoSteal.drop(this, rows, true);
+			else
+				autoSteal.steal(this, rows, true);
 	}
 }

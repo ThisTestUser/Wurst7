@@ -24,13 +24,29 @@ import net.wurstclient.settings.SliderSetting.ValueDisplay;
 	"steal store buttons", "Steal/Store buttons"})
 public final class AutoStealHack extends Hack
 {
+	private final CheckboxSetting buttons =
+		new CheckboxSetting("Steal/Store buttons", true);
+	
+	private final CheckboxSetting dropButton = new CheckboxSetting(
+		"Drop button", "Replaces the steal button with a drop button.", false);
+	
+	private final CheckboxSetting drop = new CheckboxSetting("Drop",
+		"Makes AutoSteal drop items instead of storing them.", false);
+	
 	private final SliderSetting delay = new SliderSetting("Delay",
 		"Delay between moving stacks of items.\n"
 			+ "Should be at least 70ms for NoCheat+ servers.",
 		100, 0, 500, 10, ValueDisplay.INTEGER.withSuffix("ms"));
 	
-	private final CheckboxSetting buttons =
-		new CheckboxSetting("Steal/Store buttons", true);
+	private final SliderSetting startingDelay =
+		new SliderSetting("Starting delay",
+			"Initial delay after opening a chest before stealing.\n"
+				+ "This needs to be higher for laggier servers.",
+			150, 0, 2000, 25, ValueDisplay.INTEGER.withSuffix("ms"));
+	
+	private final CheckboxSetting horses =
+		new CheckboxSetting("Steal from chested entities",
+			"Automatically steals from chested donkeys, llamas, etc.", true);
 	
 	private final CheckboxSetting reverseSteal =
 		new CheckboxSetting("Reverse steal order", false);
@@ -42,39 +58,79 @@ public final class AutoStealHack extends Hack
 		super("AutoSteal");
 		setCategory(Category.ITEMS);
 		addSetting(buttons);
+		addSetting(dropButton);
+		addSetting(drop);
 		addSetting(delay);
+		addSetting(startingDelay);
+		addSetting(horses);
 		addSetting(reverseSteal);
 	}
 	
-	public void steal(HandledScreen<?> screen, int rows)
+	public void steal(HandledScreen<?> screen, int rows, boolean automatic)
 	{
-		startClickingSlots(screen, 0, rows * 9, true);
+		startClickingSlots(screen, 0, rows * 9, 0, automatic);
 	}
 	
-	public void store(HandledScreen<?> screen, int rows)
+	public void drop(HandledScreen<?> screen, int rows, boolean automatic)
 	{
-		startClickingSlots(screen, rows * 9, rows * 9 + 36, false);
+		startClickingSlots(screen, 0, rows * 9, 1, automatic);
+	}
+	
+	public void store(HandledScreen<?> screen, int rows, boolean automatic)
+	{
+		startClickingSlots(screen, rows * 9, rows * 9 + 36, 2, automatic);
+	}
+	
+	public void stealHorse(HandledScreen<?> screen, int slotColumns,
+		boolean automatic)
+	{
+		startClickingSlots(screen, 2, slotColumns * 3 + 2, 0, automatic);
+	}
+	
+	public void dropHorse(HandledScreen<?> screen, int slotColumns,
+		boolean automatic)
+	{
+		startClickingSlots(screen, 2, slotColumns * 3 + 2, 1, automatic);
+	}
+	
+	public void storeHorse(HandledScreen<?> screen, int slotColumns,
+		boolean automatic)
+	{
+		startClickingSlots(screen, slotColumns * 3 + 2,
+			slotColumns * 3 + 2 + 36, 2, automatic);
 	}
 	
 	private void startClickingSlots(HandledScreen<?> screen, int from, int to,
-		boolean steal)
+		int mode, boolean automatic)
 	{
 		if(thread != null && thread.isAlive())
 			thread.interrupt();
 		
 		thread = Thread.ofPlatform().name("AutoSteal")
 			.uncaughtExceptionHandler((t, e) -> e.printStackTrace()).daemon()
-			.start(() -> shiftClickSlots(screen, from, to, steal));
+			.start(() -> shiftClickSlots(screen, from, to, mode, automatic));
 	}
 	
 	private void shiftClickSlots(HandledScreen<?> screen, int from, int to,
-		boolean steal)
+		int mode, boolean automatic)
 	{
 		List<Slot> slots = IntStream.range(from, to)
 			.mapToObj(i -> screen.getScreenHandler().slots.get(i)).toList();
 		
-		if(reverseSteal.isChecked() && steal)
+		if(reverseSteal.isChecked() && mode == 2)
 			slots = slots.reversed();
+		
+		if(automatic)
+		{
+			try
+			{
+				Thread.sleep(startingDelay.getValueI());
+			}catch(InterruptedException e)
+			{
+				Thread.currentThread().interrupt();
+				return;
+			}
+		}
 		
 		for(Slot slot : slots)
 			try
@@ -87,8 +143,14 @@ public final class AutoStealHack extends Hack
 				if(MC.currentScreen == null)
 					break;
 				
-				screen.onMouseClick(slot, slot.id, 0,
-					SlotActionType.QUICK_MOVE);
+				if(mode == 1)
+				{
+					screen.onMouseClick(slot, slot.id, 0,
+						SlotActionType.PICKUP);
+					screen.onMouseClick(null, -999, 0, SlotActionType.PICKUP);
+				}else
+					screen.onMouseClick(slot, slot.id, 0,
+						SlotActionType.QUICK_MOVE);
 				
 			}catch(InterruptedException e)
 			{
@@ -102,5 +164,20 @@ public final class AutoStealHack extends Hack
 		return buttons.isChecked();
 	}
 	
-	// See GenericContainerScreenMixin and ShulkerBoxScreenMixin
+	public boolean hasDropButton()
+	{
+		return dropButton.isChecked();
+	}
+	
+	public boolean shouldDrop()
+	{
+		return drop.isChecked();
+	}
+	
+	public boolean stealFromHorses()
+	{
+		return horses.isChecked();
+	}
+	
+	// See GenericContainerScreenMixin, ShulkerBoxScreenMixin, HorseScreenMixin
 }
