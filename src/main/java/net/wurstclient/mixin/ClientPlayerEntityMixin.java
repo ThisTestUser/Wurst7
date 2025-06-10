@@ -29,6 +29,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.consume.UseAction;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.WurstClient;
@@ -89,15 +90,18 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	
 	/**
 	 * Allows NoSlowdown to intercept the isUsingItem() call in
-	 * tickMovement().
+	 * applyMovementSpeedFactors().
 	 */
 	@WrapOperation(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z",
-		ordinal = 0), method = "tickMovement()V")
+		ordinal = 0),
+		method = "applyMovementSpeedFactors(Lnet/minecraft/util/math/Vec2f;)Lnet/minecraft/util/math/Vec2f;")
 	private boolean wrapTickMovementItemUse(ClientPlayerEntity instance,
 		Operation<Boolean> original)
 	{
-		if(WurstClient.INSTANCE.getHax().noSlowdownHack.isEnabled())
+		boolean shield = ((ClientPlayerEntity)(Object)this).getActiveItem()
+			.getUseAction() == UseAction.BLOCK;
+		if(WurstClient.INSTANCE.getHax().noSlowdownHack.noItemSlowness(shield))
 			return false;
 		
 		return original.call(instance);
