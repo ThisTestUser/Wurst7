@@ -9,7 +9,7 @@ package net.wurstclient.hacks;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.entity.vehicle.AbstractBoatEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
@@ -112,7 +112,7 @@ public final class VehicleHack extends Hack implements UpdateListener
 			&& vehicle instanceof LivingEntity)
 			motionY += swimSpeed.getValue();
 		
-		if(boatControl.isChecked() && vehicle instanceof BoatEntity)
+		if(boatControl.isChecked() && vehicle instanceof AbstractBoatEntity)
 			vehicle.setYaw(MC.player.getYaw());
 		
 		// forward
