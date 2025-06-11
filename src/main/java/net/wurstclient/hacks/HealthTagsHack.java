@@ -7,7 +7,6 @@
  */
 package net.wurstclient.hacks;
 
-import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -65,20 +64,15 @@ public final class HealthTagsHack extends Hack implements RenderListener
 		if(!mobs.isChecked())
 			return;
 		
-		VertexConsumerProvider.Immediate immediate =
-			MC.getBufferBuilders().getEntityVertexConsumers();
-		
 		for(Entity e : MC.world.getEntities())
 		{
 			if(!(e instanceof MobEntity entity))
 				continue;
 			
 			Text text = addHealth(entity, Text.literal(""));
-			RenderUtils.renderTag(matrixStack, text, entity, immediate,
-				0xffffff, 1, !entity.hasCustomName() ? 0.5 : 1, partialTicks);
+			RenderUtils.renderTag(matrixStack, text, entity, 0xffffff, 1,
+				!entity.hasCustomName() ? 0.5 : 1, partialTicks);
 		}
-		
-		immediate.draw();
 	}
 	
 	public Text addHealth(LivingEntity entity, MutableText nametag)

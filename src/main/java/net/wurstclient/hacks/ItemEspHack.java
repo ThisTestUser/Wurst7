@@ -10,7 +10,6 @@ package net.wurstclient.hacks;
 import java.awt.Color;
 import java.util.ArrayList;
 
-import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
@@ -127,16 +126,11 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 				false);
 		}
 		
-		VertexConsumerProvider.Immediate immediate =
-			MC.getBufferBuilders().getEntityVertexConsumers();
-		
 		if(names.isChecked())
-			renderItemNames(matrixStack, immediate, partialTicks);
-		immediate.draw();
+			renderItemNames(matrixStack, partialTicks);
 	}
 	
-	private void renderItemNames(MatrixStack matrixStack,
-		VertexConsumerProvider.Immediate immediate, float partialTicks)
+	private void renderItemNames(MatrixStack matrixStack, float partialTicks)
 	{
 		for(ItemEntity e : items)
 			if(range.getValue() >= 200
@@ -146,8 +140,8 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 				Text name = Text.empty().append(stack.getName())
 					.formatted(stack.getRarity().getFormatting());
 				Text text = Text.literal(stack.getCount() + "x ").append(name);
-				RenderUtils.renderTag(matrixStack, text, e, immediate, 0xffffff,
-					0.6F, 0.3, partialTicks);
+				RenderUtils.renderTag(matrixStack, text, e, 0xffffff, 0.6F, 0.3,
+					partialTicks);
 			}
 	}
 }

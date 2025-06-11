@@ -855,9 +855,11 @@ public enum RenderUtils
 	}
 	
 	public static void renderTag(MatrixStack matrixStack, Text text,
-		Entity entity, VertexConsumerProvider provider, int color,
-		float multiplier, double vOffset, float partialTicks)
+		Entity entity, int color, float multiplier, double vOffset,
+		float partialTicks)
 	{
+		VertexConsumerProvider.Immediate vcp = getVCP();
+		
 		NameTagsHack nameTags = WurstClient.INSTANCE.getHax().nameTagsHack;
 		
 		EntityRenderDispatcher dispatcher =
@@ -893,13 +895,14 @@ public enum RenderUtils
 		TextRenderer tr = WurstClient.MC.textRenderer;
 		int labelX = -tr.getWidth(text) / 2;
 		
-		tr.draw(text, labelX, 0, color, false, matrix, provider,
+		tr.draw(text, labelX, 0, color, false, matrix, vcp,
 			TextLayerType.NORMAL, bgColor, 15728880);
 		
-		tr.draw(text, labelX, 0, -1, false, matrix, provider,
+		tr.draw(text, labelX, 0, -1, false, matrix, vcp,
 			TextLayerType.SEE_THROUGH, 0, 15728880);
 		
 		matrixStack.pop();
+		vcp.draw();
 	}
 	
 	public static void renderArmor(MatrixStack matrixStack, ItemStack stack,
@@ -938,8 +941,7 @@ public enum RenderUtils
 		viewMatrix.scale(-scale, -scale, scale);
 		
 		// render item icon
-		DrawContext context = new DrawContext(WurstClient.MC,
-			WurstClient.MC.getBufferBuilders().getEntityVertexConsumers());
+		DrawContext context = new DrawContext(WurstClient.MC, getVCP());
 		context.getMatrices().translate(0, 0, -149);
 		context.drawItem(stack, -50 + armorId * 20, -20);
 		context.getMatrices().translate(0, 0, 149);
@@ -960,8 +962,7 @@ public enum RenderUtils
 		{
 			matrixStack.scale(0.5F, 0.5F, 0.5F);
 			int index = 0;
-			VertexConsumerProvider.Immediate immediate =
-				WurstClient.MC.getBufferBuilders().getEntityVertexConsumers();
+			VertexConsumerProvider.Immediate immediate = getVCP();
 			Matrix4f matrix = matrixStack.peek().getPositionMatrix();
 			for(Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : EnchantmentHelper
 				.getEnchantments(stack).getEnchantmentEntries())
