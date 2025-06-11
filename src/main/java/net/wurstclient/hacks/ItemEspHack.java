@@ -146,8 +146,8 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 				Text name = Text.empty().append(stack.getName())
 					.formatted(stack.getRarity().getFormatting());
 				Text text = Text.literal(stack.getCount() + "x ").append(name);
-				RenderUtils.renderTag(matrixStack, text, e, immediate, 0xffffff, 0.6F,
-					0.3, partialTicks);
+				RenderUtils.renderTag(matrixStack, text, e, immediate, 0xffffff,
+					0.6F, 0.3, partialTicks);
 			}
 	}
 }
