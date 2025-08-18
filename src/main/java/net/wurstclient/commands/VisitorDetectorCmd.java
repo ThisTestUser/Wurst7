@@ -191,6 +191,9 @@ public final class VisitorDetectorCmd extends Command
 		if(MC.isInSingleplayer() || !folder.exists())
 			return;
 		
+		if(networkHandler.getServerInfo() == null)
+			return;
+		
 		ServerInfo info = networkHandler.getServerInfo();
 		File serverFile = new File(folder,
 			info.address.replace(".", "_").replace(":", "_") + ".json");
