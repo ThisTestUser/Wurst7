@@ -69,6 +69,7 @@ public final class HackList implements UpdateListener
 	public final AutoWalkHack autoWalkHack = new AutoWalkHack();
 	public final BarrierEspHack barrierEspHack = new BarrierEspHack();
 	public final BaseFinderHack baseFinderHack = new BaseFinderHack();
+	public final BeaconHack beaconHack = new BeaconHack();
 	public final BlinkHack blinkHack = new BlinkHack();
 	public final BlockHitHack blockHitHack = new BlockHitHack();
 	public final BonemealAuraHack bonemealAuraHack = new BonemealAuraHack();

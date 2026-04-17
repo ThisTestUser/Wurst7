@@ -6,6 +6,7 @@
   "client": [
     "AbstractSignEditScreenMixin",
     "AtmosphericFogEnvironmentMixin",
+    "BeaconScreenMixin",
     "BlockMixin",
     "BlockStateBaseMixin",
     "BucketItemMixin",
