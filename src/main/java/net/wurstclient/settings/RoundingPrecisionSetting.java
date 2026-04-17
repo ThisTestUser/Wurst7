@@ -18,8 +18,10 @@ public final class RoundingPrecisionSetting extends SliderSetting
 	
 	private final DecimalFormat[] FORMATS;
 	
+	private final boolean trimTrailingZeros;
+	
 	public RoundingPrecisionSetting(String name, String description, int value,
-		int min, int max)
+		int min, int max, boolean trimTrailingZeros)
 	{
 		super(name, description, value, min, max, 1,
 			ValueDisplay.ROUNDING_PRECISION);
@@ -29,6 +31,7 @@ public final class RoundingPrecisionSetting extends SliderSetting
 				"min must be greater than or equal to 0");
 		
 		FORMATS = new DecimalFormat[max + 1];
+		this.trimTrailingZeros = trimTrailingZeros;
 	}
 	
 	public DecimalFormat getFormat()
@@ -39,7 +42,7 @@ public final class RoundingPrecisionSetting extends SliderSetting
 		{
 			String pattern = "0";
 			if(value > 0)
-				pattern += "." + "#".repeat(value);
+				pattern += "." + (trimTrailingZeros ? "#" : "0").repeat(value);
 			
 			FORMATS[value] = new DecimalFormat(pattern, SYMBOLS);
 		}
