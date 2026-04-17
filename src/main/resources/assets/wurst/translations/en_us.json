@@ -76,6 +76,7 @@
   "description.wurst.hack.barrieresp": "Allows you to see nearby barrier blocks.",
   "description.wurst.hack.basefinder": "Finds player bases by searching for man-made blocks.\nThe blocks that it finds will be highlighted in the selected color.\nGood for finding faction bases.",
   "description.wurst.hack.blink": "Suspends all motion updates while enabled.",
+  "description.wurst.hack.blockhit": "Automatically blocks whenever an entity is near.\nTip: You can use this with NoSlowdown.",
   "description.wurst.hack.bonemealaura": "Automatically uses bone meal on specific types of plants.\nUse the checkboxes to specify the types of plants.",
   "description.wurst.setting.bonemealaura.multimeal": "Uses bone meal on multiple plants at once.\nFaster, but can be detected by anti-cheat plugins.",
   "description.wurst.setting.bonemealaura.check_los": "Ensures that BonemealAura won't try to reach through blocks when using bone meal.\nSlower, but can help with anti-cheat plugins.",

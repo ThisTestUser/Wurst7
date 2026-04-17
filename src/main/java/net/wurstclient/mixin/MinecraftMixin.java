@@ -18,12 +18,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.UserApiService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.blaze3d.platform.WindowEventHandler;
 
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.User;
 import net.minecraft.client.main.GameConfig;
@@ -31,6 +34,7 @@ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.multiplayer.ProfileKeyPairManager;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.thread.ReentrantBlockableEventLoop;
+import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.wurstclient.WurstClient;
@@ -206,6 +210,28 @@ public abstract class MinecraftMixin
 			!WurstClient.INSTANCE.getOtfs().noTelemetryOtf.isEnabled());
 	}
 	
+	@WrapOperation(method = "handleKeybinds()V",
+		at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/KeyMapping;isDown()Z",
+			ordinal = 2))
+	private boolean allowBlockHits(KeyMapping useKey,
+		Operation<Boolean> original)
+	{
+		boolean isBlocking = player.getUseItem() != null
+			&& player.getUseItem().getItem() instanceof ShieldItem
+			&& WurstClient.INSTANCE.getHax().blockHitHack.isBlocking();
+		if(isBlocking)
+		{
+			// allow attacks while using shield
+			while(((Minecraft)(Object)this).options.keyAttack.consumeClick())
+				startAttack();
+			
+			// prevent stopUsingItem() from being called
+			return true;
+		}
+		return original.call(useKey);
+	}
+	
 	@Override
 	public ILocalPlayer getPlayer()
 	{
@@ -242,4 +268,7 @@ public abstract class MinecraftMixin
 		wurstProfileKeys = ProfileKeyPairManager.create(userApiService, session,
 			gameDirectory.toPath());
 	}
+	
+	@Shadow
+	protected abstract boolean startAttack();
 }
