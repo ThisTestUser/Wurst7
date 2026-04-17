@@ -8,6 +8,7 @@
     "AtmosphericFogEnvironmentMixin",
     "BlockMixin",
     "BlockStateBaseMixin",
+    "BucketItemMixin",
     "CactusBlockMixin",
     "CameraMixin",
     "ChatComponentMixin",
