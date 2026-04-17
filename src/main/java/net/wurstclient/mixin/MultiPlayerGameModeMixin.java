@@ -32,6 +32,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.wurstclient.WurstClient;
 import net.wurstclient.event.EventManager;
 import net.wurstclient.events.BlockBreakingProgressListener.BlockBreakingProgressEvent;
 import net.wurstclient.events.PlayerAttacksEntityListener.PlayerAttacksEntityEvent;
@@ -45,6 +46,14 @@ public abstract class MultiPlayerGameModeMixin
 	@Shadow
 	@Final
 	private Minecraft minecraft;
+	
+	@Inject(method = "destroyBlock(Lnet/minecraft/core/BlockPos;)Z",
+		at = @At("HEAD"))
+	private void onDestroyBlock(BlockPos pos,
+		CallbackInfoReturnable<Boolean> cir)
+	{
+		WurstClient.INSTANCE.getHax().civBreakHack.updateBlock(pos);
+	}
 	
 	@Inject(
 		method = "continueDestroyBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;)Z",
