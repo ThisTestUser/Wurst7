@@ -257,7 +257,9 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer
 	{
 		KnockbackEvent event = new KnockbackEvent(vec.x, vec.y, vec.z);
 		EventManager.fire(event);
-		super.lerpMotion(new Vec3(event.getX(), event.getY(), event.getZ()));
+		if(!event.isCancelled())
+			super.lerpMotion(
+				new Vec3(event.getX(), event.getY(), event.getZ()));
 	}
 	
 	@Override
