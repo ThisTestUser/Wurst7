@@ -55,6 +55,8 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer
 	@Shadow
 	@Final
 	protected Minecraft minecraft;
+	@Shadow
+	private float jumpRidingScale;
 	
 	private Screen tempCurrentScreen;
 	
@@ -98,6 +100,15 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer
 		{
 			EventManager.fire(UpdateEvent.INSTANCE);
 		}
+	}
+	
+	@Inject(method = "aiStep()V",
+		at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/player/LocalPlayer;getJumpRidingScale()F"))
+	private void setHorseJump(CallbackInfo ci)
+	{
+		if(WurstClient.INSTANCE.getHax().vehicleHack.forceHighestJump())
+			jumpRidingScale = 1;
 	}
 	
 	/**
