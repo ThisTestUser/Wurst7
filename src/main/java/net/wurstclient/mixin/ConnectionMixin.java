@@ -20,7 +20,9 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import net.minecraft.network.Connection;
+import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.protocol.Packet;
+import net.wurstclient.WurstClient;
 import net.wurstclient.event.EventManager;
 import net.wurstclient.events.ConnectionPacketOutputListener.ConnectionPacketOutputEvent;
 import net.wurstclient.events.PacketInputListener.PacketInputEvent;
@@ -86,5 +88,13 @@ public abstract class ConnectionMixin
 				return event;
 			
 		return null;
+	}
+	
+	@Inject(
+		method = "disconnect(Lnet/minecraft/network/DisconnectionDetails;)V",
+		at = @At("HEAD"))
+	private void onDisconnect(DisconnectionDetails info, CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd.removeListeners();
 	}
 }

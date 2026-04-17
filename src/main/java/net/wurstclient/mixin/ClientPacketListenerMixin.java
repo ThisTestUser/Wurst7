@@ -97,4 +97,13 @@ public abstract class ClientPacketListenerMixin
 			(pos, state) -> WurstClient.INSTANCE.getHax().newChunksHack
 				.afterUpdateBlock(pos));
 	}
+	
+	@Inject(
+		method = "handleLogin(Lnet/minecraft/network/protocol/game/ClientboundLoginPacket;)V",
+		at = @At("HEAD"))
+	private void onGameJoin(ClientboundLoginPacket packet, CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getCmds().visitorDetectorCmd
+			.onJoin((ClientPacketListener)(Object)this);
+	}
 }
