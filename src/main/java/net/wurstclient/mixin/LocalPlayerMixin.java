@@ -172,12 +172,21 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer
 		EventManager.fire(PostMotionEvent.INSTANCE);
 	}
 	
-	@Inject(
+	@WrapOperation(
 		method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V",
-		at = @At("HEAD"))
-	private void onMove(MoverType type, Vec3 offset, CallbackInfo ci)
+		at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/player/AbstractClientPlayer;move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V",
+			opcode = Opcodes.INVOKESPECIAL,
+			ordinal = 0))
+	private void onMove(LocalPlayer entity, MoverType type, Vec3 offset,
+		Operation<Void> original)
 	{
-		EventManager.fire(PlayerMoveEvent.INSTANCE);
+		PlayerMoveEvent event = new PlayerMoveEvent(type, offset);
+		EventManager.fire(event);
+		if(event.isCancelled())
+			return;
+		offset = event.getOffset();
+		original.call(entity, type, offset);
 	}
 	
 	@Inject(method = "isAutoJumpEnabled()Z",
