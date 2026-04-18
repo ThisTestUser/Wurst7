@@ -24,7 +24,7 @@ public abstract class BlockMixin implements ItemLike
 	private void onGetVelocityMultiplier(CallbackInfoReturnable<Float> cir)
 	{
 		HackList hax = WurstClient.INSTANCE.getHax();
-		if(hax == null || !hax.noSlowdownHack.isEnabled())
+		if(hax == null || !hax.noSlowdownHack.noBlockSlowness())
 			return;
 		
 		if(cir.getReturnValueF() < 1)

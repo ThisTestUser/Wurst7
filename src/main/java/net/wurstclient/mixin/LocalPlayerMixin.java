@@ -32,6 +32,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.wurstclient.InputFaker;
@@ -154,7 +155,9 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer
 	private boolean wrapModifyInputItemUse(LocalPlayer instance,
 		Operation<Boolean> original)
 	{
-		if(WurstClient.INSTANCE.getHax().noSlowdownHack.isEnabled())
+		boolean shield = ((LocalPlayer)(Object)this).getUseItem()
+			.getUseAnimation() == ItemUseAnimation.BLOCK;
+		if(WurstClient.INSTANCE.getHax().noSlowdownHack.noItemSlowness(shield))
 			return false;
 		
 		return original.call(instance);
