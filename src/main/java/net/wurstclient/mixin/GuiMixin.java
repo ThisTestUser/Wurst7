@@ -62,6 +62,19 @@ public class GuiMixin
 			ci.cancel();
 	}
 	
+	@Inject(
+		method = "renderPortalOverlay(Lnet/minecraft/client/gui/GuiGraphics;F)V",
+		at = @At("HEAD"),
+		cancellable = true)
+	private void onRenderPortalOverlay(GuiGraphics context,
+		float nauseaStrength, CallbackInfo ci)
+	{
+		if(!WurstClient.INSTANCE.getHax().noPortalOverlayHack.isEnabled())
+			return;
+		
+		ci.cancel();
+	}
+	
 	@Inject(method = "renderVignette", at = @At("HEAD"), cancellable = true)
 	private void onRenderVignetteOverlay(GuiGraphics context, Entity entity,
 		CallbackInfo ci)
