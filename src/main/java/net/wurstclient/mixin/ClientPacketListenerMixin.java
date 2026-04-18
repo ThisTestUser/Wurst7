@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
@@ -21,11 +22,9 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.TickablePacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
-import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
-import net.minecraft.network.protocol.game.ClientboundLoginPacket;
-import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.wurstclient.WurstClient;
 import net.wurstclient.util.ChatUtils;
 
@@ -105,5 +104,42 @@ public abstract class ClientPacketListenerMixin
 	{
 		WurstClient.INSTANCE.getCmds().visitorDetectorCmd
 			.onJoin((ClientPacketListener)(Object)this);
+	}
+	
+	@Inject(
+		method = "createEntityFromPacket(Lnet/minecraft/network/protocol/game/ClientboundAddEntityPacket;)Lnet/minecraft/world/entity/Entity;",
+		at = @At("RETURN"))
+	private void onCreateEntity(ClientboundAddEntityPacket packet,
+		CallbackInfoReturnable<Entity> cir)
+	{
+		if(cir.getReturnValue() instanceof Player player)
+			WurstClient.INSTANCE.getHax().playerNotifierHack.onAppear(player,
+				packet.getX(), packet.getY(), packet.getZ());
+	}
+	
+	@Inject(
+		method = "handleRemoveEntities(Lnet/minecraft/network/protocol/game/ClientboundRemoveEntitiesPacket;)V",
+		at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/network/protocol/game/ClientboundRemoveEntitiesPacket;getEntityIds()Lit/unimi/dsi/fastutil/ints/IntList;",
+			ordinal = 0))
+	private void onEntitiesRemoved(ClientboundRemoveEntitiesPacket packet,
+		CallbackInfo ci)
+	{
+		packet.getEntityIds().forEach(id -> {
+			Entity entity = WurstClient.MC.level.getEntity(id);
+			if(entity != null && entity instanceof Player player)
+				WurstClient.INSTANCE.getHax().playerNotifierHack
+					.onDisappear(player);
+		});
+	}
+	
+	@Inject(
+		method = "handleSetEquipment(Lnet/minecraft/network/protocol/game/ClientboundSetEquipmentPacket;)V",
+		at = @At("RETURN"))
+	private void onEntityEquipmentUpdate(ClientboundSetEquipmentPacket packet,
+		CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getHax().playerNotifierHack
+			.onEquipmentUpdate(packet.getEntity(), packet.getSlots());
 	}
 }
