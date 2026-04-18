@@ -16,6 +16,7 @@ import net.wurstclient.Category;
 import net.wurstclient.events.PlayerMoveListener;
 import net.wurstclient.events.PreMotionListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.mixinterface.IKeyMapping;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.EnumSetting;
 import net.wurstclient.settings.SliderSetting;
@@ -86,7 +87,8 @@ public class ElytraBoostHack extends Hack
 	public void onPlayerMove(PlayerMoveEvent event)
 	{
 		if(sneakDown.isChecked() && MC.player.isFallFlying()
-			&& MC.options.keyShift.isDown() && !MC.player.onGround())
+			&& IKeyMapping.get(MC.options.keyShift).isActuallyDown()
+			&& !MC.player.onGround())
 		{
 			double y = sneakDownSpeed.getValue() == 0
 				? MC.player.getDeltaMovement().y : -sneakDownSpeed.getValue();

@@ -7,66 +7,141 @@
  */
 package net.wurstclient.hacks;
 
+import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
-import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
+import net.wurstclient.events.PlayerMoveListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.mixinterface.IKeyMapping;
 import net.wurstclient.settings.CheckboxSetting;
+import net.wurstclient.settings.SliderSetting;
+import net.wurstclient.settings.SliderSetting.ValueDisplay;
 
 @SearchTags({"EasyElytra", "extra elytra", "easy elytra"})
-public final class ExtraElytraHack extends Hack implements UpdateListener
+public final class ExtraElytraHack extends Hack
+	implements PlayerMoveListener, UpdateListener
 {
 	private final CheckboxSetting instantFly = new CheckboxSetting(
 		"Instant fly", "Jump to fly, no weird double-jump needed!", true);
 	
-	private final CheckboxSetting speedCtrl = new CheckboxSetting(
-		"Speed control", "Control your speed with the Forward and Back keys.\n"
-			+ "(default: W and S)\n" + "No fireworks needed!",
+	private final CheckboxSetting motionCtrl = new CheckboxSetting(
+		"Motion control", "Move around freely like flying in Creative Mode.\n"
+			+ "No fireworks needed!",
 		true);
 	
-	private final CheckboxSetting heightCtrl =
-		new CheckboxSetting("Height control",
-			"Control your height with the Jump and Sneak keys.\n"
-				+ "(default: Spacebar and Shift)\n" + "No fireworks needed!",
-			false);
+	public final SliderSetting base = new SliderSetting("Base speed",
+		"Speed to move using WASD with motion control.", 4, 0, 15, 0.05,
+		ValueDisplay.DECIMAL);
+	
+	private final SliderSetting up =
+		new SliderSetting("Up speed", "Speed to move up with motion control.",
+			1, 0, 3, 0.02, ValueDisplay.DECIMAL);
+	
+	private final SliderSetting down = new SliderSetting("Down speed",
+		"Speed to move down with motion control.", 1, 0, 3, 0.02,
+		ValueDisplay.DECIMAL);
+	
+	private final CheckboxSetting ignorePitch = new CheckboxSetting(
+		"Ignore Pitch",
+		"You will not be able to dive down or up\n" + "by changing your pitch.",
+		false);
+	
+	private final CheckboxSetting idleLock = new CheckboxSetting("Idle lock",
+		"Freezes your position at idle when flying.", false);
 	
 	private final CheckboxSetting stopInWater =
 		new CheckboxSetting("Stop flying in water", true);
 	
+	private final CheckboxSetting hover = new CheckboxSetting("Hover mode",
+		"The player will not be allowed to touch the ground unless the sneak key is long pressed.\n"
+			+ "You must not be looking down for this to work, unless you have fake pitch enabled.",
+		false);
+	
+	private final CheckboxSetting fakePitch = new CheckboxSetting("Fake Pitch",
+		"Prevents the player from touching the ground with hover mode enabled by faking your pitch.",
+		false);
+	
 	private int jumpTimer;
+	private int waterTimer;
+	private int sneakPressTime;
 	
 	public ExtraElytraHack()
 	{
 		super("ExtraElytra");
 		setCategory(Category.MOVEMENT);
 		addSetting(instantFly);
-		addSetting(speedCtrl);
-		addSetting(heightCtrl);
+		addSetting(motionCtrl);
+		addSetting(base);
+		addSetting(up);
+		addSetting(down);
+		addSetting(ignorePitch);
+		
+		addSetting(idleLock);
 		addSetting(stopInWater);
+		addSetting(hover);
+		addSetting(fakePitch);
 	}
 	
 	@Override
 	protected void onEnable()
 	{
+		EVENTS.add(PlayerMoveListener.class, this);
 		EVENTS.add(UpdateListener.class, this);
+		sneakPressTime = 0;
 		jumpTimer = 0;
+		waterTimer = 0;
 	}
 	
 	@Override
 	protected void onDisable()
 	{
+		EVENTS.remove(PlayerMoveListener.class, this);
 		EVENTS.remove(UpdateListener.class, this);
+	}
+	
+	@Override
+	public void onPlayerMove(PlayerMoveEvent event)
+	{
+		if(!MC.player.canGlide())
+			return;
+		
+		if(idleLock.isChecked()
+			&& !IKeyMapping.get(MC.options.keyShift).isActuallyDown()
+			&& !MC.options.keyJump.isDown() && !MC.options.keyUp.isDown()
+			&& !MC.options.keyDown.isDown() && !MC.options.keyLeft.isDown()
+			&& !MC.options.keyRight.isDown())
+			event.setOffset(new Vec3(0, 0, 0));
+		
+		if(ignorePitch.isChecked()
+			&& !IKeyMapping.get(MC.options.keyShift).isActuallyDown()
+			&& !MC.options.keyJump.isDown())
+		{
+			Vec3 offset = event.getOffset();
+			event.setOffset(new Vec3(offset.x, 0, offset.z));
+		}
+		
+		forceHover(event);
 	}
 	
 	@Override
 	public void onUpdate()
 	{
+		if(IKeyMapping.get(MC.options.keyShift).isActuallyDown())
+			sneakPressTime++;
+		else
+			sneakPressTime = 0;
+		
 		if(jumpTimer > 0)
 			jumpTimer--;
+		if(MC.player.isInWater())
+			waterTimer = 20;
+		else if(waterTimer > 0)
+			waterTimer--;
 		
 		if(!MC.player.canGlide())
 			return;
@@ -79,8 +154,12 @@ public final class ExtraElytraHack extends Hack implements UpdateListener
 				return;
 			}
 			
-			controlSpeed();
-			controlHeight();
+			controlMotion();
+			
+			if(fakePitch.isChecked()
+				&& !WURST.getRotationFaker().isFakeRotation())
+				WURST.getRotationFaker().setServerRotation(MC.player.getYRot(),
+					-10);
 			return;
 		}
 		
@@ -96,10 +175,42 @@ public final class ExtraElytraHack extends Hack implements UpdateListener
 		MC.player.connection.send(packet);
 	}
 	
-	private void controlHeight()
+	private void controlMotion()
 	{
-		if(!heightCtrl.isChecked())
+		if(!motionCtrl.isChecked())
 			return;
+		
+		double baseSpeed = 0.2873 * base.getValue();
+		double forward = MC.player.zza;
+		double strafe = MC.player.xxa;
+		float yaw = MC.player.getYRot();
+		float pitch = ignorePitch.isChecked() ? 0 : MC.player.getXRot();
+		if(forward == 0 && strafe == 0)
+			MC.player.setDeltaMovement(0, 0, 0);
+		else
+		{
+			if(forward != 0)
+			{
+				if(strafe > 0)
+					yaw += forward > 0 ? -45 : 45;
+				else if(strafe < 0)
+					yaw += forward > 0 ? 45 : -45;
+				forward = forward > 0 ? 1 : -1;
+				strafe = 0;
+			}
+			double strafeX = Math.sin(Math.toRadians(yaw + 90));
+			double strafeZ = Math.cos(Math.toRadians(yaw + 90));
+			
+			double yawRad = Math.toRadians(yaw);
+			double pitchRad = Math.toRadians(pitch);
+			double forwardX = -Math.sin(yawRad) * Math.cos(pitchRad);
+			double forwardZ = Math.cos(yawRad) * Math.cos(pitchRad);
+			double vertical = -Math.sin(pitchRad);
+			MC.player.setDeltaMovement(
+				forward * baseSpeed * forwardX + strafe * baseSpeed * strafeX,
+				forward * baseSpeed * vertical,
+				forward * baseSpeed * forwardZ - strafe * baseSpeed * strafeZ);
+		}
 		
 		Vec3 v = MC.player.getDeltaMovement();
 		
@@ -111,25 +222,9 @@ public final class ExtraElytraHack extends Hack implements UpdateListener
 			MC.options.keyShift.setDown(false);
 		
 		if(jump && !sneak)
-			MC.player.setDeltaMovement(v.x, v.y + 0.08, v.z);
+			MC.player.setDeltaMovement(v.x, v.y + up.getValue(), v.z);
 		else if(sneak && !jump)
-			MC.player.setDeltaMovement(v.x, v.y - 0.04, v.z);
-	}
-	
-	private void controlSpeed()
-	{
-		if(!speedCtrl.isChecked())
-			return;
-		
-		float yaw = (float)Math.toRadians(MC.player.getYRot());
-		Vec3 forward = new Vec3(-Mth.sin(yaw) * 0.05, 0, Mth.cos(yaw) * 0.05);
-		
-		Vec3 v = MC.player.getDeltaMovement();
-		
-		if(MC.options.keyUp.isDown())
-			MC.player.setDeltaMovement(v.add(forward));
-		else if(MC.options.keyDown.isDown())
-			MC.player.setDeltaMovement(v.subtract(forward));
+			MC.player.setDeltaMovement(v.x, v.y - down.getValue(), v.z);
 	}
 	
 	private void doInstantFly()
@@ -137,14 +232,42 @@ public final class ExtraElytraHack extends Hack implements UpdateListener
 		if(!instantFly.isChecked())
 			return;
 		
+		if(stopInWater.isChecked() && MC.player.isInWater())
+			return;
+		
 		if(jumpTimer <= 0)
 		{
 			jumpTimer = 20;
-			MC.player.setJumping(false);
-			MC.player.setSprinting(true);
-			MC.player.jumpFromGround();
+			if(waterTimer <= 0)
+				MC.player.setDeltaMovement(0, -0.2, 0);
+			else
+			{
+				MC.player.setJumping(false);
+				MC.player.setSprinting(true);
+				MC.player.jumpFromGround();
+			}
 		}
 		
 		sendStartStopPacket();
+	}
+	
+	private void forceHover(PlayerMoveEvent event)
+	{
+		if(!hover.isChecked() || sneakPressTime > 15)
+			return;
+		
+		Vec3 v = MC.player.getDeltaMovement();
+		Vec3 move = event.getOffset();
+		
+		double offset = -3;
+		Iterable<VoxelShape> boxes = MC.level.getBlockCollisions(MC.player,
+			MC.player.getBoundingBox().inflate(v.x, offset, v.z));
+		double closest = Shapes.collide(Direction.Axis.Y,
+			MC.player.getBoundingBox(), boxes, offset);
+		
+		// force player to hover 0.3 blocks above
+		if(Math.abs(closest) < Math.abs(offset))
+			event.setOffset(new Vec3(move.x,
+				Math.max(move.y, closest - offset / 10), move.z));
 	}
 }
