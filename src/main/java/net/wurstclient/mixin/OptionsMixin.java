@@ -18,8 +18,8 @@ import net.wurstclient.WurstClient;
 @Mixin(Options.class)
 public class OptionsMixin
 {
-	@Inject(at = @At("HEAD"),
-		method = "getEffectiveRenderDistance()I",
+	@Inject(method = "getEffectiveRenderDistance()I",
+		at = @At("HEAD"),
 		cancellable = true)
 	private void onGetViewDistance(CallbackInfoReturnable<Integer> cir)
 	{
