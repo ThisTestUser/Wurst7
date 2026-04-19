@@ -12,8 +12,10 @@ import java.util.ArrayList;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.wurstclient.Category;
@@ -22,9 +24,12 @@ import net.wurstclient.events.CameraTransformViewBobbingListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.ColorSetting;
 import net.wurstclient.settings.EspBoxSizeSetting;
 import net.wurstclient.settings.EspStyleSetting;
+import net.wurstclient.settings.SliderSetting;
+import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.EntityUtils;
 import net.wurstclient.util.RenderUtils;
 
@@ -32,6 +37,14 @@ import net.wurstclient.util.RenderUtils;
 public final class ItemEspHack extends Hack implements UpdateListener,
 	CameraTransformViewBobbingListener, RenderListener
 {
+	private final CheckboxSetting names =
+		new CheckboxSetting("Show item names", true);
+	
+	private final SliderSetting range = new SliderSetting("Item name range",
+		"Items names will be shown if less than this distance.\n"
+			+ "200 = always display item names",
+		30, 5, 200, 1, ValueDisplay.DECIMAL.withLabel(200, "always show"));
+	
 	private final EspStyleSetting style = new EspStyleSetting();
 	
 	private final EspBoxSizeSetting boxSize = new EspBoxSizeSetting(
@@ -47,6 +60,8 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 	{
 		super("ItemESP");
 		setCategory(Category.RENDER);
+		addSetting(names);
+		addSetting(range);
 		addSetting(style);
 		addSetting(boxSize);
 		addSetting(color);
@@ -111,5 +126,24 @@ public final class ItemEspHack extends Hack implements UpdateListener,
 			RenderUtils.drawTracers(matrixStack, partialTicks, ends, lineColor,
 				false);
 		}
+		
+		if(names.isChecked())
+			renderItemNames(matrixStack, partialTicks);
+	}
+	
+	private void renderItemNames(PoseStack matrixStack, float partialTicks)
+	{
+		for(ItemEntity e : items)
+			if(range.getValue() >= 200
+				|| e.distanceToSqr(MC.player) < range.getValueSq())
+			{
+				ItemStack stack = e.getItem();
+				Component name = Component.empty().append(stack.getHoverName())
+					.withStyle(stack.getRarity().color());
+				Component text =
+					Component.literal(stack.getCount() + "x ").append(name);
+				RenderUtils.renderTag(matrixStack, text, e, 0xffffff, 0.6F, 0.3,
+					partialTicks);
+			}
 	}
 }

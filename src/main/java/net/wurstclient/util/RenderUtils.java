@@ -12,6 +12,7 @@ import java.util.List;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -20,12 +21,16 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.Font.DisplayMode;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -33,6 +38,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.wurstclient.WurstClient;
 import net.wurstclient.WurstRenderLayers;
+import net.wurstclient.hacks.NameTagsHack;
 
 public enum RenderUtils
 {
@@ -937,6 +943,56 @@ public enum RenderUtils
 		context.guiRenderState.submitGuiElement(new CustomQuadRenderState(pose,
 			x2, y2, x1, y2, xs1, ys2, xs2, ys2, shadowColor1, shadowColor1,
 			shadowColor2, shadowColor2, scissor));
+	}
+	
+	public static void renderTag(PoseStack matrixStack, Component text,
+		Entity entity, int color, float multiplier, double vOffset,
+		float partialTicks)
+	{
+		MultiBufferSource.BufferSource vcp = getVCP();
+		
+		NameTagsHack nameTags = WurstClient.INSTANCE.getHax().nameTagsHack;
+		
+		EntityRenderDispatcher dispatcher =
+			WurstClient.MC.getEntityRenderDispatcher();
+		double dist = dispatcher.distanceToSqr(entity);
+		if(dist > 4096 && !nameTags.isUnlimitedRange())
+			return;
+		
+		matrixStack.pushPose();
+		
+		Vec3 camPos = RenderUtils.getCameraPos();
+		Vec3 tagPos = EntityUtils.getLerpedPos(entity, partialTicks)
+			.subtract(camPos).add(0, entity.getBbHeight() + vOffset, 0);
+		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
+		
+		matrixStack.mulPose(dispatcher.camera.rotation().rotateY((float)Math.PI,
+			new Quaternionf()));
+		
+		float scale = 0.025F * multiplier;
+		if(nameTags.isEnabled())
+		{
+			double distance = WurstClient.MC.player.distanceTo(entity);
+			if(distance > 10)
+				scale *= distance / 10;
+		}
+		matrixStack.scale(-scale, -scale, scale);
+		
+		float bgOpacity = WurstClient.MC.options.getBackgroundOpacity(0.25f);
+		int bgColor = (int)(bgOpacity * 255F) << 24;
+		
+		Matrix4f matrix = matrixStack.last().pose();
+		Font tr = WurstClient.MC.font;
+		int labelX = -tr.width(text) / 2;
+		
+		tr.drawInBatch(text, labelX, 0, color, false, matrix, vcp,
+			DisplayMode.NORMAL, bgColor, 15728880);
+		
+		tr.drawInBatch(text, labelX, 0, -1, false, matrix, vcp,
+			DisplayMode.SEE_THROUGH, 0, 15728880);
+		
+		matrixStack.popPose();
+		vcp.endBatch();
 	}
 	
 	public record ColoredPoint(Vec3 point, int color)
