@@ -144,12 +144,6 @@ spotless {
 		trimTrailingWhitespace()
 		eclipse().configFile(file("codestyle/formatter.xml"))
 	}
-	format("licenseHeader") {
-		target("src/*/java/**/*.java", "src/test/java/**/*.java")
-		def header_file = file("codestyle/license_header.txt")
-		def delimiter = LicenseHeaderStep.DEFAULT_JAVA_HEADER_DELIMITER
-		licenseHeaderFile(header_file, delimiter).updateYearWithLatest(true)
-	}
 	json {
 		target "src/**/*.json"
 		gson().indentWithSpaces(2).version("2.11.0")
