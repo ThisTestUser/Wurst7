@@ -49,19 +49,29 @@ public abstract class ContainerScreenMixin
 		
 		if(autoSteal.areButtonsVisible())
 		{
-			addRenderableWidget(Button
-				.builder(Component.literal("Steal"),
-					b -> autoSteal.steal(this, containerRows))
-				.bounds(leftPos + imageWidth - 108, topPos + 4, 50, 12)
-				.build());
+			if(autoSteal.hasDropButton())
+				addRenderableWidget(Button
+					.builder(Component.literal("Drop"),
+						b -> autoSteal.drop(this, containerRows, false))
+					.bounds(leftPos + imageWidth - 108, topPos + 4, 50, 12)
+					.build());
+			else
+				addRenderableWidget(Button
+					.builder(Component.literal("Steal"),
+						b -> autoSteal.steal(this, containerRows, false))
+					.bounds(leftPos + imageWidth - 108, topPos + 4, 50, 12)
+					.build());
 			
 			addRenderableWidget(Button
 				.builder(Component.literal("Store"),
-					b -> autoSteal.store(this, containerRows))
+					b -> autoSteal.store(this, containerRows, false))
 				.bounds(leftPos + imageWidth - 56, topPos + 4, 50, 12).build());
 		}
 		
 		if(autoSteal.isEnabled())
-			autoSteal.steal(this, containerRows);
+			if(autoSteal.shouldDrop())
+				autoSteal.drop(this, containerRows, true);
+			else
+				autoSteal.steal(this, containerRows, true);
 	}
 }

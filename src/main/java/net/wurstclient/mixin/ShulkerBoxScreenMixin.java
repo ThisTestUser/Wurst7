@@ -43,19 +43,29 @@ public abstract class ShulkerBoxScreenMixin
 		
 		if(autoSteal.areButtonsVisible())
 		{
-			addRenderableWidget(Button
-				.builder(Component.literal("Steal"),
-					b -> autoSteal.steal(this, 3))
-				.bounds(leftPos + imageWidth - 108, topPos + 4, 50, 12)
-				.build());
+			if(autoSteal.hasDropButton())
+				addRenderableWidget(Button
+					.builder(Component.literal("Drop"),
+						b -> autoSteal.drop(this, 3, false))
+					.bounds(leftPos + imageWidth - 108, topPos + 4, 50, 12)
+					.build());
+			else
+				addRenderableWidget(Button
+					.builder(Component.literal("Steal"),
+						b -> autoSteal.steal(this, 3, false))
+					.bounds(leftPos + imageWidth - 108, topPos + 4, 50, 12)
+					.build());
 			
 			addRenderableWidget(Button
 				.builder(Component.literal("Store"),
-					b -> autoSteal.store(this, 3))
+					b -> autoSteal.store(this, 3, false))
 				.bounds(leftPos + imageWidth - 56, topPos + 4, 50, 12).build());
 		}
 		
 		if(autoSteal.isEnabled())
-			autoSteal.steal(this, 3);
+			if(autoSteal.shouldDrop())
+				autoSteal.drop(this, 3, true);
+			else
+				autoSteal.steal(this, 3, true);
 	}
 }

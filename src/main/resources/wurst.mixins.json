@@ -33,6 +33,7 @@
     "FogRendererMixin",
     "GameRendererMixin",
     "GuiMixin",
+    "HorseInventoryScreenMixin",
     "ItemInHandRendererMixin",
     "JoinMultiplayerScreenMixin",
     "KeyBindsListMixin",
