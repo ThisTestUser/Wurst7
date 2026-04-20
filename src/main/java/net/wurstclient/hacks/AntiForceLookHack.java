@@ -9,6 +9,7 @@ package net.wurstclient.hacks;
 
 import net.minecraft.entity.player.PlayerPosition;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PositionFlag;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.events.PacketInputListener;
@@ -43,6 +44,8 @@ public final class AntiForceLookHack extends Hack implements PacketInputListener
 		
 		if(event.getPacket() instanceof PlayerPositionLookS2CPacket packet)
 		{
+			packet.relatives().remove(PositionFlag.X_ROT);
+			packet.relatives().remove(PositionFlag.Y_ROT);
 			PlayerPosition newPosition = new PlayerPosition(
 				packet.change().position(), packet.change().deltaMovement(),
 				MC.player.getYaw(), MC.player.getPitch());
