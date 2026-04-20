@@ -70,6 +70,7 @@ public final class SneakHack extends Hack
 			break;
 			
 			case PACKET:
+			case PACKET_BYPASS:
 			sendSneakPacket(Mode.RELEASE_SHIFT_KEY);
 			break;
 		}
@@ -89,10 +90,14 @@ public final class SneakHack extends Hack
 				sneakKey.setPressed(true);
 			break;
 			
-			case PACKET:
+			case PACKET_BYPASS:
 			sneakKey.resetPressedState();
 			sendSneakPacket(Mode.PRESS_SHIFT_KEY);
 			sendSneakPacket(Mode.RELEASE_SHIFT_KEY);
+			break;
+			
+			case PACKET:
+			sendSneakPacket(Mode.PRESS_SHIFT_KEY);
 			break;
 		}
 	}
@@ -100,7 +105,7 @@ public final class SneakHack extends Hack
 	@Override
 	public void onPostMotion()
 	{
-		if(mode.getSelected() != SneakMode.PACKET)
+		if(mode.getSelected() != SneakMode.PACKET_BYPASS)
 			return;
 		
 		sendSneakPacket(Mode.RELEASE_SHIFT_KEY);
@@ -132,6 +137,7 @@ public final class SneakHack extends Hack
 	private enum SneakMode
 	{
 		PACKET("Packet"),
+		PACKET_BYPASS("Packet Bypass"),
 		LEGIT("Legit");
 		
 		private final String name;
