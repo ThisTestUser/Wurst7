@@ -35,11 +35,11 @@ public enum BlockBreaker
 	
 	public static boolean breakOneBlock(BlockPos pos)
 	{
-		return breakOneBlock(pos, false, null);
+		return breakOneBlock(pos, false, null, true);
 	}
 	
 	public static boolean breakOneBlock(BlockPos pos, boolean checkLOS,
-		Function<BlockBreakingParams, Boolean> autoTool)
+		Function<BlockBreakingParams, Boolean> autoTool, boolean rotate)
 	{
 		BlockBreakingParams params = getBlockBreakingParams(pos);
 		if(params == null || (checkLOS && !params.lineOfSight))
@@ -48,13 +48,15 @@ public enum BlockBreaker
 		if(autoTool != null)
 			autoTool.apply(params);
 		
-		return breakOneBlock(params);
+		return breakOneBlock(params, rotate);
 	}
 	
-	public static boolean breakOneBlock(BlockBreakingParams params)
+	public static boolean breakOneBlock(BlockBreakingParams params,
+		boolean rotate)
 	{
 		// face block
-		WURST.getRotationFaker().faceVectorPacket(params.hitVec);
+		if(rotate)
+			WURST.getRotationFaker().faceVectorPacket(params.hitVec);
 		
 		// damage block
 		if(!MC.interactionManager.updateBlockBreakingProgress(params.pos,

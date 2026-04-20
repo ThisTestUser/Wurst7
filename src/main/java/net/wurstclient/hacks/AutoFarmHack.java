@@ -37,7 +37,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
-import net.wurstclient.WurstClient;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
@@ -84,6 +83,8 @@ public final class AutoFarmHack extends Hack
 	private final BlockListSetting excluded = new BlockListSetting(
 		"Excluded Crops", "List of crops that will not be harvested.");
 	
+	private final CheckboxSetting rotate = new CheckboxSetting("Rotate", true);
+	
 	private final HashMap<Block, Item> seeds = new HashMap<>();
 	{
 		seeds.put(Blocks.WHEAT, Items.WHEAT_SEEDS);
@@ -126,6 +127,7 @@ public final class AutoFarmHack extends Hack
 		addSetting(excluded);
 		addSetting(fortune);
 		addSetting(silkTouch);
+		addSetting(rotate);
 	}
 	
 	@Override
@@ -352,7 +354,8 @@ public final class AutoFarmHack extends Hack
 					continue;
 				
 				// face block
-				WURST.getRotationFaker().faceVectorPacket(params.hitVec());
+				if(rotate.isChecked())
+					WURST.getRotationFaker().faceVectorPacket(params.hitVec());
 				
 				// place seed
 				ActionResult result = MC.interactionManager
@@ -406,11 +409,10 @@ public final class AutoFarmHack extends Hack
 		}
 		
 		// Break the first valid block in survival mode
-		currentlyHarvesting =
-			stream
-				.filter(pos -> BlockBreaker.breakOneBlock(pos,
-					checkLOS.isChecked(), p -> selectTool(p)))
-				.findFirst().orElse(null);
+		currentlyHarvesting = stream
+			.filter(pos -> BlockBreaker.breakOneBlock(pos, checkLOS.isChecked(),
+				p -> selectTool(p), rotate.isChecked()))
+			.findFirst().orElse(null);
 		
 		if(currentlyHarvesting == null)
 		{
@@ -430,7 +432,7 @@ public final class AutoFarmHack extends Hack
 		boolean findFortune = fortune.isChecked()
 			&& fortuneBlocks.contains(BlockUtils.getBlock(pos));
 		
-		DynamicRegistryManager drm = WurstClient.MC.world.getRegistryManager();
+		DynamicRegistryManager drm = MC.world.getRegistryManager();
 		Registry<Enchantment> registry =
 			drm.getOrThrow(RegistryKeys.ENCHANTMENT);
 		Optional<Reference<Enchantment>> silkTouch =

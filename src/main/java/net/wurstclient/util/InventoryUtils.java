@@ -74,7 +74,7 @@ public enum InventoryUtils
 	
 	/**
 	 * Searches the player's inventory from slot 0 to {@code maxInvSlot-1} for
-	 * all items that matches the given predicate.
+	 * all items that match the given predicate.
 	 *
 	 * @param predicate
 	 *            checks if an item is the one you want
