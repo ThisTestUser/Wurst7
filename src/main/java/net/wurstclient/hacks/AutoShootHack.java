@@ -94,7 +94,7 @@ public final class AutoShootHack extends Hack implements UpdateListener
 			"Determines how multiple targets should be handled for multishot and piercing crossbows.\n"
 				+ "\u00a7lAny Filtered Entity\u00a7r - Any entity hit can be valid.\n"
 				+ "\u00a7lOnly Filtered Entities\u00a7r - All entities hit must be valid.",
-			MultiTargetOption.values(), MultiTargetOption.ANY_FILTERED);
+			MultiTargetOption.values(), MultiTargetOption.ONLY_FILTERED);
 	
 	private final EnumSetting<FireworkLifespan> fireworkLifespan =
 		new EnumSetting<>("Firework Lifespan",
