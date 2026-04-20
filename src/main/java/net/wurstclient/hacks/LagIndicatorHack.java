@@ -8,7 +8,7 @@
 package net.wurstclient.hacks;
 
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.Window;
+import net.minecraft.util.Colors;
 import net.wurstclient.Category;
 import net.wurstclient.events.GUIRenderListener;
 import net.wurstclient.events.PacketInputListener;
@@ -62,12 +62,11 @@ public final class LagIndicatorHack extends Hack
 	@Override
 	public void onRenderGUI(DrawContext context, float partialTicks)
 	{
-		Window window = MC.getWindow();
 		long delta = System.currentTimeMillis() - lastPacketMS;
 		if(delta >= lagOffset.getValue() * 1000)
 			context.drawTextWithShadow(MC.textRenderer,
 				"Time since last packet: "
 					+ precision.format((double)delta / 1000) + " S",
-				window.getScaledWidth() / 2 - 130 / 2, 16, 0xffffff);
+				context.getScaledWindowWidth() / 2 - 130 / 2, 16, Colors.WHITE);
 	}
 }
