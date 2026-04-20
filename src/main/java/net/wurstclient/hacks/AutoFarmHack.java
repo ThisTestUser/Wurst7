@@ -97,15 +97,9 @@ public final class AutoFarmHack extends Hack
 		seeds.put(Blocks.COCOA, Items.COCOA_BEANS);
 	}
 	
-	private final HashSet<Block> fortuneBlocks = new HashSet<>();
-	{
-		fortuneBlocks.add(Blocks.WHEAT);
-		fortuneBlocks.add(Blocks.CARROTS);
-		fortuneBlocks.add(Blocks.POTATOES);
-		fortuneBlocks.add(Blocks.BEETROOTS);
-		fortuneBlocks.add(Blocks.NETHER_WART);
-		fortuneBlocks.add(Blocks.MELON);
-	}
+	private final HashSet<Block> fortuneBlocks =
+		new HashSet<>(List.of(Blocks.WHEAT, Blocks.CARROTS, Blocks.POTATOES,
+			Blocks.BEETROOTS, Blocks.NETHER_WART, Blocks.MELON));
 	
 	private final HashMap<BlockPos, Item> plants = new HashMap<>();
 	private final BlockBreakingCache cache = new BlockBreakingCache();
