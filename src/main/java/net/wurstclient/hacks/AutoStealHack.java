@@ -49,7 +49,7 @@ public final class AutoStealHack extends Hack
 			"Automatically steals from chested donkeys, llamas, etc.", true);
 	
 	private final CheckboxSetting reverseSteal =
-		new CheckboxSetting("Reverse steal order", false);
+		new CheckboxSetting("Reverse steal/drop order", false);
 	
 	private Thread thread;
 	
@@ -117,7 +117,7 @@ public final class AutoStealHack extends Hack
 		List<Slot> slots = IntStream.range(from, to)
 			.mapToObj(i -> screen.getScreenHandler().slots.get(i)).toList();
 		
-		if(reverseSteal.isChecked() && mode == 2)
+		if(reverseSteal.isChecked() && mode != 2)
 			slots = slots.reversed();
 		
 		if(automatic)
