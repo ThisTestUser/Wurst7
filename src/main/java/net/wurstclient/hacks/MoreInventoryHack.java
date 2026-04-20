@@ -7,6 +7,7 @@
  */
 package net.wurstclient.hacks;
 
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
@@ -38,7 +39,8 @@ public final class MoreInventoryHack extends Hack
 	@Override
 	public void onSentPacket(PacketOutputEvent event)
 	{
-		if(event.getPacket() instanceof CloseHandledScreenC2SPacket)
+		if(event.getPacket() instanceof CloseHandledScreenC2SPacket
+			&& MC.currentScreen instanceof InventoryScreen)
 			event.cancel();
 	}
 }
