@@ -27,6 +27,7 @@ import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ChunkData;
 import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityEquipmentUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.text.MutableText;
@@ -129,5 +130,14 @@ public abstract class ClientPlayNetworkHandlerMixin
 				WurstClient.INSTANCE.getHax().playerNotifierHack
 					.onDisappear(player);
 		});
+	}
+	
+	@Inject(at = @At("RETURN"),
+		method = "onEntityEquipmentUpdate(Lnet/minecraft/network/packet/s2c/play/EntityEquipmentUpdateS2CPacket;)V")
+	private void onEntityEquipmentUpdate(EntityEquipmentUpdateS2CPacket packet,
+		CallbackInfo ci)
+	{
+		WurstClient.INSTANCE.getHax().playerNotifierHack
+			.onEquipmentUpdate(packet.getEntityId(), packet.getEquipmentList());
 	}
 }
