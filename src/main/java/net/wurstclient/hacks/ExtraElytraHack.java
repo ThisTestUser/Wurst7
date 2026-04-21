@@ -17,6 +17,7 @@ import net.wurstclient.SearchTags;
 import net.wurstclient.events.PlayerMoveListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.mixinterface.IKeyBinding;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
@@ -109,7 +110,8 @@ public final class ExtraElytraHack extends Hack
 		if(!MC.player.canGlide())
 			return;
 		
-		if(idleLock.isChecked() && !MC.options.sneakKey.isPressed()
+		if(idleLock.isChecked()
+			&& !IKeyBinding.get(MC.options.sneakKey).isActuallyPressed()
 			&& !MC.options.jumpKey.isPressed()
 			&& !MC.options.forwardKey.isPressed()
 			&& !MC.options.backKey.isPressed()
@@ -117,7 +119,8 @@ public final class ExtraElytraHack extends Hack
 			&& !MC.options.rightKey.isPressed())
 			event.setOffset(new Vec3d(0, 0, 0));
 		
-		if(ignorePitch.isChecked() && !MC.options.sneakKey.isPressed()
+		if(ignorePitch.isChecked()
+			&& !IKeyBinding.get(MC.options.sneakKey).isActuallyPressed()
 			&& !MC.options.jumpKey.isPressed())
 		{
 			Vec3d offset = event.getOffset();
@@ -130,7 +133,7 @@ public final class ExtraElytraHack extends Hack
 	@Override
 	public void onUpdate()
 	{
-		if(MC.options.sneakKey.isPressed())
+		if(IKeyBinding.get(MC.options.sneakKey).isActuallyPressed())
 			sneakPressTime++;
 		else
 			sneakPressTime = 0;
@@ -209,10 +212,20 @@ public final class ExtraElytraHack extends Hack
 				forward * baseSpeed * vertical,
 				forward * baseSpeed * forwardZ - strafe * baseSpeed * strafeZ);
 		}
+		
 		Vec3d v = MC.player.getVelocity();
-		if(MC.options.jumpKey.isPressed())
+		
+		boolean jump = MC.options.jumpKey.isPressed();
+		boolean sneak =
+			IKeyBinding.get(MC.options.sneakKey).isActuallyPressed();
+		
+		// ensure we don't enter sneaking pose
+		if(sneak)
+			MC.options.sneakKey.setPressed(false);
+		
+		if(jump && !sneak)
 			MC.player.setVelocity(v.x, v.y + up.getValue(), v.z);
-		else if(MC.options.sneakKey.isPressed())
+		else if(sneak && !jump)
 			MC.player.setVelocity(v.x, v.y - down.getValue(), v.z);
 	}
 	

@@ -12,6 +12,15 @@ import net.minecraft.client.option.KeyBinding;
 public interface IKeyBinding
 {
 	/**
+	 * Returns whether the user is actually pressing this key on their keyboard
+	 * or mouse.
+	 */
+	public default boolean isActuallyPressed()
+	{
+		return wurst_isActuallyPressed();
+	}
+	
+	/**
 	 * Resets the pressed state to whether or not the user is actually pressing
 	 * this key on their keyboard.
 	 */
@@ -48,6 +57,12 @@ public interface IKeyBinding
 	{
 		return (IKeyBinding)kb;
 	}
+	
+	/**
+	 * @deprecated Use {@link #isActuallyDown()} instead.
+	 */
+	@Deprecated
+	public boolean wurst_isActuallyPressed();
 	
 	/**
 	 * @deprecated Use {@link #resetPressedState()} instead.

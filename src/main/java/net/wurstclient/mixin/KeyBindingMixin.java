@@ -26,16 +26,24 @@ public abstract class KeyBindingMixin implements IKeyBinding
 	
 	@Override
 	@Unique
-	@Deprecated // use IKeyBinding.resetPressedState() instead
-	public void wurst_resetPressedState()
+	@Deprecated // use IKeyBinding.isActuallyPressed() instead
+	public boolean wurst_isActuallyPressed()
 	{
 		long handle = WurstClient.MC.getWindow().getHandle();
 		int code = boundKey.getCode();
 		
 		if(boundKey.getCategory() == InputUtil.Type.MOUSE)
-			setPressed(GLFW.glfwGetMouseButton(handle, code) == 1);
-		else
-			setPressed(InputUtil.isKeyPressed(handle, code));
+			return GLFW.glfwGetMouseButton(handle, code) == 1;
+		
+		return InputUtil.isKeyPressed(handle, code);
+	}
+	
+	@Override
+	@Unique
+	@Deprecated // use IKeyMapping.resetPressedState() instead
+	public void wurst_resetPressedState()
+	{
+		setPressed(wurst_isActuallyPressed());
 	}
 	
 	@Override
