@@ -41,6 +41,7 @@ public class AutoDrainHack extends Hack
 	private SliderSetting delay = new SliderSetting("Delay",
 		"Delay between right click actions in milliseconds.", 100, 0, 2000, 50,
 		ValueDisplay.INTEGER);
+	
 	private final SliderSetting range = new SliderSetting("Placement Range",
 		"The range to attempt to right click surfaces.\n"
 			+ "Ranges above 4.5 will most likely fail.",
