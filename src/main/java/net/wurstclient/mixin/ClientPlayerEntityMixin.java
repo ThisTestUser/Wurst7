@@ -107,6 +107,18 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		return original.call(instance);
 	}
 	
+	@WrapOperation(at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/client/network/ClientPlayerEntity;checkGliding()Z",
+		ordinal = 0), method = "tickMovement()V")
+	private boolean disableFreecamElytra(ClientPlayerEntity instance,
+		Operation<Boolean> original)
+	{
+		if(WurstClient.INSTANCE.getHax().freecamHack.isEnabled())
+			return false;
+		
+		return original.call(instance);
+	}
+	
 	@Inject(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/network/ClientPlayerEntity;getMountJumpStrength()F"),
 		method = "tickMovement()V")

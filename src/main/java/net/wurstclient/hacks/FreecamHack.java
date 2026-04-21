@@ -13,6 +13,8 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -149,6 +151,17 @@ public final class FreecamHack extends Hack implements UpdateListener,
 					fakePlayer.isOnGround(), fakePlayer.horizontalCollision));
 				lastPositionTicks = 0;
 			}else
+				event.cancel();
+		}else if(event.getPacket() instanceof PlayerInputC2SPacket)
+			event.cancel();
+		else if(event.getPacket() instanceof ClientCommandC2SPacket command)
+		{
+			ClientCommandC2SPacket.Mode mode = command.getMode();
+			if(mode == ClientCommandC2SPacket.Mode.START_FALL_FLYING
+				|| mode == ClientCommandC2SPacket.Mode.START_SPRINTING
+				|| mode == ClientCommandC2SPacket.Mode.STOP_SPRINTING
+				|| mode == ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY
+				|| mode == ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY)
 				event.cancel();
 		}
 	}
