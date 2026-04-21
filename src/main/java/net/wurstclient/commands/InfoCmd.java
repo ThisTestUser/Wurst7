@@ -9,6 +9,7 @@ package net.wurstclient.commands;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.client.network.ServerInfo;
+import net.wurstclient.WurstClient;
 import net.wurstclient.command.CmdError;
 import net.wurstclient.command.CmdException;
 import net.wurstclient.command.CmdSyntaxError;
@@ -32,9 +33,9 @@ public final class InfoCmd extends Command
 		{
 			if(args[0].equalsIgnoreCase("client"))
 			{
-				String version = "Version: " + SharedConstants.VERSION_NAME;
-				String protocolversion = "Protocol Version: "
-					+ SharedConstants.RELEASE_TARGET_PROTOCOL_VERSION;
+				String version = "Version: " + WurstClient.MC_VERSION;
+				String protocolversion =
+					"Protocol Version: " + SharedConstants.getProtocolVersion();
 				String name = "Name: " + MC.getSession().getUsername();
 				String sessionid =
 					"Session id: " + MC.getSession().getSessionId();
