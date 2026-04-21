@@ -72,6 +72,17 @@ public abstract class ClientPlayerInteractionManagerMixin
 	}
 	
 	@Inject(at = @At("HEAD"),
+		method = "interactBlock(Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;",
+		cancellable = true)
+	public void onInteractBlock(ClientPlayerEntity player, Hand hand,
+		BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir)
+	{
+		if(WurstClient.INSTANCE.getHax().noInteractHack
+			.shouldCancelInteraction(hitResult))
+			cir.setReturnValue(ActionResult.FAIL);
+	}
+	
+	@Inject(at = @At("HEAD"),
 		method = "attackEntity(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;)V")
 	private void onAttackEntity(PlayerEntity player, Entity target,
 		CallbackInfo ci)
