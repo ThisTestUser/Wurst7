@@ -43,6 +43,7 @@ import net.wurstclient.hack.Hack;
 import net.wurstclient.hacks.autofarm.AutoFarmRenderer;
 import net.wurstclient.settings.BlockListSetting;
 import net.wurstclient.settings.CheckboxSetting;
+import net.wurstclient.settings.FacingSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.settings.SwingHandSetting.SwingHand;
@@ -83,7 +84,16 @@ public final class AutoFarmHack extends Hack
 	private final BlockListSetting excluded = new BlockListSetting(
 		"Excluded Crops", "List of crops that will not be harvested.");
 	
-	private final CheckboxSetting rotate = new CheckboxSetting("Rotate", true);
+	private final FacingSetting facing = FacingSetting.withoutPacketSpam(
+		"How AutoFarm should face the crops when planting and harvesting.\n\n"
+			+ "\u00a7lOff\u00a7r - Don't face the crops at all. Will be"
+			+ " detected by anti-cheat plugins.\n\n"
+			+ "\u00a7lServer-side\u00a7r - Face the crops on the"
+			+ " server-side, while still letting you move the camera freely on"
+			+ " the client-side.\n\n"
+			+ "\u00a7lClient-side\u00a7r - Face the crops by moving your"
+			+ " camera on the client-side. This is the most legit option, but"
+			+ " can be disorienting to look at.");
 	
 	private final HashMap<Block, Item> seeds = new HashMap<>();
 	{
@@ -121,7 +131,7 @@ public final class AutoFarmHack extends Hack
 		addSetting(excluded);
 		addSetting(fortune);
 		addSetting(silkTouch);
-		addSetting(rotate);
+		addSetting(facing);
 	}
 	
 	@Override
@@ -348,8 +358,7 @@ public final class AutoFarmHack extends Hack
 					continue;
 				
 				// face block
-				if(rotate.isChecked())
-					WURST.getRotationFaker().faceVectorPacket(params.hitVec());
+				facing.getSelected().face(params.hitVec());
 				
 				// place seed
 				ActionResult result = MC.interactionManager
@@ -405,7 +414,7 @@ public final class AutoFarmHack extends Hack
 		// Break the first valid block in survival mode
 		currentlyHarvesting = stream
 			.filter(pos -> BlockBreaker.breakOneBlock(pos, checkLOS.isChecked(),
-				p -> selectTool(p), rotate.isChecked()))
+				p -> selectTool(p), facing.getSelected()))
 			.findFirst().orElse(null);
 		
 		if(currentlyHarvesting == null)

@@ -24,22 +24,22 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.shape.VoxelShape;
 import net.wurstclient.WurstClient;
+import net.wurstclient.settings.FacingSetting.Facing;
 import net.wurstclient.settings.SwingHandSetting.SwingHand;
 
 public enum BlockBreaker
 {
 	;
 	
-	private static final WurstClient WURST = WurstClient.INSTANCE;
 	private static final MinecraftClient MC = WurstClient.MC;
 	
 	public static boolean breakOneBlock(BlockPos pos)
 	{
-		return breakOneBlock(pos, false, null, true);
+		return breakOneBlock(pos, false, null, Facing.SERVER);
 	}
 	
 	public static boolean breakOneBlock(BlockPos pos, boolean checkLOS,
-		Function<BlockBreakingParams, Boolean> autoTool, boolean rotate)
+		Function<BlockBreakingParams, Boolean> autoTool, Facing facing)
 	{
 		BlockBreakingParams params = getBlockBreakingParams(pos);
 		if(params == null || (checkLOS && !params.lineOfSight))
@@ -48,15 +48,14 @@ public enum BlockBreaker
 		if(autoTool != null)
 			autoTool.apply(params);
 		
-		return breakOneBlock(params, rotate);
+		return breakOneBlock(params, facing);
 	}
 	
 	public static boolean breakOneBlock(BlockBreakingParams params,
-		boolean rotate)
+		Facing facing)
 	{
 		// face block
-		if(rotate)
-			WURST.getRotationFaker().faceVectorPacket(params.hitVec);
+		facing.face(params.hitVec);
 		
 		// damage block
 		if(!MC.interactionManager.updateBlockBreakingProgress(params.pos,
