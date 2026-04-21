@@ -28,6 +28,7 @@ import net.wurstclient.events.PostMotionListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.settings.CheckboxSetting;
+import net.wurstclient.settings.FacingSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.BlockUtils;
@@ -47,11 +48,24 @@ public class AutoDrainHack extends Hack
 	
 	private final CheckboxSetting lava = new CheckboxSetting("Drain Lava",
 		"Seeks out lava source blocks to be drained", true);
+	
 	private final CheckboxSetting water =
 		new CheckboxSetting("Drain Water",
 			"Seeks out water source blocks to be drained.\n"
 				+ "This will not work if the source is able to regenerate!",
 			false);
+	
+	private final FacingSetting facing = FacingSetting.withoutPacketSpam(
+		"How AutoDrain should face the liquid blocks when draining and placing.\n\n"
+			+ "\u00a7lOff\u00a7r - Face the blocks only on the draining and"
+			+ " placing packets on the server side, which is necessary for"
+			+ " the hack to work.\n\n"
+			+ "\u00a7lServer-side\u00a7r - Face the blocks on the"
+			+ " server-side, while still letting you move the camera freely on"
+			+ " the client-side.\n\n"
+			+ "\u00a7lClient-side\u00a7r - Face the blocks by moving your"
+			+ " camera on the client-side. This is the most legit option, but"
+			+ " can be disorienting to look at.");
 	
 	private boolean rightClick;
 	private boolean useServerRot;
@@ -67,6 +81,7 @@ public class AutoDrainHack extends Hack
 		addSetting(range);
 		addSetting(lava);
 		addSetting(water);
+		addSetting(facing);
 	}
 	
 	@Override
@@ -207,7 +222,7 @@ public class AutoDrainHack extends Hack
 				continue;
 			
 			serverRot = rotation;
-			WURST.getRotationFaker().faceVectorPacket(hitVec);
+			facing.getSelected().face(hitVec);
 			return true;
 		}
 		return false;
@@ -250,7 +265,7 @@ public class AutoDrainHack extends Hack
 				continue;
 			
 			serverRot = rotation;
-			WURST.getRotationFaker().faceVectorPacket(hitVec);
+			facing.getSelected().face(hitVec);
 			return true;
 		}
 		
