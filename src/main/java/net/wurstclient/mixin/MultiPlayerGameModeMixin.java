@@ -75,6 +75,18 @@ public abstract class MultiPlayerGameModeMixin
 	}
 	
 	@Inject(
+		method = "useItemOn(Lnet/minecraft/client/player/LocalPlayer;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;",
+		at = @At("HEAD"),
+		cancellable = true)
+	public void onInteractBlock(LocalPlayer player, InteractionHand hand,
+		BlockHitResult hitResult, CallbackInfoReturnable<InteractionResult> cir)
+	{
+		if(WurstClient.INSTANCE.getHax().noInteractHack
+			.shouldCancelInteraction(hitResult))
+			cir.setReturnValue(InteractionResult.FAIL);
+	}
+	
+	@Inject(
 		method = "attack(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;)V",
 		at = @At("HEAD"))
 	private void onAttackEntity(Player player, Entity target, CallbackInfo ci)

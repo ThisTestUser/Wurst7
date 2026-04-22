@@ -149,6 +149,7 @@ public final class HackList implements UpdateListener
 	public final NoFireOverlayHack noFireOverlayHack = new NoFireOverlayHack();
 	public final NoFogHack noFogHack = new NoFogHack();
 	public final NoHurtcamHack noHurtcamHack = new NoHurtcamHack();
+	public final NoInteractHack noInteractHack = new NoInteractHack();
 	public final NoLevitationHack noLevitationHack = new NoLevitationHack();
 	public final NoOverlayHack noOverlayHack = new NoOverlayHack();
 	public final NoPortalOverlayHack noPortalOverlayHack =
