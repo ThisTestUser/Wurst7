@@ -28,6 +28,8 @@ import net.wurstclient.events.PostMotionListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.settings.CheckboxSetting;
+import net.wurstclient.settings.FaceTargetSetting;
+import net.wurstclient.settings.FaceTargetSetting.FaceTarget;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.BlockUtils;
@@ -40,6 +42,7 @@ public class AutoDrainHack extends Hack
 	private SliderSetting delay = new SliderSetting("Delay",
 		"Delay between right click actions in milliseconds.", 100, 0, 2000, 50,
 		ValueDisplay.INTEGER);
+	
 	private final SliderSetting range = new SliderSetting("Placement Range",
 		"The range to attempt to right click surfaces.\n"
 			+ "Ranges above 4.5 will most likely fail.",
@@ -47,11 +50,15 @@ public class AutoDrainHack extends Hack
 	
 	private final CheckboxSetting lava = new CheckboxSetting("Drain Lava",
 		"Seeks out lava source blocks to be drained", true);
+	
 	private final CheckboxSetting water =
 		new CheckboxSetting("Drain Water",
 			"Seeks out water source blocks to be drained.\n"
 				+ "This will not work if the source is able to regenerate!",
 			false);
+	
+	private final FaceTargetSetting faceTarget =
+		FaceTargetSetting.withoutPacketSpam(this, FaceTarget.SERVER);
 	
 	private boolean rightClick;
 	private boolean useServerRot;
@@ -67,6 +74,7 @@ public class AutoDrainHack extends Hack
 		addSetting(range);
 		addSetting(lava);
 		addSetting(water);
+		addSetting(faceTarget);
 	}
 	
 	@Override
@@ -208,7 +216,7 @@ public class AutoDrainHack extends Hack
 				continue;
 			
 			serverRot = rotation;
-			WURST.getRotationFaker().faceVectorPacket(hitVec);
+			faceTarget.face(hitVec);
 			return true;
 		}
 		return false;
@@ -251,7 +259,7 @@ public class AutoDrainHack extends Hack
 				continue;
 			
 			serverRot = rotation;
-			WURST.getRotationFaker().faceVectorPacket(hitVec);
+			faceTarget.face(hitVec);
 			return true;
 		}
 		

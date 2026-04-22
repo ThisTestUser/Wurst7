@@ -39,6 +39,7 @@
   "description.wurst.setting.autobuild.swing_hand": "How AutoBuild should swing your hand when placing blocks.",
   "description.wurst.hack.autocomplete": "Auto-completes your chat messages using large language models. Requires an OpenAI account with API access or any other language model API that is OpenAI-compatible.",
   "description.wurst.hack.autodrain": "Automatically drains lava or water when holding a bucket. This works by grabbing a source block and then placing it down at a place where another source block exists.",
+  "description.wurst.setting.autodrain.face_target": "How AutoDrain should face the liquid blocks when draining and placing.",
   "description.wurst.hack.autodrop": "Automatically drops unwanted items.",
   "description.wurst.hack.autoleave": "Automatically leaves the server when your health is low.",
   "description.wurst.hack.autolibrarian": "Automatically trains a villager to become a librarian that sells a specific enchanted book. You can set up an entire trading hall in no time by using this hack.",
