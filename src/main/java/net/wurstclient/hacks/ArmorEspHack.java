@@ -44,8 +44,6 @@ public final class ArmorEspHack extends Hack
 		{EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD,
 			EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 	
-	private boolean rendering;
-	
 	public ArmorEspHack()
 	{
 		super("ArmorESP");
@@ -61,31 +59,21 @@ public final class ArmorEspHack extends Hack
 		if(!isEnabled())
 			return;
 		
-		// render armor through walls
+		// render through walls
 		RenderSystem.getDevice().createCommandEncoder()
 			.clearDepthTexture(MC.getFramebuffer().getDepthAttachment(), 1.0);
 		
-		rendering = true;
 		for(Entity entity : mobs.isChecked() ? MC.world.getEntities()
 			: MC.world.getPlayers())
 			if(entity instanceof LivingEntity living && entity != MC.player)
-			{
-				int i = 0;
-				for(EquipmentSlot slot : SLOTS)
+				for(int i = 0; i < SLOTS.length; i++)
 				{
+					EquipmentSlot slot = SLOTS[i];
 					ItemStack stack = living.getEquippedStack(slot);
 					if(!stack.isEmpty())
 						RenderUtils.renderArmor(matrixStack, stack, entity, i,
 							enchants.isChecked(), impossible.isChecked(),
 							scale.getValueF(), 0.75, partialTicks);
-					i++;
 				}
-			}
-		rendering = false;
-	}
-	
-	public boolean isRendering()
-	{
-		return rendering;
 	}
 }

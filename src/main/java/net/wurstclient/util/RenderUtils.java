@@ -928,6 +928,9 @@ public enum RenderUtils
 		
 		TextRenderer tr = WurstClient.MC.textRenderer;
 		
+		int x = -50 + armorId * 20;
+		int y = -20;
+		
 		// offset model view stack for armor
 		Matrix4fStack viewMatrix = RenderSystem.getModelViewStack();
 		viewMatrix.pushMatrix();
@@ -938,14 +941,15 @@ public enum RenderUtils
 		viewMatrix.translate((float)tagPos.x, (float)tagPos.y, (float)tagPos.z);
 		viewMatrix.rotate(dispatcher.getRotation().rotateY((float)Math.PI,
 			new Quaternionf()));
-		viewMatrix.scale(-scale, -scale, scale);
+		viewMatrix.scale(-scale, -scale, -scale);
 		
 		// render item icon
-		DrawContext context = new DrawContext(WurstClient.MC, getVCP());
-		context.getMatrices().translate(0, 0, -149);
-		context.drawItem(stack, -50 + armorId * 20, -20);
-		context.getMatrices().translate(0, 0, 149);
-		context.drawStackOverlay(tr, stack, -50 + armorId * 20, -20);
+		VertexConsumerProvider.Immediate immediate = getVCP();
+		DrawContext context = new DrawContext(WurstClient.MC, immediate);
+		context.drawItem(stack, x, y, 0, -150);
+		context.getMatrices().translate(0, 0, -200);
+		context.drawStackOverlay(tr, stack, x, y, "");
+		context.getMatrices().translate(0, 0, 200);
 		context.draw();
 		
 		viewMatrix.popMatrix();
@@ -957,12 +961,23 @@ public enum RenderUtils
 			new Quaternionf()));
 		matrixStack.scale(-scale, -scale, scale);
 		
+		// render item count
+		if(stack.getCount() != 1)
+		{
+			String amount = String.valueOf(stack.getCount());
+			tr.draw(amount, x + 19 - 2 - tr.getWidth(amount), y + 6 + 3,
+				0xffffff, false, matrixStack.peek().getPositionMatrix(),
+				immediate, TextLayerType.NORMAL, 0, 15728880);
+			tr.draw(amount, x + 19 - 2 - tr.getWidth(amount), y + 6 + 3, -1,
+				false, matrixStack.peek().getPositionMatrix(), immediate,
+				TextLayerType.SEE_THROUGH, 0, 15728880);
+		}
+		
 		// render enchants
 		if(showEnchants && stack.hasEnchantments())
 		{
 			matrixStack.scale(0.5F, 0.5F, 0.5F);
 			int index = 0;
-			VertexConsumerProvider.Immediate immediate = getVCP();
 			Matrix4f matrix = matrixStack.peek().getPositionMatrix();
 			for(Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : EnchantmentHelper
 				.getEnchantments(stack).getEnchantmentEntries())
@@ -983,9 +998,9 @@ public enum RenderUtils
 					-60 + tr.fontHeight * index, -1, false, matrix, immediate,
 					TextLayerType.SEE_THROUGH, 0, 15728880);
 			}
-			immediate.draw();
 		}
 		
+		immediate.draw();
 		matrixStack.pop();
 		
 		// reset lighting
