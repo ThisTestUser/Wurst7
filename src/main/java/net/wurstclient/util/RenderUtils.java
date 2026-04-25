@@ -864,8 +864,8 @@ public enum RenderUtils
 		
 		EntityRenderDispatcher dispatcher =
 			WurstClient.MC.getEntityRenderDispatcher();
-		double dist = dispatcher.getSquaredDistanceToCamera(entity);
-		if(dist > 4096 && !nameTags.isUnlimitedRange())
+		double distSq = dispatcher.getSquaredDistanceToCamera(entity);
+		if(distSq > 4096 && !nameTags.isUnlimitedRange())
 			return;
 		
 		matrixStack.push();
@@ -881,7 +881,8 @@ public enum RenderUtils
 		float scale = 0.025F * multiplier;
 		if(nameTags.isEnabled())
 		{
-			double distance = WurstClient.MC.player.distanceTo(entity);
+			scale *= nameTags.getScale();
+			double distance = Math.sqrt(distSq);
 			if(distance > 10)
 				scale *= distance / 10;
 		}
@@ -913,8 +914,8 @@ public enum RenderUtils
 		
 		EntityRenderDispatcher dispatcher =
 			WurstClient.MC.getEntityRenderDispatcher();
-		double dist = dispatcher.getSquaredDistanceToCamera(entity);
-		if(dist > 4096 && !nameTags.isUnlimitedRange())
+		double distSq = dispatcher.getSquaredDistanceToCamera(entity);
+		if(distSq > 4096 && !nameTags.isUnlimitedRange())
 			return;
 		
 		Vec3d camPos = RenderUtils.getCameraPos();
@@ -922,7 +923,7 @@ public enum RenderUtils
 			.subtract(camPos).add(0, entity.getHeight() + vOffset, 0);
 		
 		float scale = 0.025F * multiplier;
-		double distance = WurstClient.MC.player.distanceTo(entity);
+		double distance = Math.sqrt(distSq);
 		if(distance > 10)
 			scale *= distance / 10;
 		
