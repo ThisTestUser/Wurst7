@@ -948,9 +948,9 @@ public enum RenderUtils
 		VertexConsumerProvider.Immediate immediate = getVCP();
 		DrawContext context = new DrawContext(WurstClient.MC, immediate);
 		context.drawItem(stack, x, y, 0, -150);
-		context.getMatrices().translate(0, 0, -200);
+		context.getMatrices().translate(0, 0, -199);
 		context.drawStackOverlay(tr, stack, x, y, "");
-		context.getMatrices().translate(0, 0, 200);
+		context.getMatrices().translate(0, 0, 199);
 		context.draw();
 		
 		viewMatrix.popMatrix();
