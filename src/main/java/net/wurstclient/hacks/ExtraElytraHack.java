@@ -106,7 +106,7 @@ public final class ExtraElytraHack extends Hack
 	@Override
 	public void onPlayerMove(PlayerMoveEvent event)
 	{
-		if(!MC.player.canGlide())
+		if(!MC.player.isGliding())
 			return;
 		
 		if(idleLock.isChecked() && !MC.options.sneakKey.isPressed()
