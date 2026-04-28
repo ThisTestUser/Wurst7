@@ -955,8 +955,8 @@ public enum RenderUtils
 		
 		EntityRenderDispatcher dispatcher =
 			WurstClient.MC.getEntityRenderDispatcher();
-		double dist = dispatcher.distanceToSqr(entity);
-		if(dist > 4096 && !nameTags.isUnlimitedRange())
+		double distSq = dispatcher.distanceToSqr(entity);
+		if(distSq > 4096 && !nameTags.isUnlimitedRange())
 			return;
 		
 		matrixStack.pushPose();
@@ -972,7 +972,8 @@ public enum RenderUtils
 		float scale = 0.025F * multiplier;
 		if(nameTags.isEnabled())
 		{
-			double distance = WurstClient.MC.player.distanceTo(entity);
+			scale *= nameTags.getScale();
+			double distance = Math.sqrt(distSq);
 			if(distance > 10)
 				scale *= distance / 10;
 		}
