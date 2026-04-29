@@ -32,6 +32,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -65,6 +66,22 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer
 		GameProfile profile)
 	{
 		super(world, profile);
+	}
+	
+	@WrapOperation(method = "tick()V",
+		at = @At(value = "FIELD",
+			target = "Lnet/minecraft/client/player/ClientInput;keyPresses:Lnet/minecraft/world/entity/player/Input;",
+			opcode = Opcodes.GETFIELD))
+	private Input modifyInput(ClientInput input, Operation<Input> original)
+	{
+		Input originalInput = original.call(input);
+		
+		if(WurstClient.INSTANCE.getHax().sneakHack.shouldPacketSneak())
+			return new Input(originalInput.forward(), originalInput.backward(),
+				originalInput.left(), originalInput.right(),
+				originalInput.jump(), true, originalInput.sprint());
+		
+		return originalInput;
 	}
 	
 	@Inject(method = "tick()V", at = @At("HEAD"))
