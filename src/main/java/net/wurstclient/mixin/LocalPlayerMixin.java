@@ -76,6 +76,12 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer
 	{
 		Input originalInput = original.call(input);
 		
+		if(WurstClient.INSTANCE.getHax().flightHack.disableSneak()
+			|| WurstClient.INSTANCE.getHax().extraElytraHack.disableSneak())
+			return new Input(originalInput.forward(), originalInput.backward(),
+				originalInput.left(), originalInput.right(),
+				originalInput.jump(), false, originalInput.sprint());
+		
 		if(WurstClient.INSTANCE.getHax().sneakHack.shouldPacketSneak())
 			return new Input(originalInput.forward(), originalInput.backward(),
 				originalInput.left(), originalInput.right(),

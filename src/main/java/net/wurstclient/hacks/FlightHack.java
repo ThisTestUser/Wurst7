@@ -17,7 +17,6 @@ import net.wurstclient.events.IsPlayerInWaterListener;
 import net.wurstclient.events.MouseScrollListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
-import net.wurstclient.mixinterface.IKeyMapping;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
@@ -125,11 +124,8 @@ public final class FlightHack extends Hack implements UpdateListener,
 		if(MC.options.keyJump.isDown())
 			player.addDeltaMovement(new Vec3(0, vSpeed, 0));
 		
-		if(IKeyMapping.get(MC.options.keyShift).isActuallyDown())
-		{
-			MC.options.keyShift.setDown(false);
+		if(MC.options.keyShift.isDown())
 			player.addDeltaMovement(new Vec3(0, -vSpeed, 0));
-		}
 		
 		if(antiKick.isChecked())
 			doAntiKick();
@@ -207,5 +203,10 @@ public final class FlightHack extends Hack implements UpdateListener,
 		
 		return Mth.clamp(horizontalSpeed.getValue() * verticalSpeed.getValue(),
 			0.05, limitVerticalSpeed ? 3.95 : 10);
+	}
+	
+	public boolean disableSneak()
+	{
+		return isEnabled() && !WURST.getHax().freecamHack.isMovingCamera();
 	}
 }

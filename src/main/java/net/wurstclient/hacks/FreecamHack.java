@@ -30,7 +30,6 @@ import net.wurstclient.hacks.freecam.FreecamInputSetting;
 import net.wurstclient.hacks.freecam.FreecamInputSetting.ApplyInputTo;
 import net.wurstclient.hacks.freecam.FreecamInteractionSetting;
 import net.wurstclient.hacks.freecam.FreecamInteractionSetting.InteractFrom;
-import net.wurstclient.mixinterface.IKeyMapping;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.ColorSetting;
 import net.wurstclient.settings.SliderSetting;
@@ -185,9 +184,9 @@ public final class FreecamHack extends Hack
 		// Calculate vertical offset
 		double offsetY = 0;
 		double vSpeed = getActualVerticalSpeed();
-		if(IKeyMapping.get(MC.options.keyJump).isActuallyDown())
+		if(MC.options.keyJump.isDown())
 			offsetY += vSpeed;
-		if(IKeyMapping.get(MC.options.keyShift).isActuallyDown())
+		if(MC.options.keyShift.isDown())
 			offsetY -= vSpeed;
 		
 		// Apply to camera

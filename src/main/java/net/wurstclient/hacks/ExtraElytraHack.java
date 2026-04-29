@@ -17,7 +17,6 @@ import net.wurstclient.SearchTags;
 import net.wurstclient.events.PlayerMoveListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
-import net.wurstclient.mixinterface.IKeyMapping;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
@@ -110,15 +109,13 @@ public final class ExtraElytraHack extends Hack
 		if(!MC.player.isFallFlying())
 			return;
 		
-		if(idleLock.isChecked()
-			&& !IKeyMapping.get(MC.options.keyShift).isActuallyDown()
+		if(idleLock.isChecked() && !MC.options.keyShift.isDown()
 			&& !MC.options.keyJump.isDown() && !MC.options.keyUp.isDown()
 			&& !MC.options.keyDown.isDown() && !MC.options.keyLeft.isDown()
 			&& !MC.options.keyRight.isDown())
 			event.setOffset(new Vec3(0, 0, 0));
 		
-		if(ignorePitch.isChecked()
-			&& !IKeyMapping.get(MC.options.keyShift).isActuallyDown()
+		if(ignorePitch.isChecked() && !MC.options.keyShift.isDown()
 			&& !MC.options.keyJump.isDown())
 		{
 			Vec3 offset = event.getOffset();
@@ -131,7 +128,7 @@ public final class ExtraElytraHack extends Hack
 	@Override
 	public void onUpdate()
 	{
-		if(IKeyMapping.get(MC.options.keyShift).isActuallyDown())
+		if(MC.options.keyShift.isDown())
 			sneakPressTime++;
 		else
 			sneakPressTime = 0;
@@ -215,11 +212,7 @@ public final class ExtraElytraHack extends Hack
 		Vec3 v = MC.player.getDeltaMovement();
 		
 		boolean jump = MC.options.keyJump.isDown();
-		boolean sneak = IKeyMapping.get(MC.options.keyShift).isActuallyDown();
-		
-		// ensure we don't enter sneaking pose
-		if(sneak)
-			MC.options.keyShift.setDown(false);
+		boolean sneak = MC.options.keyShift.isDown();
 		
 		if(jump && !sneak)
 			MC.player.setDeltaMovement(v.x, v.y + up.getValue(), v.z);
@@ -269,5 +262,11 @@ public final class ExtraElytraHack extends Hack
 		if(Math.abs(closest) < Math.abs(offset))
 			event.setOffset(new Vec3(move.x,
 				Math.max(move.y, closest - offset / 10), move.z));
+	}
+	
+	public boolean disableSneak()
+	{
+		return isEnabled() && MC.player.canGlide() && MC.player.isFallFlying()
+			&& motionCtrl.isChecked();
 	}
 }
