@@ -910,6 +910,8 @@ public enum RenderUtils
 		Entity entity, int armorId, boolean showEnchants, boolean impossible,
 		float multiplier, double vOffset, float partialTicks)
 	{
+		VertexConsumerProvider.Immediate vcp = getVCP();
+		
 		NameTagsHack nameTags = WurstClient.INSTANCE.getHax().nameTagsHack;
 		
 		EntityRenderDispatcher dispatcher =
@@ -945,8 +947,7 @@ public enum RenderUtils
 		viewMatrix.scale(-scale, -scale, -scale);
 		
 		// render item icon
-		VertexConsumerProvider.Immediate immediate = getVCP();
-		DrawContext context = new DrawContext(WurstClient.MC, immediate);
+		DrawContext context = new DrawContext(WurstClient.MC, vcp);
 		context.drawItem(stack, x, y, 0, -150);
 		context.getMatrices().translate(0, 0, -199);
 		context.drawStackOverlay(tr, stack, x, y, "");
@@ -967,10 +968,10 @@ public enum RenderUtils
 		{
 			String amount = String.valueOf(stack.getCount());
 			tr.draw(amount, x + 19 - 2 - tr.getWidth(amount), y + 6 + 3,
-				0xffffff, false, matrixStack.peek().getPositionMatrix(),
-				immediate, TextLayerType.NORMAL, 0, 15728880);
+				0xffffff, false, matrixStack.peek().getPositionMatrix(), vcp,
+				TextLayerType.NORMAL, 0, 15728880);
 			tr.draw(amount, x + 19 - 2 - tr.getWidth(amount), y + 6 + 3, -1,
-				false, matrixStack.peek().getPositionMatrix(), immediate,
+				false, matrixStack.peek().getPositionMatrix(), vcp,
 				TextLayerType.SEE_THROUGH, 0, 15728880);
 		}
 		
@@ -993,16 +994,16 @@ public enum RenderUtils
 					.append(Integer.toString(entry.getIntValue()));
 				
 				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
-					-60 + tr.fontHeight * index, 0xffffff, false, matrix,
-					immediate, TextLayerType.NORMAL, 0, 15728880);
+					-60 + tr.fontHeight * index, 0xffffff, false, matrix, vcp,
+					TextLayerType.NORMAL, 0, 15728880);
 				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
-					-60 + tr.fontHeight * index, -1, false, matrix, immediate,
+					-60 + tr.fontHeight * index, -1, false, matrix, vcp,
 					TextLayerType.SEE_THROUGH, 0, 15728880);
 			}
 		}
 		
-		immediate.draw();
 		matrixStack.pop();
+		vcp.draw();
 		
 		// reset lighting
 		if(WurstClient.MC.world.getDimensionEffects().isDarkened())
