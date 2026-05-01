@@ -19,6 +19,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+
 import net.minecraft.client.Camera;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Font.DisplayMode;
@@ -28,10 +30,15 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.EnchantmentTags;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.phys.AABB;
@@ -994,6 +1001,123 @@ public enum RenderUtils
 		
 		matrixStack.popPose();
 		vcp.endBatch();
+	}
+	
+	public static void renderArmor(PoseStack matrixStack, ItemStack stack,
+		Entity entity, int armorId, boolean showEnchants, boolean impossible,
+		float multiplier, double vOffset, float partialTicks)
+	{
+		MultiBufferSource.BufferSource vcp = getVCP();
+		
+		NameTagsHack nameTags = WurstClient.INSTANCE.getHax().nameTagsHack;
+		
+		EntityRenderDispatcher dispatcher =
+			WurstClient.MC.getEntityRenderDispatcher();
+		double distSq = dispatcher.distanceToSqr(entity);
+		if(distSq > 4096 && !nameTags.isUnlimitedRange())
+			return;
+		
+		Vec3 camPos = RenderUtils.getCameraPos();
+		Vec3 tagPos = EntityUtils.getLerpedPos(entity, partialTicks)
+			.subtract(camPos).add(0, entity.getBbHeight() + vOffset, 0);
+		
+		float scale = 0.025F * multiplier;
+		double distance = Math.sqrt(distSq);
+		if(distance > 10)
+			scale *= distance / 10;
+		
+		Font tr = WurstClient.MC.font;
+		
+		int x = -50 + armorId * 20;
+		int y = -20;
+		
+		// offset matrixStack for rendering
+		matrixStack.pushPose();
+		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
+		matrixStack.mulPose(dispatcher.camera.rotation().rotateY((float)Math.PI,
+			new Quaternionf()));
+		matrixStack.scale(-scale, -scale, scale);
+		
+		// render item icon
+		
+		// render item bar
+		if(stack.isBarVisible())
+		{
+			int left = x + 2;
+			int top = y + 13;
+			fill(vcp, matrixStack, WurstRenderLayers.getQuads(true), left, top,
+				left + 13, top + 2, -16777216);
+			fill(vcp, matrixStack, WurstRenderLayers.getQuads(true), left, top,
+				left + stack.getBarWidth(), top + 1,
+				ARGB.opaque(stack.getBarColor()));
+		}
+		
+		// render item cooldown
+		float cooldown = WurstClient.MC.player.getCooldowns()
+			.getCooldownPercent(stack, WurstClient.MC.getDeltaTracker()
+				.getGameTimeDeltaPartialTick(true));
+		if(cooldown > 0)
+		{
+			int top = y + Mth.floor(16F * (1F - cooldown));
+			int bottom = top + Mth.ceil(16F * cooldown);
+			fill(vcp, matrixStack, WurstRenderLayers.getQuads(true), x, top,
+				x + 16, bottom, Integer.MAX_VALUE);
+		}
+		
+		// render item count
+		if(stack.getCount() != 1)
+		{
+			String amount = String.valueOf(stack.getCount());
+			tr.drawInBatch(amount, x + 19 - 2 - tr.width(amount), y + 6 + 3,
+				0xffffff, false, matrixStack.last().pose(), vcp,
+				DisplayMode.NORMAL, 0, 15728880);
+			tr.drawInBatch(amount, x + 19 - 2 - tr.width(amount), y + 6 + 3, -1,
+				false, matrixStack.last().pose(), vcp, DisplayMode.SEE_THROUGH,
+				0, 15728880);
+		}
+		
+		// render enchants
+		if(showEnchants && stack.isEnchanted())
+		{
+			matrixStack.scale(0.5F, 0.5F, 0.5F);
+			int index = 0;
+			Matrix4f matrix = matrixStack.last().pose();
+			for(Object2IntMap.Entry<Holder<Enchantment>> entry : EnchantmentHelper
+				.getEnchantmentsForCrafting(stack).entrySet())
+			{
+				Enchantment enchantment = entry.getKey().value();
+				if(impossible && !enchantment.canEnchant(stack))
+					continue;
+				index++;
+				Component text = EnchantmentUtils
+					.getShortName(entry.getKey().getRegisteredName(),
+						entry.getKey().is(EnchantmentTags.CURSE))
+					.append(Integer.toString(entry.getIntValue()));
+				
+				tr.drawInBatch(text, -95 + armorId * 40 - tr.width(text),
+					-60 + tr.lineHeight * index, 0xffffff, false, matrix, vcp,
+					DisplayMode.NORMAL, 0, 15728880);
+				tr.drawInBatch(text, -95 + armorId * 40 - tr.width(text),
+					-60 + tr.lineHeight * index, -1, false, matrix, vcp,
+					DisplayMode.SEE_THROUGH, 0, 15728880);
+			}
+		}
+		
+		matrixStack.popPose();
+		vcp.endBatch();
+	}
+	
+	public static void fill(MultiBufferSource.BufferSource vcp,
+		PoseStack matrixStack, RenderType type, float x1, float y1, float x2,
+		float y2, int color)
+	{
+		Pose entry = matrixStack.last();
+		VertexConsumer buffer = vcp.getBuffer(type);
+		buffer.addVertex(entry, x1, y1, 0).setColor(color);
+		buffer.addVertex(entry, x1, y2, 0).setColor(color);
+		buffer.addVertex(entry, x2, y2, 0).setColor(color);
+		buffer.addVertex(entry, x2, y1, 0).setColor(color);
+		vcp.endBatch(type);
 	}
 	
 	public record ColoredPoint(Vec3 point, int color)

@@ -53,5 +53,7 @@ public class LevelRendererMixin
 		float tickProgress = tickCounter.getGameTimeDeltaPartialTick(false);
 		RenderEvent event = new RenderEvent(matrixStack, tickProgress);
 		EventManager.fire(event);
+		WurstClient.INSTANCE.getHax().armorEspHack.renderArmor(matrixStack,
+			tickProgress);
 	}
 }
