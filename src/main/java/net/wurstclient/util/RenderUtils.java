@@ -870,7 +870,7 @@ public enum RenderUtils
 		
 		matrixStack.push();
 		
-		Vec3d camPos = RenderUtils.getCameraPos();
+		Vec3d camPos = getCameraPos();
 		Vec3d tagPos = EntityUtils.getLerpedPos(entity, partialTicks)
 			.subtract(camPos).add(0, entity.getHeight() + vOffset, 0);
 		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
@@ -889,8 +889,8 @@ public enum RenderUtils
 		matrixStack.scale(-scale, -scale, scale);
 		
 		float bgOpacity =
-			WurstClient.MC.options.getTextBackgroundOpacity(0.25f);
-		int bgColor = (int)(bgOpacity * 255F) << 24;
+			WurstClient.MC.options.getTextBackgroundOpacity(0.25F);
+		int bgColor = (int)(bgOpacity * 255) << 24;
 		
 		Matrix4f matrix = matrixStack.peek().getPositionMatrix();
 		TextRenderer tr = WurstClient.MC.textRenderer;
@@ -920,31 +920,32 @@ public enum RenderUtils
 		if(distSq > 4096 && !nameTags.isUnlimitedRange())
 			return;
 		
-		Vec3d camPos = RenderUtils.getCameraPos();
+		matrixStack.push();
+		
+		Vec3d camPos = getCameraPos();
 		Vec3d tagPos = EntityUtils.getLerpedPos(entity, partialTicks)
 			.subtract(camPos).add(0, entity.getHeight() + vOffset, 0);
+		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
+		
+		matrixStack.multiply(dispatcher.getRotation().rotateY((float)Math.PI,
+			new Quaternionf()));
 		
 		float scale = 0.025F * multiplier;
 		double distance = Math.sqrt(distSq);
 		if(distance > 10)
 			scale *= distance / 10;
+		matrixStack.scale(-scale, -scale, scale);
 		
 		TextRenderer tr = WurstClient.MC.textRenderer;
 		
 		int x = -50 + armorId * 20;
 		int y = -20;
 		
-		// offset model view stack for armor
+		// offset model view matrix
 		Matrix4fStack viewMatrix = RenderSystem.getModelViewStack();
 		viewMatrix.pushMatrix();
-		
-		// camera rotation
 		viewMatrix.mul(matrixStack.peek().getPositionMatrix());
-		
-		viewMatrix.translate((float)tagPos.x, (float)tagPos.y, (float)tagPos.z);
-		viewMatrix.rotate(dispatcher.getRotation().rotateY((float)Math.PI,
-			new Quaternionf()));
-		viewMatrix.scale(-scale, -scale, -scale);
+		viewMatrix.scale(1, 1, -1);
 		
 		// render item icon
 		DrawContext context = new DrawContext(WurstClient.MC, vcp);
@@ -954,22 +955,23 @@ public enum RenderUtils
 		context.getMatrices().translate(0, 0, 199);
 		context.draw();
 		
-		viewMatrix.popMatrix();
+		// reset lighting
+		if(WurstClient.MC.world.getDimensionEffects().isDarkened())
+			DiffuseLighting.enableForLevel();
+		else
+			DiffuseLighting.disableForLevel();
 		
-		// offset matrixStack for rendering text
-		matrixStack.push();
-		matrixStack.translate(tagPos.x, tagPos.y, tagPos.z);
-		matrixStack.multiply(dispatcher.getRotation().rotateY((float)Math.PI,
-			new Quaternionf()));
-		matrixStack.scale(-scale, -scale, scale);
+		viewMatrix.popMatrix();
 		
 		// render item count
 		if(stack.getCount() != 1)
 		{
 			String amount = String.valueOf(stack.getCount());
+			
 			tr.draw(amount, x + 19 - 2 - tr.getWidth(amount), y + 6 + 3,
 				0xffffff, false, matrixStack.peek().getPositionMatrix(), vcp,
 				TextLayerType.NORMAL, 0, 15728880);
+			
 			tr.draw(amount, x + 19 - 2 - tr.getWidth(amount), y + 6 + 3, -1,
 				false, matrixStack.peek().getPositionMatrix(), vcp,
 				TextLayerType.SEE_THROUGH, 0, 15728880);
@@ -987,6 +989,7 @@ public enum RenderUtils
 				Enchantment enchantment = entry.getKey().value();
 				if(impossible && !enchantment.isAcceptableItem(stack))
 					continue;
+				
 				index++;
 				Text text = EnchantmentUtils
 					.getShortName(entry.getKey().getIdAsString(),
@@ -996,6 +999,7 @@ public enum RenderUtils
 				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
 					-60 + tr.fontHeight * index, 0xffffff, false, matrix, vcp,
 					TextLayerType.NORMAL, 0, 15728880);
+				
 				tr.draw(text, -95 + armorId * 40 - tr.getWidth(text),
 					-60 + tr.fontHeight * index, -1, false, matrix, vcp,
 					TextLayerType.SEE_THROUGH, 0, 15728880);
@@ -1004,12 +1008,6 @@ public enum RenderUtils
 		
 		matrixStack.pop();
 		vcp.draw();
-		
-		// reset lighting
-		if(WurstClient.MC.world.getDimensionEffects().isDarkened())
-			DiffuseLighting.enableForLevel();
-		else
-			DiffuseLighting.disableForLevel();
 	}
 	
 	public record ColoredPoint(Vec3d point, int color)
